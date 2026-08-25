@@ -22,6 +22,14 @@ export default function DiaperPanel() {
     setOpenModal('diaper');
   }
 
+  // 소변/대변/소변+대변 색 구분 (카드 배경색)
+  function diaperColor(type) {
+    if (type === 'wet') return { dot: 'var(--cd-wet)', bg: 'var(--dw-wet)' };
+    if (type === 'soiled') return { dot: 'var(--cd)', bg: 'var(--dw)' };
+    // both: 두 색을 절반씩
+    return { dot: 'linear-gradient(90deg, var(--cd-wet) 50%, var(--cd) 50%)', bg: 'linear-gradient(90deg, var(--dw-wet) 50%, var(--dw) 50%)' };
+  }
+
   function delDiaper(id) {
     const item = diapers.find(x => x.id === id);
     if (!item) return;
@@ -54,9 +62,10 @@ export default function DiaperPanel() {
             <div className="daylbl">{day}</div>
             {items.map(d => {
               const sub = [d.color ? TC[d.color] : '', d.note || ''].filter(Boolean).join(' · ');
+              const dc = diaperColor(d.type);
               return (
-                <div key={d.id} className="ec" onClick={() => openEdit(d)}>
-                  <div className="edot d"></div>
+                <div key={d.id} className="ec" onClick={() => openEdit(d)} style={{ background: dc.bg }}>
+                  <div className="edot" style={{ background: dc.dot }}></div>
                   <div className="emain">
                     <div className="epri">{TD[d.type] || '기저귀'}</div>
                     <div className="esec">{sub || ' '}</div>

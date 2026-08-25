@@ -38,6 +38,13 @@ export default function FeedPanel() {
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
+  // 모유(직수)/모유(유축)/분유 색 구분 (카드 배경색) — FeedModal의 색상 체계와 동일
+  function feedColor(f) {
+    if (f.type === 'bottle') return { dot: 'var(--cd)', bg: 'var(--dw)' };
+    if (f.subtype === 'pumped') return { dot: 'var(--cf)', bg: 'var(--fw)' };
+    return { dot: 'var(--cs)', bg: 'var(--sw)' }; // 직수 (기본)
+  }
+
   function feedLabel(f) {
     const base = TF[f.type] || '수유';
     if (f.subtype) return base + ' · ' + (TSU[f.subtype] || '');
@@ -89,9 +96,10 @@ export default function FeedPanel() {
               const t = f.start || f.time;
               const timeRange = (f.start && f.end) ? `${fmt(f.start)} → ${fmt(f.end)}` : fmt(t);
               const detail = feedDetails(f);
+              const fc = feedColor(f);
               return (
-                <div key={f.id} className="ec" onClick={() => openEdit(f)}>
-                  <div className="edot f"></div>
+                <div key={f.id} className="ec" onClick={() => openEdit(f)} style={{ background: fc.bg }}>
+                  <div className="edot" style={{ background: fc.dot }}></div>
                   <div className="emain">
                     <div className="epri">{feedLabel(f)}</div>
                     <div className="esec">{timeRange}{detail ? ' · ' + detail : ''}</div>
