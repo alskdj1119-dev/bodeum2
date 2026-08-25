@@ -1,9 +1,9 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmt, fmtFull, elapsedStr, groupByDay } from '../../lib/helpers';
-
-const TD = { wet:'소변', soiled:'대변', both:'소변+대변' };
-const TC = { yellow:'노란색', green:'녹색', other:'기타' };
+import {
+  fmtFull, elapsedStr, groupByDay,
+  DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC,
+} from '../../lib/helpers';
 
 export default function DiaperPanel() {
   const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast } = useApp();

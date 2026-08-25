@@ -1,22 +1,22 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { agoStr, durStr, fmt, fmtFull, elapsedStr, directFeedMl, timerStr } from '../../lib/helpers';
+import {
+  agoStr, durStr, fmt, fmtFull, elapsedStr, directFeedMl, timerStr,
+  FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
+} from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
-
-function p2(n) { return n < 10 ? '0' + n : '' + n; }
 
 export default function HomePanel() {
   const {
     db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
-    feedTimerMs, sleepTimerMs, linkedSleepId, stopActiveFeed, stopActiveSleep,
+    feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep,
   } = useApp();
   const { feeds, diapers, sleeps, weights } = db;
 
   // 진행 중인 타이머 (홈 최상단 요약 배너용)
   const activeFeed = feeds.find(f => f.start && !f.end);
   const activeSleep = sleeps.find(s => s.start && !s.end);
-  const isLinkedSleep = linkedSleepId && activeSleep && activeSleep.id === linkedSleepId;
 
   // 직전 24시간 상세 모달
   const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
@@ -29,9 +29,6 @@ export default function HomePanel() {
     const d = Math.floor((today - birth) / 86400000) + 1;
     if (d >= 1) dayCount = d;
   }
-
-  const TF = { breast:'모유', bottle:'분유' };
-  const TD = { wet:'소변', soiled:'대변', both:'소변+대변' };
 
   // Last events
   const sortedFeeds = [...feeds].filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));
@@ -142,7 +139,7 @@ export default function HomePanel() {
           {activeSleep && (
             <div className="slive-mini banner-in">
               <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
-              <span className="slive-mini-lbl">{isLinkedSleep ? '수면+수유 중' : '수면 중'}</span>
+              <span className="slive-mini-lbl">수면 중</span>
               <span className="slive-mini-timer">{timerStr(sleepTimerMs)}</span>
               <button className="slive-mini-stop" style={{ background:'var(--cs)' }} onClick={stopActiveSleep}>종료</button>
             </div>

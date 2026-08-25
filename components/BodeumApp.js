@@ -38,10 +38,9 @@ export default function BodeumApp() {
   const {
     familyCode, db, baby,
     activeTab, tabDir, goTab,
-    feedTimerMs, setFeedTimerMs,
-    sleepTimerMs, setSleepTimerMs,
-    openModal, setOpenModal,
-    pendingConsumedFeedId,
+    setFeedTimerMs,
+    setSleepTimerMs,
+    openModal,
   } = useApp();
 
   const panelRefs = useRef({});

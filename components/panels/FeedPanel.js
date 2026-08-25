@@ -1,21 +1,17 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, directFeedMl } from '../../lib/helpers';
-
-const TF = { breast:'모유', bottle:'분유' };
-const TSU = { direct:'직수', pumped:'유축' };
-const TS = { left:'왼쪽', right:'오른쪽' };
+import {
+  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, directFeedMl,
+  FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, FEED_SIDE_LABEL as TS,
+} from '../../lib/helpers';
 
 export default function FeedPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, linkedSleepId, stopActiveFeed } = useApp();
-  const { feeds, sleeps } = db;
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed } = useApp();
+  const { feeds } = db;
 
   const activeFeed = feeds.find(f => f.start && !f.end);
-  const activeSleep = sleeps.find(s => s.start && !s.end);
   const done = feeds.filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));
   const grouped = groupByDay(done, f => f.start || f.time);
-
-  const isLinked = linkedSleepId != null;
 
   function openEdit(f) {
     if (!f.end) { showToast('진행 중인 수유는 종료 후 수정할 수 있어요'); return; }

@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, groupByDay, directFeedMl } from '../../lib/helpers';
+import { fmtFull, groupByDay, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
-const METHOD_LABEL = { ear: '귀', armpit: '겨드랑이', forehead: '이마', rectal: '항문' };
 const VACCINE_KEY = 'bodeum_vaccine_status';
 
 const VACCINES = [
@@ -290,7 +289,7 @@ export default function HealthPanel() {
               </div>
             </div>
           ) : (
-            VACCINES.map((v, i) => {
+            VACCINES.map((v) => {
               const status = vaccineStatus[v.code] || 'before';
               const targetDate = new Date(baby.birthDate);
               targetDate.setDate(targetDate.getDate() + v.daysMin);

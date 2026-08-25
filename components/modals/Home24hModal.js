@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { durStr, fmt, fmtFull, elapsedStr, directFeedMl } from '../../lib/helpers';
+import {
+  durStr, fmt, elapsedStr, directFeedMl,
+  DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
+} from '../../lib/helpers';
 import { useApp } from '../../lib/store';
-
-const TD = { wet: '소변', soiled: '대변', both: '소변+대변' };
-const TF = { breast: '모유', bottle: '분유' };
 
 function StatBar({ value, max, color }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;

@@ -2,8 +2,6 @@
 import { useApp } from '../../lib/store';
 import { fmtFull, groupByDay } from '../../lib/helpers';
 
-function p2(n) { return n < 10 ? '0' + n : '' + n; }
-
 function buildChart(weights) {
   const asc = [...weights].sort((a,b) => new Date(a.time) - new Date(b.time));
   if (asc.length < 2) return null;

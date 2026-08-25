@@ -1,6 +1,9 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmtFull, elapsedStr, durStr, fmt } from '../../lib/helpers';
+import {
+  fmtFull, elapsedStr, durStr, fmt,
+  FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, DIAPER_TYPE_LABEL as TD,
+} from '../../lib/helpers';
 
 const TYPE_LABEL = {
   feeds: '수유',
@@ -16,10 +19,6 @@ const TYPE_DOT = {
   weights: 'w',
   temps: 'w',
 };
-const TF = { breast: '모유', bottle: '분유' };
-const TSU = { direct: '직수', pumped: '유축' };
-const TD = { wet: '소변', soiled: '대변', both: '소변+대변' };
-
 function itemSummary(item) {
   const t = item._type;
   if (t === 'feeds') {
@@ -101,7 +100,7 @@ export default function TrashPanel() {
           <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '12px', lineHeight: '1.5' }}>
             삭제된 기록은 여기서 확인하고 복원할 수 있어요.
           </p>
-          {sorted.map((item, i) => {
+          {sorted.map((item) => {
             const dotClass = TYPE_DOT[item._type] || 'f';
             return (
               <div key={`${item._type}-${item.id}-${item._deletedAt}`} className="ec" style={{ alignItems: 'flex-start' }}>

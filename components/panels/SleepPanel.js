@@ -1,15 +1,15 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr } from '../../lib/helpers';
-
-const PL = { crib:'침대', arms:'품', cushion:'원형쿠션' };
+import {
+  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr,
+  SLEEP_PLACE_LABEL as PL,
+} from '../../lib/helpers';
 
 export default function SleepPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, linkedSleepId, stopActiveSleep } = useApp();
-  const { sleeps, feeds } = db;
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, stopActiveSleep } = useApp();
+  const { sleeps } = db;
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
-  const isLinked = linkedSleepId && activeSleep && activeSleep.id === linkedSleepId;
   const done = sleeps.filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start));
   const grouped = groupByDay(done, s => s.start);
 
@@ -42,7 +42,7 @@ export default function SleepPanel() {
         <div className="slive banner-in" style={{ background:'var(--sw)' }}>
           <div className="spulse" style={{ background:'var(--cs)' }}></div>
           <div className="sliveinf">
-            <div className="slivelbl">{isLinked ? '수면+수유 중' : '수면 중'}</div>
+            <div className="slivelbl">수면 중</div>
             <div className="slivetimer">{timerStr(sleepTimerMs)}</div>
           </div>
           <button className="sstop" style={{ background:'var(--cs)' }} onClick={stopActiveSleep}>종료</button>
