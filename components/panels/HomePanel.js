@@ -17,6 +17,7 @@ export default function HomePanel() {
   const {
     db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
     feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep,
+    notifPermission, requestNotifPermission,
   } = useApp();
   const { feeds, diapers, sleeps, weights } = db;
 
@@ -130,6 +131,15 @@ export default function HomePanel() {
           </div>
         )}
       </div>
+
+      {/* 알림 권한 아직 결정 안 됨 → 눈에 띄게 한 번 안내 */}
+      {notifPermission === 'default' && (
+        <div className="sc" style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px', padding:'12px 14px' }}>
+          <span style={{ fontSize:'18px', lineHeight:1 }}>🔔</span>
+          <span style={{ flex:1, fontSize:'12.5px', color:'var(--ink)' }}>수유·수면·기저귀 알림을 받으려면 알림을 허용해주세요.</span>
+          <button className="bpri" style={{ padding:'8px 14px', fontSize:'12.5px', whiteSpace:'nowrap' }} onClick={requestNotifPermission}>허용하기</button>
+        </div>
+      )}
 
       {/* 진행 중인 타이머 — 얇은 한 줄 요약 배너 */}
       {(activeFeed || activeSleep) && (

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 
 export default function SettingsPanel() {
-  const { baby, saveBaby, familyCode, showToast, goTab, notifSettings, saveNotifSettings } = useApp();
+  const { baby, saveBaby, familyCode, showToast, goTab, notifSettings, saveNotifSettings, notifPermission, requestNotifPermission } = useApp();
 
   const [form, setForm] = useState({
     name: '',
@@ -116,6 +116,31 @@ export default function SettingsPanel() {
 
       {/* ─── 알림 설정 ─── */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>알림 설정</p>
+
+      {/* 알림 권한 상태 */}
+      <div className="sc" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div className="flbl" style={{ marginBottom: 4 }}>기기 알림 권한</div>
+          {notifPermission === 'granted' && (
+            <div style={{ fontSize: 13, color: 'var(--sage)', fontWeight: 600 }}>허용됨 — 아래 알림을 받을 수 있어요 ✓</div>
+          )}
+          {notifPermission === 'default' && (
+            <div style={{ fontSize: 13, color: 'var(--ink)' }}>아직 허용하지 않았어요. 버튼을 눌러 허용해주세요.</div>
+          )}
+          {notifPermission === 'denied' && (
+            <div style={{ fontSize: 13, color: 'var(--cd)' }}>차단됨 — 기기/브라우저 설정에서 이 앱의 알림을 직접 허용해야 해요.</div>
+          )}
+          {notifPermission === 'unsupported' && (
+            <div style={{ fontSize: 13, color: 'var(--muted)' }}>이 기기/브라우저는 알림을 지원하지 않아요.</div>
+          )}
+        </div>
+        {notifPermission !== 'granted' && notifPermission !== 'unsupported' && (
+          <button className="bpri" style={{ padding: '10px 16px', fontSize: 13, whiteSpace: 'nowrap' }} onClick={requestNotifPermission}>
+            알림 허용하기
+          </button>
+        )}
+      </div>
+
       <div className="sc" style={{ marginBottom: 20 }}>
         <div className="fld" style={{ marginBottom: 10 }}>
           <div className="flbl">기저귀 경과 알림 (시간)</div>
