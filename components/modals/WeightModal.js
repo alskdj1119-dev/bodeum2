@@ -4,25 +4,24 @@ import { useApp } from '../../lib/store';
 import { nowISO, toLocal } from '../../lib/helpers';
 
 // Scroll-wheel number picker (wdial)
-function WDial({ value, onChange, min, max, step = 1, label, pad = 0 }) {
-  const listRef = useRef(null);
+function WDial({ value, onChange, min, max, step = 1, pad = 0 }) {
+  const colRef = useRef(null);
   const items = [];
   for (let v = min; v <= max; v = Math.round((v + step) * 1000) / 1000) {
     items.push(Math.round(v * 1000) / 1000);
   }
 
   const ITEM_H = 44;
-  const idx = items.findIndex(v => Math.abs(v - value) < step * 0.5);
 
   useEffect(() => {
-    const el = listRef.current;
+    const el = colRef.current;
     if (!el) return;
-    const target = Math.max(0, idx) * ITEM_H;
-    el.scrollTop = target;
+    const idx = items.findIndex(v => Math.abs(v - value) < step * 0.5);
+    if (idx >= 0) el.scrollTop = idx * ITEM_H;
   }, []);
 
   function onScroll() {
-    const el = listRef.current;
+    const el = colRef.current;
     if (!el) return;
     const i = Math.round(el.scrollTop / ITEM_H);
     const v = items[Math.min(i, items.length - 1)];
@@ -35,23 +34,14 @@ function WDial({ value, onChange, min, max, step = 1, label, pad = 0 }) {
   }
 
   return (
-    <div className="wdial-wrap">
-      <div className="wdial-label">{label}</div>
-      <div className="wdial">
-        <div className="wdial-mask top"></div>
-        <div className="wdial-list" ref={listRef} onScroll={onScroll}>
-          <div style={{height: ITEM_H * 2}}></div>
-          {items.map(v => (
-            <div key={v} className={`wdial-item${Math.abs(v - value) < step * 0.5 ? ' selected' : ''}`}
-              style={{height:ITEM_H, lineHeight: ITEM_H + 'px'}}>
-              {fmtVal(v)}
-            </div>
-          ))}
-          <div style={{height: ITEM_H * 2}}></div>
-        </div>
-        <div className="wdial-mask bottom"></div>
-        <div className="wdial-sel"></div>
+    <div className="wdial-cont">
+      <div className="wdial-bar" />
+      <div className="wdial-col" ref={colRef} onScroll={onScroll}>
+        {items.map(v => (
+          <div key={v} className="wdial-item">{fmtVal(v)}</div>
+        ))}
       </div>
+      <div className="wdial-fade" />
     </div>
   );
 }
@@ -114,17 +104,18 @@ export default function WeightModal() {
   }
 
   return (
-    <div className="mbg" onClick={close}>
+    <div className="mbg open" onClick={close}>
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle"></div>
         <div className="mtitle">{isEdit ? '체중 수정' : '체중 기록'}</div>
         <div className="mbody">
-          <div className="wdial-row">
-            <WDial value={kgInt} onChange={setKgInt} min={0} max={30} label="kg" />
-            <div className="wdial-dot">.</div>
-            <WDial value={kgDec} onChange={setKgDec} min={0} max={999} label="g (1/1000)" pad={3}/>
+          <div className="wdial-wrap">
+            <WDial value={kgInt} onChange={setKgInt} min={0} max={30} />
+            <div className="wdial-sep">.</div>
+            <WDial value={kgDec} onChange={setKgDec} min={0} max={999} pad={3}/>
+            <div className="wdial-unit">kg</div>
           </div>
-          <div className="weight-preview">{kg} kg</div>
+          <div style={{ textAlign:'center', fontSize:'22px', fontWeight:700, color:'var(--ink)', marginBottom:'8px' }}>{kg} kg</div>
 
           <div className="fld" style={{marginTop:16}}>
             <div className="flbl">날짜/시간</div>

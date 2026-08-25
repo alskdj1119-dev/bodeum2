@@ -20,7 +20,7 @@ import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 
 const PANELS = ['home', 'feed', 'diaper', 'sleep', 'weight', 'settings', 'changelog', 'requests'];
-const SUB_PANELS = ['settings', 'changelog', 'requests'];
+const SUB_PANELS = ['changelog', 'requests'];
 
 function sendToSW(lastFeedTime, activeFeedStart, babyName) {
   if (!('serviceWorker' in navigator)) return;
@@ -145,8 +145,9 @@ export default function BodeumApp() {
     return () => clearTimeout(cleanup);
   }, [activeTab, tabDir]);
 
-  // Initial panel visibility
+  // Initial panel visibility — runs when panels first appear (familyCode goes truthy)
   useEffect(() => {
+    if (!familyCode) return;
     PANELS.forEach(p => {
       const el = panelRefs.current[p];
       if (!el) return;
@@ -158,7 +159,7 @@ export default function BodeumApp() {
         el.style.display = 'none';
       }
     });
-  }, []);
+  }, [familyCode]);
 
   // Swipe back gesture
   function handleTouchStart(e) {
@@ -185,6 +186,7 @@ export default function BodeumApp() {
 
   function handleBack() {
     if (activeTab === 'changelog' || activeTab === 'requests') goTab('settings', 'back');
+    else if (activeTab === 'settings') goTab('home', 'back');
     else goTab('home', 'back');
   }
 

@@ -71,7 +71,7 @@ export default function DiaperModal() {
   const showColor = type === 'soiled' || type === 'both';
 
   return (
-    <div className="mbg" onClick={close}>
+    <div className="mbg open" onClick={close}>
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle"></div>
         <div className="mtitle">{isEdit ? '기저귀 수정' : '기저귀 기록'}</div>

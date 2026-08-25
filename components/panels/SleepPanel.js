@@ -1,11 +1,11 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr } from '../../lib/helpers';
+import { fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, directFeedMl } from '../../lib/helpers';
 
 const PL = { crib:'침대', arms:'품', cushion:'원형쿠션' };
 
 export default function SleepPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId, directFeedMl: _unused } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
   const { sleeps, feeds } = db;
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
@@ -35,6 +35,8 @@ export default function SleepPanel() {
     const endTime = new Date().toISOString();
     let newSleeps = sleeps.map(s => s.id === activeSleep.id ? { ...s, end: endTime } : s);
     let newFeeds = feeds;
+    let pendingFeedId = null;
+
     if (isLinked) {
       const activeFeed = feeds.find(f => f.start && !f.end);
       if (activeFeed) {
@@ -42,17 +44,23 @@ export default function SleepPanel() {
         newFeeds = feeds.map(f => {
           if (f.id !== activeFeed.id) return f;
           const upd = { ...f, end: endTime };
-          if (isDirect) upd.amount = Math.round(Math.round((new Date(endTime) - new Date(f.start)) / 10000) * 50 / 90);
+          if (isDirect) upd.amount = directFeedMl(f.start, endTime);
           return upd;
         });
-        if (isDirect) setPendingConsumedFeedId(activeFeed.id);
+        if (isDirect) pendingFeedId = activeFeed.id;
       }
       setLinkedSleepId(null);
       try { localStorage.removeItem('bodeum_linked_sleep'); } catch(_) {}
     }
+
     const newDB = { ...db, sleeps: newSleeps, feeds: newFeeds };
     dispatch({ type: 'SET_ALL', payload: newDB });
-    saveDB(newDB);
+    if (pendingFeedId) {
+      setPendingConsumedFeedId(pendingFeedId);
+      saveDB(newDB).then(() => setOpenModal('consumed'));
+    } else {
+      saveDB(newDB);
+    }
   }
 
   return (
