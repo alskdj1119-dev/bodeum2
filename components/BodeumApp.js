@@ -13,19 +13,24 @@ import WeightPanel from './panels/WeightPanel';
 import SettingsPanel from './panels/SettingsPanel';
 import ChangelogPanel from './panels/ChangelogPanel';
 import RequestsPanel from './panels/RequestsPanel';
+import StatsPanel from './panels/StatsPanel';
+import HealthPanel from './panels/HealthPanel';
 import FeedModal from './modals/FeedModal';
 import DiaperModal from './modals/DiaperModal';
 import SleepModal from './modals/SleepModal';
 import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
+import TempModal from './modals/TempModal';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'weight', 'settings', 'changelog', 'requests'];
-const SUB_PANELS = ['changelog', 'requests'];
+const PANELS = ['home', 'feed', 'diaper', 'sleep', 'weight', 'settings', 'changelog', 'requests', 'stats', 'health'];
+const SUB_PANELS = ['changelog', 'requests', 'stats', 'health'];
 
-function sendToSW(lastFeedTime, activeFeedStart, babyName) {
+function sendToSW(lastFeedTime, activeFeedStart, babyName, lastDiaperTime, activeSleepStart) {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.ready.then(reg => {
-    if (reg.active) reg.active.postMessage({ type: 'FEED_UPDATE', lastFeedTime, activeFeedStart, babyName });
+    if (reg.active) reg.active.postMessage({
+      type: 'FEED_UPDATE', lastFeedTime, activeFeedStart, babyName, lastDiaperTime, activeSleepStart,
+    });
   }).catch(() => {});
 }
 
@@ -79,7 +84,15 @@ export default function BodeumApp() {
   useEffect(() => {
     const lastFeed = [...db.feeds].sort((a,b) => (b.end||b.start||'').localeCompare(a.end||a.start||'')).find(f => f.end);
     const activeFeed = db.feeds.find(f => f.start && !f.end);
-    sendToSW(lastFeed?.end || lastFeed?.start, activeFeed?.start, baby.name);
+    const lastDiaper = [...db.diapers].sort((a,b) => b.time > a.time ? 1 : -1)[0];
+    const activeSleep = db.sleeps.find(s => s.start && !s.end);
+    sendToSW(
+      lastFeed?.end || lastFeed?.start,
+      activeFeed?.start,
+      baby.name,
+      lastDiaper?.time,
+      activeSleep?.start,
+    );
   }, [db, baby.name]);
 
   // Panel slide animation
@@ -185,7 +198,7 @@ export default function BodeumApp() {
   const showBack = isSubPanel;
 
   function handleBack() {
-    if (activeTab === 'changelog' || activeTab === 'requests') goTab('settings', 'back');
+    if (activeTab === 'changelog' || activeTab === 'requests' || activeTab === 'stats' || activeTab === 'health') goTab('settings', 'back');
     else if (activeTab === 'settings') goTab('home', 'back');
     else goTab('home', 'back');
   }
@@ -205,16 +218,18 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('settings')}><SettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
         <div className="panel" ref={panelRef('requests')}><RequestsPanel /></div>
+        <div className="panel" ref={panelRef('stats')}><StatsPanel /></div>
+        <div className="panel" ref={panelRef('health')}><HealthPanel /></div>
       </div>
 
       <NavBar />
-
 
       {openModal === 'feed' && <FeedModal />}
       {openModal === 'diaper' && <DiaperModal />}
       {openModal === 'sleep' && <SleepModal />}
       {openModal === 'weight' && <WeightModal />}
       {openModal === 'consumed' && <ConsumedModal />}
+      {openModal === 'temp' && <TempModal />}
 
       <Toast />
     </div>

@@ -3,42 +3,33 @@ import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 import { nowISO, toLocal } from '../../lib/helpers';
 
-// Scroll-wheel number picker (wdial)
-function WDial({ value, onChange, min, max, step = 1, pad = 0 }) {
+// Single-digit scroll column
+function WDial({ value, onChange, min = 0, max = 9 }) {
   const colRef = useRef(null);
   const items = [];
-  for (let v = min; v <= max; v = Math.round((v + step) * 1000) / 1000) {
-    items.push(Math.round(v * 1000) / 1000);
-  }
-
+  for (let v = min; v <= max; v++) items.push(v);
   const ITEM_H = 44;
 
   useEffect(() => {
     const el = colRef.current;
     if (!el) return;
-    const idx = items.findIndex(v => Math.abs(v - value) < step * 0.5);
+    const idx = items.indexOf(value);
     if (idx >= 0) el.scrollTop = idx * ITEM_H;
   }, []);
 
   function onScroll() {
     const el = colRef.current;
     if (!el) return;
-    const i = Math.round(el.scrollTop / ITEM_H);
-    const v = items[Math.min(i, items.length - 1)];
-    if (v !== undefined) onChange(v);
-  }
-
-  function fmtVal(v) {
-    if (pad > 0) return String(v).padStart(pad, '0');
-    return String(v);
+    const i = Math.min(Math.round(el.scrollTop / ITEM_H), items.length - 1);
+    if (items[i] !== undefined) onChange(items[i]);
   }
 
   return (
-    <div className="wdial-cont">
+    <div className="wdial-cont" style={{ flex: '0 0 48px' }}>
       <div className="wdial-bar" />
-      <div className="wdial-col" ref={colRef} onScroll={onScroll}>
+      <div className="wdial-col" ref={colRef} onScroll={onScroll} style={{ width: '48px' }}>
         {items.map(v => (
-          <div key={v} className="wdial-item">{fmtVal(v)}</div>
+          <div key={v} className="wdial-item">{v}</div>
         ))}
       </div>
       <div className="wdial-fade" />
@@ -49,43 +40,41 @@ function WDial({ value, onChange, min, max, step = 1, pad = 0 }) {
 export default function WeightModal() {
   const {
     db, dispatch, saveDB, showToast,
-    openModal, setOpenModal,
-    editId, setEditId, editType, setEditType,
-    uid,
+    setOpenModal, editId, setEditId, setEditType, uid,
   } = useApp();
 
   const isEdit = !!editId;
   const existing = isEdit ? db.weights.find(w => w.id === editId) : null;
 
-  // kg stored as integer parts for dial: integer part + decimal part (0-999)
-  const [kgInt, setKgInt] = useState(3);
-  const [kgDec, setKgDec] = useState(0); // 0-999
-  const [time, setTime] = useState(() => nowISO().slice(0, 16)); // datetime-local format
+  // 5 independent digit dials: d0=tens, d1=units, d2-d4=decimal 3 places
+  const [d0, setD0] = useState(0); // 0-3
+  const [d1, setD1] = useState(3); // 0-9
+  const [d2, setD2] = useState(5); // 0-9
+  const [d3, setD3] = useState(0); // 0-9
+  const [d4, setD4] = useState(0); // 0-9
+  const [time, setTime] = useState(() => nowISO());
 
   useEffect(() => {
     if (existing) {
-      const kg = parseFloat(existing.kg) || 3;
-      setKgInt(Math.floor(kg));
-      setKgDec(Math.round((kg - Math.floor(kg)) * 1000));
-      // existing.time is ISO UTC; convert to local datetime-local format
+      const kg = parseFloat(existing.kg) || 3.5;
+      setD0(Math.floor(kg / 10));
+      setD1(Math.floor(kg) % 10);
+      const dec = Math.round((kg - Math.floor(kg)) * 1000);
+      setD2(Math.floor(dec / 100));
+      setD3(Math.floor((dec % 100) / 10));
+      setD4(dec % 10);
       setTime(existing.time ? toLocal(existing.time) : nowISO());
     } else {
-      setKgInt(3);
-      setKgDec(0);
+      setD0(0); setD1(3); setD2(5); setD3(0); setD4(0);
       setTime(nowISO());
     }
   }, [editId]);
 
-  const kg = (kgInt + kgDec / 1000).toFixed(3);
+  const kg = (d0 * 10 + d1 + d2 / 10 + d3 / 100 + d4 / 1000).toFixed(3);
 
-  function close() {
-    setOpenModal(null);
-    setEditId(null);
-    setEditType(null);
-  }
+  function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
-    // Convert datetime-local string back to ISO
     const isoTime = new Date(time).toISOString();
     const newWeights = [...db.weights];
     if (isEdit) {
@@ -95,7 +84,7 @@ export default function WeightModal() {
     } else {
       newWeights.push({ id: uid(), kg: parseFloat(kg), time: isoTime });
     }
-    newWeights.sort((a,b) => new Date(a.time) - new Date(b.time));
+    newWeights.sort((a, b) => new Date(a.time) - new Date(b.time));
     const newDB = { ...db, weights: newWeights };
     dispatch({ type: 'SET_WEIGHTS', payload: newWeights });
     await saveDB(newDB);
@@ -106,20 +95,26 @@ export default function WeightModal() {
   return (
     <div className="mbg open" onClick={close}>
       <div className="msheet" onClick={e => e.stopPropagation()}>
-        <div className="mhandle"></div>
+        <div className="mhandle" />
         <div className="mtitle">{isEdit ? '체중 수정' : '체중 기록'}</div>
         <div className="mbody">
-          <div className="wdial-wrap">
-            <WDial value={kgInt} onChange={setKgInt} min={0} max={30} />
+          {/* 5-digit dial: 0 0 . 0 0 0 kg */}
+          <div className="wdial-wrap" style={{ gap: '2px' }}>
+            <WDial value={d0} onChange={setD0} min={0} max={3} />
+            <WDial value={d1} onChange={setD1} min={0} max={9} />
             <div className="wdial-sep">.</div>
-            <WDial value={kgDec} onChange={setKgDec} min={0} max={999} pad={3}/>
+            <WDial value={d2} onChange={setD2} min={0} max={9} />
+            <WDial value={d3} onChange={setD3} min={0} max={9} />
+            <WDial value={d4} onChange={setD4} min={0} max={9} />
             <div className="wdial-unit">kg</div>
           </div>
-          <div style={{ textAlign:'center', fontSize:'22px', fontWeight:700, color:'var(--ink)', marginBottom:'8px' }}>{kg} kg</div>
+          <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: 'var(--ink)', marginBottom: '8px' }}>
+            {kg} kg
+          </div>
 
-          <div className="fld" style={{marginTop:16}}>
+          <div className="fld" style={{ marginTop: 16 }}>
             <div className="flbl">날짜/시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)}/>
+            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
           </div>
         </div>
         <div className="mfoot">
