@@ -7,6 +7,12 @@ import {
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
 
+// "직전" 카드는 가로 폭이 좁아 "23시간 59분 전"처럼 긴 경과시간이 잘릴 수 있음.
+// 카드 안에서 항상 안 잘리도록: 끝의 " 전"을 생략(라벨이 이미 "직전"이라 의미는 충분히 전달됨) + 폰트 축소.
+function agoShort(iso) {
+  return agoStr(iso).replace(/ 전$/, '');
+}
+
 export default function HomePanel() {
   const {
     db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
@@ -172,7 +178,7 @@ export default function HomePanel() {
             <div className="slbl">수유</div>
             <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{lastFeed ? agoStr(lastFeed.start || lastFeed.time) : '—'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
           <div className="ssub">{lastFeed ? fmt(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditDiaper(lastDiaper)}>
@@ -180,7 +186,7 @@ export default function HomePanel() {
             <div className="slbl">기저귀</div>
             <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{lastDiaper ? agoStr(lastDiaper.time) : '—'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
           <div className="ssub">{lastDiaper ? fmt(lastDiaper.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditSleep(lastSleep)}>
@@ -188,7 +194,7 @@ export default function HomePanel() {
             <div className="slbl">수면</div>
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{lastSleep ? agoStr(lastSleep.start) : '—'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastSleep ? agoShort(lastSleep.start) : '—'}</div>
           <div className="ssub">{lastSleep ? durStr(new Date(lastSleep.end) - new Date(lastSleep.start)) : '기록 없음'}</div>
         </div>
       </div>
@@ -198,8 +204,8 @@ export default function HomePanel() {
       <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'20px' }}>
         <div className="sc" onClick={() => setDetail24('feed')}>
           <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
-          <div className="sval" style={{ fontSize:'15px' }}>{feed24.length}</div>
-          <div className="ssub">{feedMl > 0 ? `섭취 ${feedMl}ml` : '회'}</div>
+          <div className="sval" style={{ fontSize:'15px' }}>{feed24.length}회</div>
+          <div className="ssub">{feedMl > 0 ? `섭취 ${feedMl}ml` : (feed24.length > 0 ? ' ' : '기록 없음')}</div>
         </div>
         <div className="sc" onClick={() => setDetail24('diaper')}>
           <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
