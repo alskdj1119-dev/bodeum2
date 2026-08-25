@@ -66,7 +66,7 @@ export default function TempModal() {
   const accentColor = isFever ? '#E05A4E' : 'var(--cw)';
 
   return (
-    <div className="mbg open" onClick={close}>
+    <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: accentColor, opacity: 0.6 }} />
         <div className="mtitle" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

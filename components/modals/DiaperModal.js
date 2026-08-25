@@ -86,7 +86,7 @@ export default function DiaperModal() {
   const showColor = type === 'soiled' || type === 'both';
 
   return (
-    <div className="mbg open" onClick={close}>
+    <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cd)', opacity: 0.6 }} />
         <div className="mtitle" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

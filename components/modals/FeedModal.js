@@ -32,6 +32,7 @@ export default function FeedModal() {
   const [subtype, setSubtype] = useState('direct');
   const [side, setSide] = useState('left');
   const [amount, setAmount] = useState('');
+  const [consumedAmount, setConsumedAmount] = useState('');
   const [note, setNote] = useState('');
   const [author, setAuthor] = useState('mom');
   const [start, setStart] = useState('');
@@ -43,6 +44,7 @@ export default function FeedModal() {
       setSubtype(existing.subtype || 'direct');
       setSide(existing.side || 'left');
       setAmount(existing.amount != null ? String(existing.amount) : '');
+      setConsumedAmount(existing.consumedAmount != null ? String(existing.consumedAmount) : '');
       setNote(existing.note || '');
       setAuthor(existing.author || '');
       setStart(existing.start ? toLocal(existing.start) : '');
@@ -52,6 +54,7 @@ export default function FeedModal() {
       setSubtype('direct');
       setSide('left');
       setAmount('');
+      setConsumedAmount('');
       setNote('');
       setAuthor('mom');
       setStart('');
@@ -90,6 +93,7 @@ export default function FeedModal() {
         subtype: type === 'breast' ? subtype : undefined,
         side: isDirectBreast ? side : undefined,
         amount: amount ? parseFloat(amount) : undefined,
+        consumedAmount: (!isDirectBreast && consumedAmount !== '') ? parseFloat(consumedAmount) : undefined,
         note: note || undefined,
         author: author || undefined,
         start: fromLocal(start),
@@ -125,7 +129,7 @@ export default function FeedModal() {
   }
 
   return (
-    <div className="mbg open" onClick={close}>
+    <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         {/* Colored handle bar reflects feed type */}
         <div className="mhandle" style={{ background: fc.main, opacity: 0.7 }} />
@@ -189,7 +193,14 @@ export default function FeedModal() {
                 onChange={e => setAmount(e.target.value)} placeholder="예: 120" />
             </div>
           )}
-          {/* 섭취량은 이 화면에서 입력하지 않음 — 타이머 종료 시 팝업으로 입력 */}
+          {/* 섭취량 — 최초 기록 시엔 입력하지 않음(타이머 종료 시 팝업으로 입력), 이미 기록된 건을 수정할 때만 수정 가능 */}
+          {isEdit && !isDirectBreast && (
+            <div className="fld">
+              <div className="flbl">섭취량 (ml)</div>
+              <input className="finp" type="number" value={consumedAmount}
+                onChange={e => setConsumedAmount(e.target.value)} placeholder="예: 100" />
+            </div>
+          )}
 
           {/* Author — 직수 새 기록: 엄마 고정 표시, 그 외: 선택 가능 */}
           {isDirectBreast && !isEdit ? (

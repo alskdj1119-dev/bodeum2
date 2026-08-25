@@ -274,7 +274,6 @@ export default function Home24hModal({ type, onClose }) {
     <div
       className={`mbg${open ? ' open' : ''}`}
       style={{ display: 'flex' }}
-      onClick={e => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
         className="msheet"

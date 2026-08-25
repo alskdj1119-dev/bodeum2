@@ -81,7 +81,7 @@ export default function SleepModal() {
   }
 
   return (
-    <div className="mbg open" onClick={close}>
+    <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cs)', opacity: 0.6 }} />
         <div className="mtitle" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
