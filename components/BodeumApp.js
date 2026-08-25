@@ -9,7 +9,6 @@ import HomePanel from './panels/HomePanel';
 import FeedPanel from './panels/FeedPanel';
 import DiaperPanel from './panels/DiaperPanel';
 import SleepPanel from './panels/SleepPanel';
-import WeightPanel from './panels/WeightPanel';
 import SettingsPanel from './panels/SettingsPanel';
 import ChangelogPanel from './panels/ChangelogPanel';
 import RequestsPanel from './panels/RequestsPanel';
@@ -22,8 +21,8 @@ import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'weight', 'settings', 'changelog', 'requests', 'stats', 'health'];
-const SUB_PANELS = ['changelog', 'requests', 'stats', 'health'];
+const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests'];
+const SUB_PANELS = ['changelog', 'requests'];
 
 function sendToSW(lastFeedTime, activeFeedStart, babyName, lastDiaperTime, activeSleepStart) {
   if (!('serviceWorker' in navigator)) return;
@@ -174,9 +173,17 @@ export default function BodeumApp() {
     });
   }, [familyCode]);
 
-  // Swipe back gesture
+  // Swipe back gesture (left-edge swipe)
+  // home, settings → no swipe back (top-level tabs)
+  // feed/diaper/sleep/weight → back to home
+  // stats/health/changelog/requests → back to settings
+  const SWIPE_BACK_TARGET = {
+    feed: 'home', diaper: 'home', sleep: 'home',
+    changelog: 'settings', requests: 'settings',
+  };
+
   function handleTouchStart(e) {
-    if (e.touches[0].clientX < 30) {
+    if (SWIPE_BACK_TARGET[activeTab] && e.touches[0].clientX < 30) {
       touchStartX.current = e.touches[0].clientX;
     } else {
       touchStartX.current = null;
@@ -187,7 +194,8 @@ export default function BodeumApp() {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     if (dx > 60) {
-      goTab('home', 'back');
+      const dest = SWIPE_BACK_TARGET[activeTab];
+      if (dest) goTab(dest, 'back');
     }
     touchStartX.current = null;
   }
@@ -198,8 +206,7 @@ export default function BodeumApp() {
   const showBack = isSubPanel;
 
   function handleBack() {
-    if (activeTab === 'changelog' || activeTab === 'requests' || activeTab === 'stats' || activeTab === 'health') goTab('settings', 'back');
-    else if (activeTab === 'settings') goTab('home', 'back');
+    if (activeTab === 'changelog' || activeTab === 'requests') goTab('settings', 'back');
     else goTab('home', 'back');
   }
 
@@ -214,7 +221,6 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('feed')}><FeedPanel /></div>
         <div className="panel" ref={panelRef('diaper')}><DiaperPanel /></div>
         <div className="panel" ref={panelRef('sleep')}><SleepPanel /></div>
-        <div className="panel" ref={panelRef('weight')}><WeightPanel /></div>
         <div className="panel" ref={panelRef('settings')}><SettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
         <div className="panel" ref={panelRef('requests')}><RequestsPanel /></div>

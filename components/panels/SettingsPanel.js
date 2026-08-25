@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 
 export default function SettingsPanel() {
@@ -12,6 +12,8 @@ export default function SettingsPanel() {
     birthTime: '',
     birthWeight: '',
   });
+  // 사용자가 폼을 직접 수정했으면 baby 상태 변경시 덮어쓰지 않음
+  const dirtyRef = useRef(false);
 
   const [ns, setNs] = useState({
     diaperAlertH: 3,
@@ -21,6 +23,8 @@ export default function SettingsPanel() {
   });
 
   useEffect(() => {
+    // 사용자가 직접 수정 중이면 baby 변경으로 폼 초기화 방지
+    if (dirtyRef.current) return;
     setForm({
       name: baby.name || '',
       prenatal: baby.prenatal || '',
@@ -34,12 +38,13 @@ export default function SettingsPanel() {
     if (notifSettings) setNs({ ...notifSettings });
   }, [notifSettings]);
 
-  function set(k, v) { setForm(p => ({ ...p, [k]: v })); }
+  function set(k, v) { dirtyRef.current = true; setForm(p => ({ ...p, [k]: v })); }
   function setN(k, v) { setNs(p => ({ ...p, [k]: v })); }
 
   function save() {
     const nb = { ...baby, ...form, name: (form.name || '').trim() || '아이' };
     saveBaby(nb);
+    dirtyRef.current = false; // 저장 후 dirty 해제
     showToast('아이 정보가 저장됐어요 ✓');
   }
 
@@ -153,31 +158,6 @@ export default function SettingsPanel() {
 
       {/* ─── 메뉴 ─── */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>기타</p>
-      <button className="settmenu" onClick={() => goTab('stats', 'forward')}>
-        <div className="settmenu-ico" style={{ background:'var(--fw)' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--cf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-        </div>
-        <div className="settmenu-inf">
-          <div className="settmenu-title">통계 분석</div>
-          <div className="settmenu-sub">수유·수면·기저귀 패턴 분석</div>
-        </div>
-        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </button>
-      <button className="settmenu" onClick={() => goTab('health', 'forward')}>
-        <div className="settmenu-ico" style={{ background:'#FFF0EE' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#E05A4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a5 5 0 0 1 5 5c0 5-5 13-5 13S7 12 7 7a5 5 0 0 1 5-5z"/>
-            <circle cx="12" cy="7" r="2"/>
-          </svg>
-        </div>
-        <div className="settmenu-inf">
-          <div className="settmenu-title">건강 기록</div>
-          <div className="settmenu-sub">체온 기록 및 예방접종 스케줄</div>
-        </div>
-        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </button>
       <button className="settmenu" onClick={() => goTab('changelog', 'forward')}>
         <div className="settmenu-ico" style={{ background:'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>

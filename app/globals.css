@@ -41,7 +41,7 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 
 /* ── CONTENT & PANELS ── */
 .content{flex:1;overflow:hidden;-webkit-overflow-scrolling:touch;position:relative}
-.panel{display:block;padding:20px;padding-bottom:100px;position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(100%);opacity:0;pointer-events:none;will-change:transform,opacity}
+.panel{display:block;padding:20px;padding-bottom:100px;position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;transform:translateX(100%);opacity:0;pointer-events:none;will-change:transform,opacity}
 .panel.active{transform:translateX(0);opacity:1;pointer-events:auto}
 .panel.slide-out-right{transform:translateX(100%);opacity:0;pointer-events:none}
 .panel.slide-out-left{transform:translateX(-30%);opacity:0;pointer-events:none}
@@ -51,8 +51,8 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 
 /* ── BOTTOM NAV ── */
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surf);border-top:1px solid var(--bdr);display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom,0)}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 8px;border:none;background:none;cursor:pointer;color:var(--muted);font-family:var(--sans);font-size:10px;font-weight:400;transition:color .15s, transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent}
-.nb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 7px;border:none;background:none;cursor:pointer;color:var(--muted);font-family:var(--sans);font-size:9px;font-weight:400;transition:color .15s, transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent}
+.nb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nb.active{color:var(--sage)}
 .nb:active{transform:scale(.82)}
 .nb.tab-bounce{animation:tab-bounce .3s cubic-bezier(.34,1.56,.64,1)}

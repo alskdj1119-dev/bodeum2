@@ -2,11 +2,18 @@
 import { useApp } from '../../lib/store';
 import { durStr, directFeedMl } from '../../lib/helpers';
 
-function p2(n) { return n < 10 ? '0' + n : '' + n; }
+// ──────────── 날짜 범위 헬퍼 (00:00~23:59 기준) ────────────
+function dayRange(offsetDays) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offsetDays);
+  return { start: d.getTime(), end: d.getTime() + 86400000 - 1 };
+}
 
-// 날짜 범위 필터
-function inLast(isoTime, hours) {
-  return (Date.now() - new Date(isoTime).getTime()) <= hours * 3600 * 1000;
+function inDay(isoTime, offsetDays) {
+  const t = new Date(isoTime).getTime();
+  const { start, end } = dayRange(offsetDays);
+  return t >= start && t <= end;
 }
 
 // 낮잠(06-22) vs 밤잠(22-06)
@@ -15,7 +22,7 @@ function isNight(isoTime) {
   return h >= 22 || h < 6;
 }
 
-// 수유 간격 평균 계산 (완료된 수유 기준)
+// 수유 간격 평균
 function avgIntervalMin(feedList) {
   const sorted = [...feedList]
     .filter(f => f.end)
@@ -28,7 +35,54 @@ function avgIntervalMin(feedList) {
   return Math.round(total / (sorted.length - 1) / 60000);
 }
 
-// 간단 막대 차트 (CSS)
+function totalMl(list) {
+  return list.reduce((acc, f) => {
+    let amt = f.consumedAmount != null ? f.consumedAmount : f.amount;
+    if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
+      amt = directFeedMl(f.start, f.end);
+    }
+    return acc + (amt || 0);
+  }, 0);
+}
+
+function fmtMin(m) {
+  if (!m) return '—';
+  const h = Math.floor(m / 60), mn = m % 60;
+  return h > 0 ? `${h}시간 ${mn}분` : `${mn}분`;
+}
+
+// 최근 7일 (오늘 포함 7일)
+function last7Days() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+  return days;
+}
+
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+function dayLabel(d) { return DAY_LABELS[d.getDay()]; }
+
+// ──────────── 막대 차트 (수유 전용 — 횟수 + ml 표시) ────────────
+function FeedBar({ label, count, ml, maxCount, color }) {
+  const pct = maxCount > 0 ? Math.min(100, (count / maxCount) * 100) : 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+      <div style={{ width: 28, fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>{label}</div>
+      <div style={{ flex: 1, height: 10, background: 'var(--bdr)', borderRadius: 5, overflow: 'hidden' }}>
+        <div style={{ width: pct + '%', height: '100%', background: color, borderRadius: 5, transition: 'width .4s' }} />
+      </div>
+      <div style={{ minWidth: 64, fontSize: 10, color: 'var(--ink)', textAlign: 'right', flexShrink: 0 }}>
+        {count}회{ml > 0 ? ` · ${ml}ml` : ''}
+      </div>
+    </div>
+  );
+}
+
+// ──────────── 막대 차트 (일반) ────────────
 function MiniBar({ label, value, max, color, unit = '' }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
@@ -44,94 +98,66 @@ function MiniBar({ label, value, max, color, unit = '' }) {
   );
 }
 
-// 최근 7일 날짜 라벨
-function last7Days() {
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - i);
-    days.push(d);
-  }
-  return days;
-}
-
 export default function StatsPanel() {
   const { db } = useApp();
   const { feeds, diapers, sleeps } = db;
 
-  const h24 = 24, h48 = 48, h168 = 168; // 1d, 2d, 7d
+  // ══ 수유 (오늘/어제/7일 — 당일 00:00~23:59 기준) ══
+  const feedToday = feeds.filter(f => inDay(f.start || f.time, 0));
+  const feedYest  = feeds.filter(f => inDay(f.start || f.time, -1));
 
-  // === 수유 통계 ===
-  const feed24 = feeds.filter(f => inLast(f.start || f.time, h24));
-  const feed48 = feeds.filter(f => inLast(f.start || f.time, h48) && !inLast(f.start || f.time, h24));
-  const feed7d  = feeds.filter(f => inLast(f.start || f.time, h168));
+  // 7일 평균: 오늘 포함 최근 7일
+  const feed7d = feeds.filter(f => {
+    const t = new Date(f.start || f.time).getTime();
+    const { start } = dayRange(-6);
+    return t >= start;
+  });
 
-  function totalMl(list) {
-    return list.reduce((acc, f) => {
-      let amt = f.consumedAmount != null ? f.consumedAmount : f.amount;
-      if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
-        amt = directFeedMl(f.start, f.end);
-      }
-      return acc + (amt || 0);
-    }, 0);
-  }
+  const mlToday = Math.round(totalMl(feedToday));
+  const mlYest  = Math.round(totalMl(feedYest));
+  const intToday = avgIntervalMin(feedToday);
+  const intYest  = avgIntervalMin(feedYest);
+  const int7d    = avgIntervalMin(feed7d);
 
-  const ml24 = Math.round(totalMl(feed24));
-  const ml48 = Math.round(totalMl(feed48));
-  const interval24 = avgIntervalMin(feed24);
-  const interval48 = avgIntervalMin(feed48);
-  const interval7d  = avgIntervalMin(feed7d);
-
-  // 최근 7일 수유 횟수 차트
+  // 7일 일별 수유 횟수 + ml
   const days7 = last7Days();
   const feedByDay = days7.map(d => {
     const start = d.getTime(), end = start + 86400000;
     return feeds.filter(f => {
       const t = new Date(f.start || f.time).getTime();
       return t >= start && t < end;
-    }).length;
+    });
   });
-  const maxFeedDay = Math.max(...feedByDay, 1);
+  const feedCountByDay = feedByDay.map(arr => arr.length);
+  const feedMlByDay    = feedByDay.map(arr => Math.round(totalMl(arr)));
+  const maxFeedDay = Math.max(...feedCountByDay, 1);
 
-  // === 수면 통계 ===
-  const done24 = sleeps.filter(s => s.end && inLast(s.start, h24));
-  const done48 = sleeps.filter(s => s.end && inLast(s.start, h48) && !inLast(s.start, h24));
+  // ══ 수면 ══
+  const sleepToday = sleeps.filter(s => s.end && inDay(s.start, 0));
+  const sleepYest  = sleeps.filter(s => s.end && inDay(s.start, -1));
 
-  const sleepMs24 = done24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
-  const sleepMs48 = done48.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
+  const sleepMsToday = sleepToday.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
+  const sleepMsYest  = sleepYest.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
 
-  const nap24 = done24.filter(s => !isNight(s.start));
-  const night24 = done24.filter(s => isNight(s.start));
-  const napMs = nap24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
+  const nap24   = sleepToday.filter(s => !isNight(s.start));
+  const night24 = sleepToday.filter(s => isNight(s.start));
+  const napMs   = nap24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
   const nightMs = night24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
 
-  // 최근 7일 수면 시간 차트
   const sleepByDay = days7.map(d => {
     const start = d.getTime(), end = start + 86400000;
     const ms = sleeps
       .filter(s => s.end && new Date(s.start).getTime() >= start && new Date(s.start).getTime() < end)
       .reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
-    return Math.round(ms / 3600000 * 10) / 10; // hours
+    return Math.round(ms / 3600000 * 10) / 10;
   });
   const maxSleepDay = Math.max(...sleepByDay, 1);
 
-  // === 기저귀 통계 ===
-  const diap24 = diapers.filter(d => inLast(d.time, h24));
-  const diap48 = diapers.filter(d => inLast(d.time, h48) && !inLast(d.time, h24));
-
-  const wet24    = diap24.filter(d => d.type === 'wet' || d.type === 'both').length;
-  const soiled24 = diap24.filter(d => d.type === 'soiled' || d.type === 'both').length;
-
-  function fmtMin(m) {
-    if (!m) return '—';
-    const h = Math.floor(m / 60), mn = m % 60;
-    return h > 0 ? `${h}시간 ${mn}분` : `${mn}분`;
-  }
-
-  // 요일 라벨
-  const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-  function dayLabel(d) { return DAY_LABELS[d.getDay()]; }
+  // ══ 기저귀 ══
+  const diapToday = diapers.filter(d => inDay(d.time, 0));
+  const diapYest  = diapers.filter(d => inDay(d.time, -1));
+  const wetToday    = diapToday.filter(d => d.type === 'wet' || d.type === 'both').length;
+  const soiledToday = diapToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
 
   return (
     <>
@@ -142,9 +168,9 @@ export default function StatsPanel() {
       <div className="sc" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {[
-            { label: '오늘', count: feed24.length, ml: ml24, interval: interval24 },
-            { label: '어제', count: feed48.length, ml: ml48, interval: interval48 },
-            { label: '7일 평균', count: Math.round(feed7d.length / 7 * 10) / 10, ml: null, interval: interval7d },
+            { label: '오늘', count: feedToday.length, ml: mlToday, interval: intToday },
+            { label: '어제', count: feedYest.length,  ml: mlYest,  interval: intYest },
+            { label: '7일 평균', count: Math.round(feed7d.length / 7 * 10) / 10, ml: null, interval: int7d },
           ].map((s, i) => (
             <div key={i} style={{ borderRight: i < 2 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>{s.label}</div>
@@ -156,9 +182,9 @@ export default function StatsPanel() {
           ))}
         </div>
 
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase' }}>최근 7일 수유 횟수</div>
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>최근 7일 수유 횟수</div>
         {days7.map((d, i) => (
-          <MiniBar key={i} label={dayLabel(d)} value={feedByDay[i]} max={maxFeedDay} color="var(--cf)" unit="회" />
+          <FeedBar key={i} label={dayLabel(d)} count={feedCountByDay[i]} ml={feedMlByDay[i]} maxCount={maxFeedDay} color="var(--cf)" />
         ))}
       </div>
 
@@ -167,8 +193,8 @@ export default function StatsPanel() {
       <div className="sc" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {[
-            { label: '오늘 총 수면', val: sleepMs24 > 0 ? durStr(sleepMs24) : '—', sub: done24.length + '회' },
-            { label: '어제 총 수면', val: sleepMs48 > 0 ? durStr(sleepMs48) : '—', sub: done48.length + '회' },
+            { label: '오늘 총 수면', val: sleepMsToday > 0 ? durStr(sleepMsToday) : '—', sub: sleepToday.length + '회' },
+            { label: '어제 총 수면', val: sleepMsYest  > 0 ? durStr(sleepMsYest)  : '—', sub: sleepYest.length  + '회' },
           ].map((s, i) => (
             <div key={i} style={{ borderRight: i < 1 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>{s.label}</div>
@@ -178,21 +204,20 @@ export default function StatsPanel() {
           ))}
         </div>
 
-        {/* 낮잠/밤잠 구분 */}
         <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>
           <div style={{ flex: 1, background: 'var(--fw)', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: 'var(--muted)' }}>낮잠</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)' }}>낮잠 (오늘)</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cf)' }}>{napMs > 0 ? durStr(napMs) : '—'}</div>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>{nap24.length}회</div>
           </div>
           <div style={{ flex: 1, background: 'var(--sw)', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: 'var(--muted)' }}>밤잠</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)' }}>밤잠 (오늘)</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cs)' }}>{nightMs > 0 ? durStr(nightMs) : '—'}</div>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>{night24.length}회</div>
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase' }}>최근 7일 수면 시간</div>
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>최근 7일 수면 시간</div>
         {days7.map((d, i) => (
           <MiniBar key={i} label={dayLabel(d)} value={sleepByDay[i]} max={maxSleepDay} color="var(--cs)" unit="h" />
         ))}
@@ -203,10 +228,10 @@ export default function StatsPanel() {
       <div className="sc" style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, textAlign: 'center' }}>
           {[
-            { label: '오늘', total: diap24.length, wet: wet24, soiled: soiled24 },
-            { label: '어제', total: diap48.length,
-              wet: diap48.filter(d => d.type === 'wet' || d.type === 'both').length,
-              soiled: diap48.filter(d => d.type === 'soiled' || d.type === 'both').length },
+            { label: '오늘', total: diapToday.length, wet: wetToday, soiled: soiledToday },
+            { label: '어제', total: diapYest.length,
+              wet: diapYest.filter(d => d.type === 'wet' || d.type === 'both').length,
+              soiled: diapYest.filter(d => d.type === 'soiled' || d.type === 'both').length },
           ].map((s, i) => (
             <div key={i} style={{ borderRight: i < 1 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>{s.label}</div>
