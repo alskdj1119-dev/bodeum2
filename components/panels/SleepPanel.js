@@ -1,11 +1,11 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, directFeedMl } from '../../lib/helpers';
+import { fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr } from '../../lib/helpers';
 
 const PL = { crib:'침대', arms:'품', cushion:'원형쿠션' };
 
 export default function SleepPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, linkedSleepId, stopActiveSleep } = useApp();
   const { sleeps, feeds } = db;
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
@@ -36,40 +36,6 @@ export default function SleepPanel() {
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
-  function stopSleep() {
-    if (!activeSleep) return;
-    const endTime = new Date().toISOString();
-    let newSleeps = sleeps.map(s => s.id === activeSleep.id ? { ...s, end: endTime } : s);
-    let newFeeds = feeds;
-    let pendingFeedId = null;
-
-    if (isLinked) {
-      const activeFeed = feeds.find(f => f.start && !f.end);
-      if (activeFeed) {
-        const isDirect = activeFeed.type === 'breast' && activeFeed.subtype === 'direct';
-        newFeeds = feeds.map(f => {
-          if (f.id !== activeFeed.id) return f;
-          const upd = { ...f, end: endTime };
-          if (isDirect) upd.amount = directFeedMl(f.start, endTime);
-          return upd;
-        });
-        // 모든 수유 타입: 타이머 종료 시 섭취량 입력 팝업 (필수)
-        pendingFeedId = activeFeed.id;
-      }
-      setLinkedSleepId(null);
-      try { localStorage.removeItem('bodeum_linked_sleep'); } catch(_) {}
-    }
-
-    const newDB = { ...db, sleeps: newSleeps, feeds: newFeeds };
-    dispatch({ type: 'SET_ALL', payload: newDB });
-    if (pendingFeedId) {
-      setPendingConsumedFeedId(pendingFeedId);
-      saveDB(newDB).then(() => setOpenModal('consumed'));
-    } else {
-      saveDB(newDB);
-    }
-  }
-
   return (
     <>
       {activeSleep && (
@@ -79,7 +45,7 @@ export default function SleepPanel() {
             <div className="slivelbl">{isLinked ? '수면+수유 중' : '수면 중'}</div>
             <div className="slivetimer">{timerStr(sleepTimerMs)}</div>
           </div>
-          <button className="sstop" style={{ background:'var(--cs)' }} onClick={stopSleep}>종료</button>
+          <button className="sstop" style={{ background:'var(--cs)' }} onClick={stopActiveSleep}>종료</button>
         </div>
       )}
 

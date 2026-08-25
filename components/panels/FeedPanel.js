@@ -7,7 +7,7 @@ const TSU = { direct:'직수', pumped:'유축' };
 const TS = { left:'왼쪽', right:'오른쪽' };
 
 export default function FeedPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, linkedSleepId, stopActiveFeed } = useApp();
   const { feeds, sleeps } = db;
 
   const activeFeed = feeds.find(f => f.start && !f.end);
@@ -42,29 +42,6 @@ export default function FeedPanel() {
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
-  function stopFeed() {
-    if (!activeFeed) return;
-    const endTime = new Date().toISOString();
-    const isDirect = activeFeed.type === 'breast' && activeFeed.subtype === 'direct';
-    let newFeeds = feeds.map(f => {
-      if (f.id !== activeFeed.id) return f;
-      const upd = { ...f, end: endTime };
-      if (isDirect) upd.amount = directFeedMl(f.start, endTime);
-      return upd;
-    });
-    let newSleeps = sleeps;
-    if (linkedSleepId) {
-      newSleeps = sleeps.map(s => s.id === linkedSleepId && !s.end ? { ...s, end: endTime } : s);
-      setLinkedSleepId(null);
-      try { localStorage.removeItem('bodeum_linked_sleep'); } catch(_) {}
-    }
-    const newDB = { ...db, feeds: newFeeds, sleeps: newSleeps };
-    dispatch({ type: 'SET_ALL', payload: newDB });
-    // 모든 수유 타입: 타이머 종료 시 섭취량 입력 팝업 (필수)
-    setPendingConsumedFeedId(activeFeed.id);
-    saveDB(newDB).then(() => setOpenModal('consumed'));
-  }
-
   function feedLabel(f) {
     const base = TF[f.type] || '수유';
     if (f.subtype) return base + ' · ' + (TSU[f.subtype] || '');
@@ -93,7 +70,7 @@ export default function FeedPanel() {
             <div className="slivelbl">수유 중</div>
             <div className="slivetimer">{timerStr(feedTimerMs)}</div>
           </div>
-          <button className="sstop" style={{ background:'var(--cf)' }} onClick={stopFeed}>종료</button>
+          <button className="sstop" style={{ background:'var(--cf)' }} onClick={stopActiveFeed}>종료</button>
         </div>
       )}
 

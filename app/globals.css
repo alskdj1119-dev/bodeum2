@@ -110,7 +110,7 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 .daytitle{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.25}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
 .sr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.slbl{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.slbl{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.04em;text-transform:uppercase}
 .sico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center}
 .sico svg{width:17px;height:17px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sico.f{background:var(--fw)}.sico.f svg{stroke:var(--cf)}
@@ -118,7 +118,7 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 .sico.s{background:var(--sw)}.sico.s svg{stroke:var(--cs)}
 .sico.w{color:var(--cw)}
 .sval{font-size:20px;font-family:var(--serif);font-weight:700;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
-.ssub{font-size:11px;color:var(--muted);margin-top:2px}
+.ssub{font-size:12px;color:var(--muted);margin-top:2px}
 .seclbl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .qgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px}
 .tlitem{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--bdr)}
@@ -155,6 +155,14 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 .sliveinf{flex:1}.slivelbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .slivetimer{font-size:26px;font-family:var(--serif);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}
 .sstop{color:#fff;border:none;border-radius:100px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+
+/* ── LIVE BANNER (얇은 요약 버전, 홈 최상단용) ── */
+.slive-mini{background:var(--surf);border:1px solid var(--bdr);border-radius:100px;padding:8px 10px 8px 14px;display:flex;align-items:center;gap:8px;transition:opacity .3s, transform .3s cubic-bezier(.4,0,.2,1)}
+.slive-mini.banner-in{animation:banner-in .3s cubic-bezier(.32,1,.32,1) both}
+.slive-mini-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
+.slive-mini-lbl{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+.slive-mini-timer{flex:1;font-size:14px;font-family:var(--serif);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.slive-mini-stop{color:#fff;border:none;border-radius:100px;padding:6px 14px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .empty{text-align:center;padding:52px 20px;color:var(--muted)}
 .empty-ico{font-size:36px;margin-bottom:10px;opacity:.55}
 .empty-lbl{font-size:14px}

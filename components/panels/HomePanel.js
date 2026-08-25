@@ -1,14 +1,22 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { agoStr, durStr, fmt, fmtFull, elapsedStr, directFeedMl } from '../../lib/helpers';
+import { agoStr, durStr, fmt, fmtFull, elapsedStr, directFeedMl, timerStr } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
 
 function p2(n) { return n < 10 ? '0' + n : '' + n; }
 
 export default function HomePanel() {
-  const { db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab } = useApp();
+  const {
+    db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
+    feedTimerMs, sleepTimerMs, linkedSleepId, stopActiveFeed, stopActiveSleep,
+  } = useApp();
   const { feeds, diapers, sleeps, weights } = db;
+
+  // 진행 중인 타이머 (홈 최상단 요약 배너용)
+  const activeFeed = feeds.find(f => f.start && !f.end);
+  const activeSleep = sleeps.find(s => s.start && !s.end);
+  const isLinkedSleep = linkedSleepId && activeSleep && activeSleep.id === linkedSleepId;
 
   // 직전 24시간 상세 모달
   const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
@@ -112,10 +120,49 @@ export default function HomePanel() {
         </h1>
         {dayCount !== null && (
           <div style={{ textAlign:'right', fontSize:'11px', color:'var(--muted)', lineHeight:'1.5', paddingTop:'2px', flexShrink:0, marginLeft:'10px' }}>
-            <strong style={{ fontSize:'13px', color:'var(--sage)' }}>{baby.name || '아이'}이와</strong><br/>
+            <strong style={{ fontSize:'15px', color:'var(--sage)' }}>{baby.name || '아이'}이와</strong><br/>
             만난지 {dayCount}일차
           </div>
         )}
+      </div>
+
+      {/* 진행 중인 타이머 — 얇은 한 줄 요약 배너 */}
+      {(activeFeed || activeSleep) && (
+        <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'20px' }}>
+          {activeFeed && (
+            <div className="slive-mini banner-in">
+              <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
+              <span className="slive-mini-lbl">수유 중</span>
+              <span className="slive-mini-timer">{timerStr(feedTimerMs)}</span>
+              <button className="slive-mini-stop" style={{ background:'var(--cf)' }} onClick={stopActiveFeed}>종료</button>
+            </div>
+          )}
+          {activeSleep && (
+            <div className="slive-mini banner-in">
+              <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
+              <span className="slive-mini-lbl">{isLinkedSleep ? '수면+수유 중' : '수면 중'}</span>
+              <span className="slive-mini-timer">{timerStr(sleepTimerMs)}</span>
+              <button className="slive-mini-stop" style={{ background:'var(--cs)' }} onClick={stopActiveSleep}>종료</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 빠른 기록 */}
+      <p className="seclbl" style={{ marginBottom:'10px' }}>빠른 기록</p>
+      <div className="qgrid" style={{ marginBottom:'20px' }}>
+        <button className="qbtn qf" onClick={() => { setEditId(null); setEditType(null); setOpenModal('feed'); }}>
+          <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          수유
+        </button>
+        <button className="qbtn qd" onClick={() => { setEditId(null); setEditType(null); setOpenModal('diaper'); }}>
+          <svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg>
+          기저귀
+        </button>
+        <button className="qbtn qs" onClick={() => { setEditId(null); setEditType(null); setOpenModal('sleep'); }}>
+          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          수면
+        </button>
       </div>
 
       {/* 직전 — 클릭 시 수정 팝업 */}
@@ -126,7 +173,7 @@ export default function HomePanel() {
             <div className="slbl">수유</div>
             <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastFeed ? agoStr(lastFeed.start || lastFeed.time) : '—'}</div>
+          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{lastFeed ? agoStr(lastFeed.start || lastFeed.time) : '—'}</div>
           <div className="ssub">{lastFeed ? fmt(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditDiaper(lastDiaper)}>
@@ -134,7 +181,7 @@ export default function HomePanel() {
             <div className="slbl">기저귀</div>
             <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastDiaper ? agoStr(lastDiaper.time) : '—'}</div>
+          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{lastDiaper ? agoStr(lastDiaper.time) : '—'}</div>
           <div className="ssub">{lastDiaper ? fmt(lastDiaper.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditSleep(lastSleep)}>
@@ -142,7 +189,7 @@ export default function HomePanel() {
             <div className="slbl">수면</div>
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastSleep ? agoStr(lastSleep.start) : '—'}</div>
+          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{lastSleep ? agoStr(lastSleep.start) : '—'}</div>
           <div className="ssub">{lastSleep ? durStr(new Date(lastSleep.end) - new Date(lastSleep.start)) : '기록 없음'}</div>
         </div>
       </div>
@@ -152,17 +199,17 @@ export default function HomePanel() {
       <div className="sgrid" style={{ gridTemplateColumns:'1fr 1fr 1fr', marginBottom:'20px' }}>
         <div className="sc" onClick={() => setDetail24('feed')}>
           <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
-          <div className="sval" style={{ fontSize:'13px' }}>{feed24.length}</div>
+          <div className="sval" style={{ fontSize:'15px' }}>{feed24.length}</div>
           <div className="ssub">{feedMl > 0 ? `섭취 ${feedMl}ml` : '회'}</div>
         </div>
         <div className="sc" onClick={() => setDetail24('diaper')}>
           <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
-          <div className="sval" style={{ fontSize:'13px' }}>{diaper24.length}</div>
+          <div className="sval" style={{ fontSize:'15px' }}>{diaper24.length}</div>
           <div className="ssub">회</div>
         </div>
         <div className="sc" onClick={() => setDetail24('sleep')}>
           <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
-          <div className="sval" style={{ fontSize:'13px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
+          <div className="sval" style={{ fontSize:'15px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
           <div className="ssub">{sleep24.length}회</div>
         </div>
       </div>
@@ -183,27 +230,10 @@ export default function HomePanel() {
         </div>
       </div>
 
-      {/* 빠른 기록 */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>빠른 기록</p>
-      <div className="qgrid" style={{ marginBottom:'20px' }}>
-        <button className="qbtn qf" onClick={() => { setEditId(null); setEditType(null); setOpenModal('feed'); }}>
-          <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          수유
-        </button>
-        <button className="qbtn qd" onClick={() => { setEditId(null); setEditType(null); setOpenModal('diaper'); }}>
-          <svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg>
-          기저귀
-        </button>
-        <button className="qbtn qs" onClick={() => { setEditId(null); setEditType(null); setOpenModal('sleep'); }}>
-          <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          수면
-        </button>
-      </div>
-
       {/* 최근 기록 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>최근 기록</p>
       {recent.length === 0 ? (
-        <div className="empty"><div className="empty-lbl" style={{ fontSize:'13px' }}>아직 기록이 없어요 🌿</div></div>
+        <div className="empty"><div className="empty-lbl" style={{ fontSize:'15px' }}>아직 기록이 없어요 🌿</div></div>
       ) : (
         <div>
           {recent.map((e, i) => (
