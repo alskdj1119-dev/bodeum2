@@ -1,12 +1,17 @@
 'use client';
+import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import { agoStr, durStr, fmt, fmtFull, elapsedStr, directFeedMl } from '../../lib/helpers';
+import Home24hModal from '../modals/Home24hModal';
 
 function p2(n) { return n < 10 ? '0' + n : '' + n; }
 
 export default function HomePanel() {
-  const { db, baby, setOpenModal, setEditId, setEditType, goTab } = useApp();
+  const { db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab } = useApp();
   const { feeds, diapers, sleeps, weights } = db;
+
+  // 직전 24시간 상세 모달
+  const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
 
   // Day count
   let dayCount = null;
@@ -48,6 +53,32 @@ export default function HomePanel() {
   let wDiffG = null;
   if (latestW && prevW) wDiffG = Math.round((latestW.kg - prevW.kg) * 1000);
 
+  // 직전 카드 클릭 → 수정 팝업
+  function openEditFeed(f) {
+    if (!f) return;
+    setEditId(f.id);
+    setEditType('feeds');
+    setOpenModal('feed');
+  }
+  function openEditDiaper(d) {
+    if (!d) return;
+    setEditId(d.id);
+    setEditType('diapers');
+    setOpenModal('diaper');
+  }
+  function openEditSleep(s) {
+    if (!s) return;
+    setEditId(s.id);
+    setEditType('sleeps');
+    setOpenModal('sleep');
+  }
+
+  // 체중 카드 클릭 → 건강 > 체중 탭
+  function openHealthWeight() {
+    setHealthInitTab('weight');
+    goTab('health');
+  }
+
   // Recent timeline
   const all = [];
   feeds.forEach(f => {
@@ -58,12 +89,20 @@ export default function HomePanel() {
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : fAmt ? `${fAmt}ml` : '';
     const durTxt = (f.start && f.end) ? ' · ' + durStr(new Date(f.end) - new Date(f.start)) : '';
-    all.push({ t: 'f', time: t, label: '수유 — ' + (TF[f.type] || ''), sub: amtStr + durTxt });
+    all.push({ t: 'f', time: t, label: '수유 — ' + (TF[f.type] || ''), sub: amtStr + durTxt, raw: f });
   });
-  diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '' }));
-  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', time: s.start, label: '수면', sub: durStr(new Date(s.end) - new Date(s.start)) }));
+  diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d }));
+  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', time: s.start, label: '수면', sub: durStr(new Date(s.end) - new Date(s.start)), raw: s }));
   all.sort((a, b) => new Date(b.time) - new Date(a.time));
   const recent = all.slice(0, 10);
+
+  // 최근 기록 클릭 → 수정 팝업
+  function handleRecentClick(e) {
+    if (!e.raw) return;
+    if (e.t === 'f') openEditFeed(e.raw);
+    else if (e.t === 'd') openEditDiaper(e.raw);
+    else if (e.t === 's') openEditSleep(e.raw);
+  }
 
   return (
     <>
@@ -78,10 +117,10 @@ export default function HomePanel() {
         )}
       </div>
 
-      {/* 직전 */}
+      {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>직전</p>
       <div className="sgrid" style={{ gridTemplateColumns:'1fr 1fr 1fr', marginBottom:'20px' }}>
-        <div className="sc" onClick={() => goTab('feed')}>
+        <div className="sc" onClick={() => openEditFeed(lastFeed)}>
           <div className="sr">
             <div className="slbl">수유</div>
             <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
@@ -89,7 +128,7 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastFeed ? agoStr(lastFeed.start || lastFeed.time) : '—'}</div>
           <div className="ssub">{lastFeed ? fmt(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
         </div>
-        <div className="sc" onClick={() => goTab('diaper')}>
+        <div className="sc" onClick={() => openEditDiaper(lastDiaper)}>
           <div className="sr">
             <div className="slbl">기저귀</div>
             <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
@@ -97,7 +136,7 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastDiaper ? agoStr(lastDiaper.time) : '—'}</div>
           <div className="ssub">{lastDiaper ? fmt(lastDiaper.time) : '기록 없음'}</div>
         </div>
-        <div className="sc" onClick={() => goTab('sleep')}>
+        <div className="sc" onClick={() => openEditSleep(lastSleep)}>
           <div className="sr">
             <div className="slbl">수면</div>
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
@@ -107,29 +146,29 @@ export default function HomePanel() {
         </div>
       </div>
 
-      {/* 직전 24시간 */}
+      {/* 직전 24시간 — 클릭 시 상세 모달 */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>직전 24시간</p>
       <div className="sgrid" style={{ gridTemplateColumns:'1fr 1fr 1fr', marginBottom:'20px' }}>
-        <div className="sc" onClick={() => goTab('sleep')}>
+        <div className="sc" onClick={() => setDetail24('sleep')}>
           <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
           <div className="sval" style={{ fontSize:'13px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
           <div className="ssub">{sleep24.length}회</div>
         </div>
-        <div className="sc" onClick={() => goTab('feed')}>
+        <div className="sc" onClick={() => setDetail24('feed')}>
           <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
           <div className="sval" style={{ fontSize:'13px' }}>{feed24.length}</div>
           <div className="ssub">{feedMl > 0 ? `섭취 ${feedMl}ml` : '회'}</div>
         </div>
-        <div className="sc" onClick={() => goTab('diaper')}>
+        <div className="sc" onClick={() => setDetail24('diaper')}>
           <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
           <div className="sval" style={{ fontSize:'13px' }}>{diaper24.length}</div>
           <div className="ssub">회</div>
         </div>
       </div>
 
-      {/* 체중 */}
+      {/* 체중 — 클릭 시 건강 > 체중 탭 */}
       <div className="sgrid" style={{ gridTemplateColumns:'1fr', marginBottom:'20px' }}>
-        <div className="sc" onClick={() => goTab('weight')}>
+        <div className="sc" onClick={openHealthWeight}>
           <div className="sr"><div className="slbl">체중</div><div className="sico w"><svg viewBox="0 0 24 24" style={{ width:'17px', height:'17px', fill:'none', stroke:'var(--cw)', strokeWidth:'1.8', strokeLinecap:'round', strokeLinejoin:'round' }}><path d="M12 3a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4z"/><path d="M4 7h16l-2 14H6L4 7z"/></svg></div></div>
           <div className="sval">{latestW ? latestW.kg.toFixed(2) + ' kg' : '—'}</div>
           <div className="ssub">
@@ -160,14 +199,19 @@ export default function HomePanel() {
         </button>
       </div>
 
-      {/* 최근 기록 */}
+      {/* 최근 기록 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>최근 기록</p>
       {recent.length === 0 ? (
         <div className="empty"><div className="empty-lbl" style={{ fontSize:'13px' }}>아직 기록이 없어요 🌿</div></div>
       ) : (
         <div>
           {recent.map((e, i) => (
-            <div key={i} className="tlitem" style={{ animationDelay: `${i * 40}ms` }}>
+            <div
+              key={i}
+              className="tlitem"
+              style={{ animationDelay: `${i * 40}ms`, cursor: 'pointer' }}
+              onClick={() => handleRecentClick(e)}
+            >
               <div className={`tldot ${e.t}`}></div>
               <div className="tlinf">
                 <div className="tltype">{e.label}</div>
@@ -180,6 +224,11 @@ export default function HomePanel() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* 직전 24시간 상세 모달 */}
+      {detail24 && (
+        <Home24hModal type={detail24} onClose={() => setDetail24(null)} />
       )}
     </>
   );

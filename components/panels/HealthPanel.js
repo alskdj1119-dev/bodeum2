@@ -87,12 +87,20 @@ function buildWeightChart(weights) {
 
 // ──────────────────────────── 메인 컴포넌트 ────────────────────────────
 export default function HealthPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, activeTab, healthInitTab, setHealthInitTab } = useApp();
   const baby = useApp().baby;
   const { temps = [], weights = [] } = db;
 
   const [tab, setTab] = useState('temp'); // 'temp' | 'weight' | 'vaccine'
   const [vaccineStatus, setVaccineStatus] = useState({});
+
+  // 홈에서 체중 카드 클릭 시 체중 탭으로 자동 이동
+  useEffect(() => {
+    if (activeTab === 'health' && healthInitTab) {
+      setTab(healthInitTab);
+      setHealthInitTab(null);
+    }
+  }, [activeTab, healthInitTab]);
 
   useEffect(() => {
     try {

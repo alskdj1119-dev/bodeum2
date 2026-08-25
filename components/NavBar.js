@@ -1,6 +1,16 @@
 'use client';
 import { useApp } from '../lib/store';
 
+const TAB_ACTIVE_COLOR = {
+  home:     'var(--sage)',
+  feed:     'var(--cf)',
+  diaper:   'var(--cd)',
+  sleep:    'var(--cs)',
+  health:   'var(--cw)',
+  stats:    'var(--sage)',
+  settings: 'var(--sage)',
+};
+
 const TABS = [
   {
     id: 'home', label: '홈',
@@ -42,6 +52,7 @@ export default function NavBar() {
           key={tab.id}
           id={`nav-${tab.id}`}
           className={`nb${activeTab === tab.id ? ' active' : ''}`}
+          style={activeTab === tab.id ? { color: TAB_ACTIVE_COLOR[tab.id] } : {}}
           onClick={() => goTab(tab.id, tab.id === 'home' ? 'back' : 'forward')}
         >
           {tab.icon}
