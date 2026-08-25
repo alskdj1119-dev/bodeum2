@@ -76,7 +76,7 @@ export default function SleepPanel() {
                     <div className="esec">{timeRange}{place ? ' · ' + place : ''}</div>
                   </div>
                   <div className="etime">{fmtFull(s.start)}<br/><span className="eago">{elapsedStr(s.start)}</span></div>
-                  <button className="edel" onClick={e => { e.stopPropagation(); delSleep(s.id); }}>
+                  <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 수면 기록을 삭제하시겠어요?')) delSleep(s.id); }}>
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>

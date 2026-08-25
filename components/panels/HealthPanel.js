@@ -229,7 +229,7 @@ export default function HealthPanel() {
                         <div className="esub">{METHOD_LABEL[t.method] || t.method}{t.note ? ' · ' + t.note : ''}</div>
                       </div>
                       <div className="etime">{fmtFull(t.time)}</div>
-                      <button className="edel" onClick={e => { e.stopPropagation(); delTemp(t.id); }}>
+                      <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 체온 기록을 삭제하시겠어요?')) delTemp(t.id); }}>
                         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
                     </div>
@@ -269,7 +269,7 @@ export default function HealthPanel() {
                       <div className="epri">{w.kg.toFixed(3)} kg</div>
                     </div>
                     <div className="etime">{fmtFull(w.time)}</div>
-                    <button className="edel" onClick={e => { e.stopPropagation(); delWeight(w.id); }}>
+                    <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 체중 기록을 삭제하시겠어요?')) delWeight(w.id); }}>
                       <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>

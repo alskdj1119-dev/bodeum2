@@ -46,6 +46,8 @@ export default function HomePanel() {
   const diaper24 = diapers.filter(d => (now - new Date(d.time).getTime()) <= h24);
   const sleep24 = sleeps.filter(s => s.end && (now - new Date(s.start).getTime()) <= h24);
   const sleepMs = sleep24.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
+  const diaperWet24 = diaper24.filter(d => d.type === 'wet' || d.type === 'both').length;
+  const diaperSoiled24 = diaper24.filter(d => d.type === 'soiled' || d.type === 'both').length;
   const feedMl = feed24.reduce((acc, f) => {
     let amt = f.amount;
     if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
@@ -204,8 +206,8 @@ export default function HomePanel() {
         </div>
         <div className="sc" onClick={() => setDetail24('diaper')}>
           <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
-          <div className="sval" style={{ fontSize:'15px' }}>{diaper24.length}</div>
-          <div className="ssub">회</div>
+          <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{diaper24.length}회</div>
+          <div className="ssub">소변 {diaperWet24} · 대변 {diaperSoiled24}</div>
         </div>
         <div className="sc" onClick={() => setDetail24('sleep')}>
           <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>

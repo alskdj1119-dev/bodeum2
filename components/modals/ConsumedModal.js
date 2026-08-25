@@ -48,7 +48,7 @@ export default function ConsumedModal() {
   }
 
   return (
-    <div className="mbg open" onClick={close}>
+    <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle"></div>
         <div className="mtitle">섭취량 기록</div>
