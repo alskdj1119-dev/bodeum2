@@ -19,7 +19,7 @@ export default function ConsumedModal() {
   const [consumedAmount, setConsumedAmount] = useState('');
 
   useEffect(() => {
-    setConsumedAmount(estimate != null ? String(estimate) : '');
+    setConsumedAmount('0');
   }, [feedId]);
 
   function close() {

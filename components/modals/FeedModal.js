@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
+import { toLocal, fromLocal } from '../../lib/helpers';
 
 // Color scheme per feed type
 const FEED_COLOR = {
@@ -22,7 +22,7 @@ export default function FeedModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid, setLinkedSleepId, setPendingConsumedFeedId,
+    uid,
   } = useApp();
 
   const isEdit = !!editId;
@@ -34,7 +34,7 @@ export default function FeedModal() {
   const [amount, setAmount] = useState('');
   const [consumedAmount, setConsumedAmount] = useState('');
   const [note, setNote] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState('mom');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
 
@@ -47,7 +47,7 @@ export default function FeedModal() {
       setConsumedAmount(existing.consumedAmount != null ? String(existing.consumedAmount) : '');
       setNote(existing.note || '');
       setAuthor(existing.author || '');
-      setStart(existing.start ? toLocal(existing.start) : nowISO());
+      setStart(existing.start ? toLocal(existing.start) : '');
       setEnd(existing.end ? toLocal(existing.end) : '');
     } else {
       setType('breast');
@@ -56,11 +56,18 @@ export default function FeedModal() {
       setAmount('');
       setConsumedAmount('');
       setNote('');
-      setAuthor('');
-      setStart(nowISO());
+      setAuthor('mom');
+      setStart('');
       setEnd('');
     }
   }, [editId]);
+
+  // 직수 & 새 기록: 기록자 자동으로 엄마 설정
+  useEffect(() => {
+    if (!isEdit && type === 'breast' && subtype === 'direct') {
+      setAuthor('mom');
+    }
+  }, [type, subtype, isEdit]);
 
   const isDirectBreast = type === 'breast' && subtype === 'direct';
   const colorKey = type === 'bottle' ? 'bottle' : `breast_${subtype}`;
@@ -92,48 +99,26 @@ export default function FeedModal() {
       showToast('수정됐어요');
       close();
     } else {
+      // 모든 수유 타입: 타이머 시작 모드 (start만 저장, end 없음)
+      // 시작 시점을 누른 시점으로 정확히 기록 (초 포함)
+      const startTime = new Date().toISOString();
       const id = uid();
-      if (isDirectBreast) {
-        const entry = {
-          id, type, subtype, side,
-          note: note || undefined,
-          author: author || undefined,
-          start: nowISO(),
-        };
-        newFeeds.unshift(entry);
-        const newDB = { ...db, feeds: newFeeds };
-        dispatch({ type: 'SET_FEEDS', payload: newFeeds });
-        await saveDB(newDB);
-        showToast('수유 타이머 시작!');
-
-        const sleepId = uid();
-        setLinkedSleepId(sleepId);
-        try { localStorage.setItem('bodeum_linked_sleep', sleepId); } catch (_) {}
-        const newSleeps = [{ id: sleepId, start: nowISO(), note: '수유 연동' }, ...db.sleeps];
-        const newDB2 = { ...db, feeds: newFeeds, sleeps: newSleeps };
-        dispatch({ type: 'SET_SLEEPS', payload: newSleeps });
-        await saveDB(newDB2);
-        close();
-      } else {
-        const entry = {
-          id,
-          type,
-          subtype: type === 'breast' ? subtype : undefined,
-          side: isDirectBreast ? side : undefined,
-          amount: amount ? parseFloat(amount) : undefined,
-          consumedAmount: consumedAmount ? parseFloat(consumedAmount) : undefined,
-          note: note || undefined,
-          author: author || undefined,
-          start: nowISO(),
-          end: nowISO(),
-        };
-        newFeeds.unshift(entry);
-        const newDB = { ...db, feeds: newFeeds };
-        dispatch({ type: 'SET_FEEDS', payload: newFeeds });
-        await saveDB(newDB);
-        showToast('수유 기록이 추가됐어요');
-        close();
-      }
+      const entry = {
+        id,
+        type,
+        subtype: type === 'breast' ? subtype : undefined,
+        side: isDirectBreast ? side : undefined,
+        amount: (amount && !isDirectBreast) ? parseFloat(amount) : undefined,
+        note: note || undefined,
+        author: author || undefined,
+        start: startTime,
+      };
+      newFeeds.unshift(entry);
+      const newDB = { ...db, feeds: newFeeds };
+      dispatch({ type: 'SET_FEEDS', payload: newFeeds });
+      await saveDB(newDB);
+      showToast('수유 타이머 시작!');
+      close();
     }
   }
 
@@ -194,8 +179,8 @@ export default function FeedModal() {
             </div>
           )}
 
-          {/* Amount — not shown for new direct feed (auto-calculated on stop) */}
-          {!(isDirectBreast && !isEdit) && (
+          {/* Amount — 유축/분유만, 새 기록 또는 수정 시 */}
+          {(!isDirectBreast) && (
             <div className="fld">
               <div className="flbl">수유량 (ml)</div>
               <input className="finp" type="number" value={amount}
@@ -203,24 +188,33 @@ export default function FeedModal() {
             </div>
           )}
 
-          {/* Consumed amount */}
-          <div className="fld">
-            <div className="flbl">섭취량 (ml)</div>
-            <input className="finp" type="number" value={consumedAmount}
-              onChange={e => setConsumedAmount(e.target.value)} placeholder="선택 사항" />
-          </div>
-
-          {/* Author */}
-          <div className="fld">
-            <div className="flbl">기록자</div>
-            <div className="seg">
-              {AUTHOR_OPTIONS.map(opt => (
-                <button key={opt.code || 'none'} className={`sbtn${author === opt.code ? ' on' : ''}`}
-                  style={author === opt.code ? { background: fc.main, borderColor: fc.main } : {}}
-                  onClick={() => setAuthor(opt.code)}>{opt.label}</button>
-              ))}
+          {/* Consumed amount — 직수 새 기록에서는 숨김 (타이머 종료 후 팝업으로 입력) */}
+          {!(isDirectBreast && !isEdit) && (
+            <div className="fld">
+              <div className="flbl">섭취량 (ml)</div>
+              <input className="finp" type="number" value={consumedAmount}
+                onChange={e => setConsumedAmount(e.target.value)} placeholder="선택 사항" />
             </div>
-          </div>
+          )}
+
+          {/* Author — 직수 새 기록: 엄마 고정 표시, 그 외: 선택 가능 */}
+          {isDirectBreast && !isEdit ? (
+            <div className="fld">
+              <div className="flbl">기록자</div>
+              <div style={{ padding:'8px 0', fontSize:'14px', color:'var(--ink)', fontWeight:500 }}>엄마 (고정)</div>
+            </div>
+          ) : (
+            <div className="fld">
+              <div className="flbl">기록자</div>
+              <div className="seg">
+                {AUTHOR_OPTIONS.map(opt => (
+                  <button key={opt.code || 'none'} className={`sbtn${author === opt.code ? ' on' : ''}`}
+                    style={author === opt.code ? { background: fc.main, borderColor: fc.main } : {}}
+                    onClick={() => setAuthor(opt.code)}>{opt.label}</button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Note */}
           <div className="fld">
@@ -246,7 +240,7 @@ export default function FeedModal() {
         <div className="mfoot">
           <button className="bcan" onClick={close}>취소</button>
           <button className="bpri" style={{ background: fc.main }} onClick={save}>
-            {isEdit ? '저장' : (isDirectBreast ? '수유 시작' : '저장')}
+            {isEdit ? '저장' : '수유 시작'}
           </button>
         </div>
       </div>

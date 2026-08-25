@@ -7,7 +7,7 @@ const TSU = { direct:'직수', pumped:'유축' };
 const TS = { left:'왼쪽', right:'오른쪽' };
 
 export default function FeedPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
   const { feeds, sleeps } = db;
 
   const activeFeed = feeds.find(f => f.start && !f.end);
@@ -30,10 +30,16 @@ export default function FeedPanel() {
   }
 
   function delFeed(id) {
+    const item = feeds.find(x => x.id === id);
+    if (!item) return;
+    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'feeds' };
     const newFeeds = feeds.filter(x => x.id !== id);
-    const newDB = { ...db, feeds: newFeeds };
+    const newTrash = [trashItem, ...(db.trash || [])];
+    const newDB = { ...db, feeds: newFeeds, trash: newTrash };
     dispatch({ type: 'SET_FEEDS', payload: newFeeds });
+    dispatch({ type: 'SET_TRASH', payload: newTrash });
     saveDB(newDB);
+    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
   function stopFeed() {
@@ -88,7 +94,7 @@ export default function FeedPanel() {
         <div className="slive banner-in" style={{ background:'var(--fw)' }}>
           <div className="spulse" style={{ background:'var(--cf)' }}></div>
           <div className="sliveinf">
-            <div className="slivelbl">{isLinked ? '수유+수면 중' : '수유 중'}</div>
+            <div className="slivelbl">수유 중</div>
             <div className="slivetimer">{timerStr(feedTimerMs)}</div>
           </div>
           <button className="sstop" style={{ background:'var(--cf)' }} onClick={stopFeed}>종료</button>

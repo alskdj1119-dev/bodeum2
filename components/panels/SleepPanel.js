@@ -5,7 +5,7 @@ import { fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, directFeedMl } 
 const PL = { crib:'침대', arms:'품', cushion:'원형쿠션' };
 
 export default function SleepPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
   const { sleeps, feeds } = db;
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
@@ -24,10 +24,16 @@ export default function SleepPanel() {
   }
 
   function delSleep(id) {
+    const item = sleeps.find(x => x.id === id);
+    if (!item) return;
+    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'sleeps' };
     const newSleeps = sleeps.filter(x => x.id !== id);
-    const newDB = { ...db, sleeps: newSleeps };
+    const newTrash = [trashItem, ...(db.trash || [])];
+    const newDB = { ...db, sleeps: newSleeps, trash: newTrash };
     dispatch({ type: 'SET_SLEEPS', payload: newSleeps });
+    dispatch({ type: 'SET_TRASH', payload: newTrash });
     saveDB(newDB);
+    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
   function stopSleep() {

@@ -112,7 +112,8 @@ export default function HomePanel() {
         </h1>
         {dayCount !== null && (
           <div style={{ textAlign:'right', fontSize:'11px', color:'var(--muted)', lineHeight:'1.5', paddingTop:'2px', flexShrink:0, marginLeft:'10px' }}>
-            {baby.name || '아이'}와 만난지 <strong style={{ fontSize:'13px', color:'var(--sage)' }}>{dayCount}일차</strong>
+            <strong style={{ fontSize:'13px', color:'var(--sage)' }}>{baby.name || '아이'}이와</strong><br/>
+            만난지 {dayCount}일차
           </div>
         )}
       </div>

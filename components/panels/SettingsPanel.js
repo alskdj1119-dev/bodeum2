@@ -178,6 +178,18 @@ export default function SettingsPanel() {
         </div>
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
+      <button className="settmenu" onClick={() => goTab('trash', 'forward')}>
+        <div className="settmenu-ico" style={{ background:'var(--dw)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--cd)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">삭제 기록</div>
+          <div className="settmenu-sub">삭제된 기록 확인 및 개별 복원</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
     </>
   );
 }
