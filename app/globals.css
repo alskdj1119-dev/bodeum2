@@ -109,16 +109,16 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 .daytitle{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.25}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.sr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.slbl{font-size:14px;color:var(--muted);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
-.sico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.slbl{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sico svg{width:17px;height:17px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sico.f{background:var(--fw)}.sico.f svg{stroke:var(--cf)}
 .sico.d{background:var(--dw)}.sico.d svg{stroke:var(--cd)}
 .sico.s{background:var(--sw)}.sico.s svg{stroke:var(--cs)}
 .sico.w{color:var(--cw)}
-.sval{font-size:20px;font-family:var(--serif);font-weight:700;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
-.ssub{font-size:12px;color:var(--muted);margin-top:2px}
+.sval{font-size:20px;font-family:var(--serif);font-weight:700;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ssub{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seclbl{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .qgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px}
 .tlitem{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--bdr)}
