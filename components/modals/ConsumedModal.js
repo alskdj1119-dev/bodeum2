@@ -31,7 +31,12 @@ export default function ConsumedModal() {
 
   async function save() {
     if (!feed) { close(); return; }
-    const ml = consumedAmount ? parseFloat(consumedAmount) : undefined;
+    // 섭취량은 필수값
+    if (consumedAmount === '' || consumedAmount == null || Number.isNaN(parseFloat(consumedAmount))) {
+      showToast('섭취량(ml)을 입력해주세요');
+      return;
+    }
+    const ml = parseFloat(consumedAmount);
     const newFeeds = db.feeds.map(f =>
       f.id === feedId ? { ...f, consumedAmount: ml } : f
     );
@@ -42,22 +47,18 @@ export default function ConsumedModal() {
     close();
   }
 
-  function skip() {
-    close();
-  }
-
   return (
     <div className="mbg open" onClick={close}>
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle"></div>
         <div className="mtitle">섭취량 기록</div>
         <div className="mbody">
-          <p className="modal-desc">직수가 끝났어요. 섭취량을 입력해주세요.</p>
+          <p className="modal-desc">수유가 끝났어요. 섭취량을 입력해주세요.</p>
           {estimate != null && (
             <p className="modal-hint">수유 시간 기준 예상 섭취량: 약 {estimate}ml</p>
           )}
           <div className="fld">
-            <div className="flbl">섭취량 (ml)</div>
+            <div className="flbl">섭취량 (ml) <span>· 필수</span></div>
             <input
               className="finp"
               type="number"
@@ -69,8 +70,7 @@ export default function ConsumedModal() {
           </div>
         </div>
         <div className="mfoot">
-          <button className="bcan" onClick={skip}>건너뛰기</button>
-          <button className="bpri" onClick={save}>저장</button>
+          <button className="bpri" style={{ width: '100%' }} onClick={save}>저장</button>
         </div>
       </div>
     </div>

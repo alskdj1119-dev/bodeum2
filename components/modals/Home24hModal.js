@@ -19,7 +19,7 @@ function StatCard({ label, value, sub, color }) {
   return (
     <div style={{ flex: 1, background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', minWidth: 0 }}>
       <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{sub}</div>}
     </div>
   );
@@ -289,7 +289,7 @@ export default function Home24hModal({ type, onClose }) {
         {/* 핸들 + 제목 */}
         <div className="mhandle" />
         <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px 14px', borderBottom: '1px solid var(--bdr)' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--serif)', color: colors[type] }}>
+          <div style={{ fontSize: 19, fontWeight: 700, fontFamily: 'var(--serif)', color: colors[type] }}>
             직전 24시간 {titles[type]}
           </div>
           <button

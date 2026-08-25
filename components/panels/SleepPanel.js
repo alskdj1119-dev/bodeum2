@@ -53,7 +53,8 @@ export default function SleepPanel() {
           if (isDirect) upd.amount = directFeedMl(f.start, endTime);
           return upd;
         });
-        if (isDirect) pendingFeedId = activeFeed.id;
+        // 모든 수유 타입: 타이머 종료 시 섭취량 입력 팝업 (필수)
+        pendingFeedId = activeFeed.id;
       }
       setLinkedSleepId(null);
       try { localStorage.removeItem('bodeum_linked_sleep'); } catch(_) {}

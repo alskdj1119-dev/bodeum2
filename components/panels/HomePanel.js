@@ -150,11 +150,6 @@ export default function HomePanel() {
       {/* 직전 24시간 — 클릭 시 상세 모달 */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>직전 24시간</p>
       <div className="sgrid" style={{ gridTemplateColumns:'1fr 1fr 1fr', marginBottom:'20px' }}>
-        <div className="sc" onClick={() => setDetail24('sleep')}>
-          <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
-          <div className="sval" style={{ fontSize:'13px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
-          <div className="ssub">{sleep24.length}회</div>
-        </div>
         <div className="sc" onClick={() => setDetail24('feed')}>
           <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
           <div className="sval" style={{ fontSize:'13px' }}>{feed24.length}</div>
@@ -165,13 +160,18 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'13px' }}>{diaper24.length}</div>
           <div className="ssub">회</div>
         </div>
+        <div className="sc" onClick={() => setDetail24('sleep')}>
+          <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
+          <div className="sval" style={{ fontSize:'13px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
+          <div className="ssub">{sleep24.length}회</div>
+        </div>
       </div>
 
       {/* 체중 — 클릭 시 건강 > 체중 탭 */}
       <div className="sgrid" style={{ gridTemplateColumns:'1fr', marginBottom:'20px' }}>
         <div className="sc" onClick={openHealthWeight}>
           <div className="sr"><div className="slbl">체중</div><div className="sico w"><svg viewBox="0 0 24 24" style={{ width:'17px', height:'17px', fill:'none', stroke:'var(--cw)', strokeWidth:'1.8', strokeLinecap:'round', strokeLinejoin:'round' }}><path d="M12 3a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4z"/><path d="M4 7h16l-2 14H6L4 7z"/></svg></div></div>
-          <div className="sval">{latestW ? latestW.kg.toFixed(2) + ' kg' : '—'}</div>
+          <div className="sval" style={{ fontSize:'26px', whiteSpace:'nowrap' }}>{latestW ? latestW.kg.toFixed(2) + ' kg' : '—'}</div>
           <div className="ssub">
             {latestW ? '직전 체중' : '기록 없음'}
             {wDiffG !== null && (

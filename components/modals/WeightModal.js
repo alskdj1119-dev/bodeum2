@@ -108,7 +108,7 @@ export default function WeightModal() {
             <WDial value={d4} onChange={setD4} min={0} max={9} />
             <div className="wdial-unit">kg</div>
           </div>
-          <div style={{ textAlign: 'center', fontSize: '22px', fontWeight: 700, color: 'var(--ink)', marginBottom: '8px' }}>
+          <div style={{ textAlign: 'center', fontSize: '28px', fontWeight: 700, color: 'var(--ink)', marginBottom: '8px', whiteSpace: 'nowrap' }}>
             {kg} kg
           </div>
 

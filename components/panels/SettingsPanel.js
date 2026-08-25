@@ -18,8 +18,10 @@ export default function SettingsPanel() {
   const [ns, setNs] = useState({
     diaperAlertH: 3,
     sleepAlertH: 2,
+    feedAlertH: 3,
     quietStart: 23,
     quietEnd: 7,
+    quietDisabled: false,
   });
 
   useEffect(() => {
@@ -50,10 +52,12 @@ export default function SettingsPanel() {
 
   function saveNotif() {
     const parsed = {
-      diaperAlertH: Number(ns.diaperAlertH) || 3,
-      sleepAlertH: Number(ns.sleepAlertH) || 2,
+      diaperAlertH: Number.isFinite(Number(ns.diaperAlertH)) ? Number(ns.diaperAlertH) : 3,
+      sleepAlertH: Number.isFinite(Number(ns.sleepAlertH)) ? Number(ns.sleepAlertH) : 2,
+      feedAlertH: Number.isFinite(Number(ns.feedAlertH)) ? Number(ns.feedAlertH) : 3,
       quietStart: Number(ns.quietStart),
       quietEnd: Number(ns.quietEnd),
+      quietDisabled: !!ns.quietDisabled,
     };
     saveNotifSettings(parsed);
     showToast('알림 설정이 저장됐어요 ✓');
@@ -140,8 +144,21 @@ export default function SettingsPanel() {
         </div>
 
         <div className="fld" style={{ marginBottom: 10 }}>
-          <div className="flbl">조용한 시간대 (방해 금지)</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flbl">수유 경과 알림 (시간)</div>
+          <div className="seg">
+            {[2, 3, 4, 0].map(h => (
+              <button key={h} className={`sbtn${Number(ns.feedAlertH) === h ? ' on' : ''}`}
+                onClick={() => setN('feedAlertH', h)}>
+                {h === 0 ? '끔' : h + '시간'}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>마지막 수유 후 해당 시간이 지나면 알림</div>
+        </div>
+
+        <div className="fld" style={{ marginBottom: 10 }}>
+          <div className="flbl">방해 금지 시간대</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: ns.quietDisabled ? 0.45 : 1, pointerEvents: ns.quietDisabled ? 'none' : 'auto' }}>
             <select className="finp" style={{ flex: 1 }} value={ns.quietStart} onChange={e => setN('quietStart', Number(e.target.value))}>
               {hours.map(h => <option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}
             </select>
@@ -150,7 +167,13 @@ export default function SettingsPanel() {
               {hours.map(h => <option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}
             </select>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>해당 시간대에는 알림이 오지 않아요</div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!ns.quietDisabled} onChange={e => setN('quietDisabled', e.target.checked)} />
+            <span style={{ fontSize: 12, color: 'var(--ink)' }}>설정하지 않음 (24시간 알림 수신)</span>
+          </label>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+            {ns.quietDisabled ? '방해 금지 시간대 없이 24시간 알림을 받아요' : '해당 시간대에는 알림이 오지 않아요'}
+          </div>
         </div>
 
         <button className="bpri" style={{ width: '100%', marginTop: 4 }} onClick={saveNotif}>알림 설정 저장</button>

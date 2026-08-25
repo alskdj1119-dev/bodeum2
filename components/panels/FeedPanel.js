@@ -60,13 +60,9 @@ export default function FeedPanel() {
     }
     const newDB = { ...db, feeds: newFeeds, sleeps: newSleeps };
     dispatch({ type: 'SET_ALL', payload: newDB });
-    const updFeed = newFeeds.find(f => f.id === activeFeed.id);
-    if (isDirect && updFeed) {
-      setPendingConsumedFeedId(activeFeed.id);
-      saveDB(newDB).then(() => setOpenModal('consumed'));
-    } else {
-      saveDB(newDB);
-    }
+    // 모든 수유 타입: 타이머 종료 시 섭취량 입력 팝업 (필수)
+    setPendingConsumedFeedId(activeFeed.id);
+    saveDB(newDB).then(() => setOpenModal('consumed'));
   }
 
   function feedLabel(f) {

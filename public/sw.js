@@ -57,8 +57,10 @@ var _babyName = '아이';
 var _settings = {
   diaperAlertH: 3,   // 기저귀 교체 후 N시간 경과 알림 (0=비활성)
   sleepAlertH: 2,    // 수면 시작 후 N시간 경과 알림 (0=비활성)
-  quietStart: 23,    // 조용한 시간대 시작 (0-23)
-  quietEnd: 7,       // 조용한 시간대 종료 (0-23)
+  feedAlertH: 3,     // 마지막 수유 후 N시간 경과 알림 (0=비활성)
+  quietStart: 23,    // 방해 금지 시간대 시작 (0-23)
+  quietEnd: 7,       // 방해 금지 시간대 종료 (0-23)
+  quietDisabled: false, // true면 방해 금지 시간대를 사용하지 않음 (24시간 알림 수신)
 };
 
 function elapsedLabel(ms) {
@@ -67,8 +69,9 @@ function elapsedLabel(ms) {
   return (hh > 0 ? hh + '시간' : '') + mm + '분';
 }
 
-// 조용한 시간대 여부 확인
+// 방해 금지 시간대 여부 확인
 function isQuietTime() {
+  if (_settings.quietDisabled) return false; // 설정하지 않음 → 24시간 알림 수신
   var h = new Date().getHours();
   var s = _settings.quietStart, e = _settings.quietEnd;
   if (s <= e) return h >= s && h < e;
@@ -103,12 +106,12 @@ function scheduleNotifications(lastFeedTime, activeFeedStart, babyName, lastDiap
   var now = Date.now();
   var name = getFirstName(_babyName);
 
-  /* 배고픔 알림: 마지막 수유 후 2시간 30분, 이후 5분마다 반복 */
-  if (lastFeedTime && !activeFeedStart) {
+  /* 수유 경과(배고픔) 알림: 마지막 수유 후 설정한 시간(feedAlertH)이 지나면, 이후 5분마다 반복 (0=끔) */
+  if (lastFeedTime && !activeFeedStart && _settings.feedAlertH > 0) {
     var elapsed = now - lastFeedTime;
-    var delay = (2.5 * 3600 * 1000) - elapsed;
+    var delay = (_settings.feedAlertH * 3600 * 1000) - elapsed;
     if (delay <= 0) {
-      if (elapsed < 6 * 3600 * 1000) {
+      if (elapsed < _settings.feedAlertH * 2 * 3600 * 1000) {
         fireHungerNotif(lastFeedTime);
       }
     } else {

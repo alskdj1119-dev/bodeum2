@@ -213,6 +213,23 @@ setOpenModal('feed');
 **DB 변경:**
 - `db.trash`: 삭제된 항목 배열. 각 항목에 `_deletedAt` (ISO), `_type` ('feeds'|'diapers'|'sleeps'|...) 필드 추가
 
+### 2026-08-25 세션 3
+**작업 내용:**
+- 설정 > 알림설정: "조용한 시간대" → "방해 금지 시간대" 문구 변경, "설정하지 않음" 체크박스 추가 (`quietDisabled`) → 체크 시 24시간 알림 수신 (시간 선택 UI는 유지, 체크 시 비활성화 표시만)
+- 설정 > 알림설정: "수유 경과 알림" 옵션 추가 (2시간/3시간/4시간/끔, `feedAlertH`) — 기존 하드코딩된 2.5시간 배고픔 알림을 설정값 기반으로 교체
+- `SettingsPanel.js` 저장 로직: `diaperAlertH`/`sleepAlertH`/`feedAlertH` "끔(0)"이 `Number(0)||3` 폴백에 의해 무시되던 기존 버그 수정 (`Number.isFinite` 체크로 변경)
+- `public/sw.js`: `isQuietTime()`이 `quietDisabled`를 확인하도록 수정, 배고픔 알림을 `feedAlertH` 설정 기반으로 리팩터링
+- 앱 내 "김이엘" 하드코딩 제거: `store.js`의 `initialBaby.name` 기본값을 '아이'로 변경 (실사용 이름은 이미 전역에서 `baby.name`으로 동적 참조되고 있었음 — 유일한 하드코딩 지점이었음)
+- 홈 "직전 24시간" 카드 순서: 수면·수유·기저귀 → 수유·기저귀·수면으로 변경 (직전 섹션과 동일한 순서로 통일)
+- 홈 체중 카드 텍스트 크기 확대 (20px→26px), `WeightModal` 체중 표시(22px→28px)·다이얼(28px→30px), `Home24hModal` 통계 값(20px→22px)·제목(18px→19px), 전역 `.finp`(15px→16px)·`.mtitle`(18px→19px) 확대, 미정의 상태였던 `.modal-desc`/`.modal-hint` 클래스 정의 추가 — 모두 모달 폭 안에서 줄바꿈 없이 표시되도록 처리
+- 수유 기록: `FeedModal`에서 "섭취량" 입력 필드 제거, "준비량(수유량)"은 직수를 제외하고 필수값으로 변경(미입력 시 저장 차단). 섭취량은 `ConsumedModal`(타이머 종료 시 팝업)에서만 입력하며 필수값으로 변경, "건너뛰기" 버튼 제거
+- `FeedPanel.stopFeed()` / `SleepPanel.stopSleep()`(연동 수유): 타이머 종료 시 모든 수유 타입(직수/유축/분유)에서 섭취량 팝업이 뜨도록 변경 (기존엔 직수만 팝업)
+- **수유 타이머 종료 시 "저장 실패" 오류 수정**: 원인은 `lib/firebase.js`에서 `getFirestore()` 기본 설정 사용 — 앱 전반에서 흔한 `field: cond ? value : undefined` 패턴으로 생성된 필드에 `undefined` 값이 들어있으면 Firestore `setDoc()`이 예외를 던짐. `initializeFirestore(app, { ignoreUndefinedProperties: true })`로 교체하여 undefined 필드를 자동 무시하도록 수정 (전체 저장 경로에 적용되는 근본 수정)
+
+**DB 변경:**
+- `notifSettings`: `feedAlertH`(수유 경과 알림, 기본 3), `quietDisabled`(방해 금지 시간대 미사용 여부, 기본 false) 필드 추가
+- `feeds[].consumedAmount`: 이제 `ConsumedModal`을 통해서만 기록됨 (모든 타입 공통)
+
 ---
 
 ## 다음 세션 사용법
