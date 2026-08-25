@@ -1,0 +1,136 @@
+'use client';
+import { useApp } from '../../lib/store';
+import { fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, directFeedMl } from '../../lib/helpers';
+
+const TF = { breast:'모유', bottle:'분유' };
+const TSU = { direct:'직수', pumped:'유축' };
+const TS = { left:'왼쪽', right:'오른쪽' };
+
+export default function FeedPanel() {
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, sleepTimerMs, linkedSleepId, setLinkedSleepId, setPendingConsumedFeedId } = useApp();
+  const { feeds, sleeps } = db;
+
+  const activeFeed = feeds.find(f => f.start && !f.end);
+  const activeSleep = sleeps.find(s => s.start && !s.end);
+  const done = feeds.filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));
+  const grouped = groupByDay(done, f => f.start || f.time);
+
+  const isLinked = linkedSleepId != null;
+
+  function openEdit(f) {
+    if (!f.end) { showToast('진행 중인 수유는 종료 후 수정할 수 있어요'); return; }
+    setEditId(f.id);
+    setEditType('feeds');
+    setOpenModal('feed');
+  }
+
+  function openNew() {
+    setEditId(null); setEditType(null);
+    setOpenModal('feed');
+  }
+
+  function delFeed(id) {
+    const newFeeds = feeds.filter(x => x.id !== id);
+    const newDB = { ...db, feeds: newFeeds };
+    dispatch({ type: 'SET_FEEDS', payload: newFeeds });
+    saveDB(newDB);
+  }
+
+  function stopFeed() {
+    if (!activeFeed) return;
+    const endTime = new Date().toISOString();
+    const isDirect = activeFeed.type === 'breast' && activeFeed.subtype === 'direct';
+    let newFeeds = feeds.map(f => {
+      if (f.id !== activeFeed.id) return f;
+      const upd = { ...f, end: endTime };
+      if (isDirect) upd.amount = directFeedMl(f.start, endTime);
+      return upd;
+    });
+    let newSleeps = sleeps;
+    if (linkedSleepId) {
+      newSleeps = sleeps.map(s => s.id === linkedSleepId && !s.end ? { ...s, end: endTime } : s);
+      setLinkedSleepId(null);
+      try { localStorage.removeItem('bodeum_linked_sleep'); } catch(_) {}
+    }
+    const newDB = { ...db, feeds: newFeeds, sleeps: newSleeps };
+    dispatch({ type: 'SET_ALL', payload: newDB });
+    const updFeed = newFeeds.find(f => f.id === activeFeed.id);
+    if (isDirect && updFeed) {
+      setPendingConsumedFeedId(activeFeed.id);
+      saveDB(newDB).then(() => setOpenModal('consumed'));
+    } else {
+      saveDB(newDB);
+    }
+  }
+
+  function feedLabel(f) {
+    const base = TF[f.type] || '수유';
+    if (f.subtype) return base + ' · ' + (TSU[f.subtype] || '');
+    return base;
+  }
+
+  function feedDetails(f) {
+    let dispAmt = f.amount;
+    if (dispAmt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
+      dispAmt = directFeedMl(f.start, f.end);
+    }
+    const amtStr = f.consumedAmount != null && dispAmt != null ? `준비 ${dispAmt}ml / 섭취 ${f.consumedAmount}ml`
+      : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
+      : dispAmt ? `${dispAmt}ml` : '';
+    const dur = (f.start && f.end) ? durStr(new Date(f.end) - new Date(f.start)) : '';
+    const side = f.side ? TS[f.side] : '';
+    return [amtStr, dur, side, f.note || ''].filter(Boolean).join(' · ');
+  }
+
+  return (
+    <>
+      {activeFeed && (
+        <div className="slive banner-in" style={{ background:'var(--fw)' }}>
+          <div className="spulse" style={{ background:'var(--cf)' }}></div>
+          <div className="sliveinf">
+            <div className="slivelbl">{isLinked ? '수유+수면 중' : '수유 중'}</div>
+            <div className="slivetimer">{timerStr(feedTimerMs)}</div>
+          </div>
+          <button className="sstop" style={{ background:'var(--cf)' }} onClick={stopFeed}>종료</button>
+        </div>
+      )}
+
+      <div className="loghdr">
+        <span className="logtitle">수유</span>
+        <span className="badge">{done.length}</span>
+        <button className="addbtn" onClick={openNew}>
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          추가
+        </button>
+      </div>
+
+      {done.length === 0 && !activeFeed ? (
+        <div className="empty"><div className="empty-ico">🍼</div><div className="empty-lbl">수유 기록이 없어요</div></div>
+      ) : (
+        grouped.map(([day, items]) => (
+          <div key={day} className="daygrp">
+            <div className="daylbl">{day}</div>
+            {items.map(f => {
+              const t = f.start || f.time;
+              const timeRange = (f.start && f.end) ? `${fmt(f.start)} → ${fmt(f.end)}` : fmt(t);
+              const detail = feedDetails(f);
+              return (
+                <div key={f.id} className="ec" onClick={() => openEdit(f)}>
+                  <div className="edot f"></div>
+                  <div className="emain">
+                    <div className="epri">{feedLabel(f)}</div>
+                    <div className="esec">{timeRange}{detail ? ' · ' + detail : ''}</div>
+                  </div>
+                  <div className="etime">{fmtFull(t)}<br/><span className="eago">{elapsedStr(t)}</span></div>
+                  <button className="edel" onClick={e => { e.stopPropagation(); delFeed(f.id); }}>
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ))
+      )}
+    </>
+  );
+}
