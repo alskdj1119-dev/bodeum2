@@ -25,18 +25,9 @@ import TempModal from './modals/TempModal';
 const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash'];
 const SUB_PANELS = ['changelog', 'requests', 'trash'];
 
-function sendToSW(lastFeedTime, activeFeedStart, babyName, lastDiaperTime, activeSleepStart) {
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.ready.then(reg => {
-    if (reg.active) reg.active.postMessage({
-      type: 'FEED_UPDATE', lastFeedTime, activeFeedStart, babyName, lastDiaperTime, activeSleepStart,
-    });
-  }).catch(() => {});
-}
-
 export default function BodeumApp() {
   const {
-    familyCode, db, baby,
+    familyCode, db,
     activeTab, tabDir, goTab,
     setFeedTimerMs,
     setSleepTimerMs,
@@ -78,21 +69,6 @@ export default function BodeumApp() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [db.sleeps]);
-
-  // Notify SW on db change
-  useEffect(() => {
-    const lastFeed = [...db.feeds].sort((a,b) => (b.end||b.start||'').localeCompare(a.end||a.start||'')).find(f => f.end);
-    const activeFeed = db.feeds.find(f => f.start && !f.end);
-    const lastDiaper = [...db.diapers].sort((a,b) => b.time > a.time ? 1 : -1)[0];
-    const activeSleep = db.sleeps.find(s => s.start && !s.end);
-    sendToSW(
-      lastFeed?.end || lastFeed?.start,
-      activeFeed?.start,
-      baby.name,
-      lastDiaper?.time,
-      activeSleep?.start,
-    );
-  }, [db, baby.name]);
 
   // Panel slide animation
   useEffect(() => {
