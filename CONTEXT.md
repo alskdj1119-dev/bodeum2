@@ -63,6 +63,12 @@ components/
     TrashPanel.js      # 삭제 기록 (복원 가능)
     NotifHistoryPanel.js # 알림 내역 (홈 화면 종 모양 아이콘으로 진입)
 
+  charts/
+    ChartTooltip.js       # 모든 인터랙티브 차트가 공통으로 쓰는 호버/탭 툴팁 (신규)
+    WeightGainChart.js    # 홈 체중 카드 — 일별 증가율(g) 선 그래프 (신규)
+    WeightValueChart.js   # 건강 > 체중 탭 — 일별 체중 추이 선 그래프 (신규, buildWeightChart 대체)
+    HourBarChart.js       # Home24hModal 시간대별 막대 그래프 (신규, 수유/기저귀/수면 3곳 공통 사용)
+
   modals/
     FeedModal.js       # 수유 기록 추가/수정
     DiaperModal.js     # 기저귀 기록 추가/수정
@@ -188,6 +194,9 @@ setOpenModal('feed');
 | `directFeedMl(start, end)` | 직수 수유량 추정 (ml) |
 | `feedAmountMl(f)` | 수유 기록의 표시용 준비량(ml) — amount 없으면 직수 시간으로 추정 |
 | `feedEffectiveMl(f)` | 통계 합산용 실제 섭취량 — consumedAmount 우선, 없으면 feedAmountMl |
+| `weightDailyPoints(weights, days=14)` | 체중 기록을 날짜별(같은 날은 마지막 값)로 묶어 최근 N일 포인트 배열 생성 (신규) |
+| `weightGains(points)` | 연속된 포인트 간 증가량(g) 배열 계산 (신규) |
+| `avgRecentGain(gains, n=7)` | 최근 n개 증가량의 평균 (신규) |
 | `groupByDay(arr, getter)` | 날짜별 그룹핑 |
 | `nowISO()` | 현재 시각 ISO |
 | `toLocal(iso)` / `fromLocal(str)` | datetime-local 변환 |
@@ -253,6 +262,17 @@ setOpenModal('feed');
 
 **DB/상태 변경:**
 - (Firestore 문서 아님, localStorage만) `bodeum_notif_enabled`: 이 기기의 알림 on/off 상태 (`'true'`/`'false'`)
+
+### 2026-08-26 세션 5
+**작업 내용:**
+- 홈 체중 카드에 "일별 증가율" 선 그래프 추가 (`WeightGainChart.js`, 신규) — 카드 안 여백이 너무 많다는 피드백에 대응, 전일 대비 증가/감소량(g)을 라인으로 표시
+- 기존 건강 > 체중 탭의 `buildWeightChart()`(문자열 SVG 조립 + `dangerouslySetInnerHTML`)를 `WeightValueChart.js`(신규, 진짜 JSX+React state 기반)로 교체
+- 모든 차트에 호버(데스크톱)/탭(모바일) 시 세부 수치를 보여주는 툴팁 추가: 체중 추이/증가율 그래프는 점 위에 `날짜 · 체중 · 증가량`, Home24hModal의 시간대별 막대 그래프(수유/기저귀/수면 3곳)는 막대 위에 `N시대: 값` — 공통 `ChartTooltip.js` + `chart-tip`/`chart-wrap`/`chart-hit` CSS 클래스 사용
+- Home24hModal의 반복되던 3개의 시간대별 막대그래프 코드를 `HourBarChart.js`(신규) 하나로 통합
+- `lib/helpers.js`: `weightDailyPoints()`/`weightGains()`/`avgRecentGain()` 추가 — 체중 관련 계산 로직을 두 체중 차트 컴포넌트가 공통으로 사용하도록 통합 (기존 HealthPanel 안에 있던 중복 로직 제거)
+- 새 `components/charts/` 디렉토리 신설
+
+**참고:** 이 세션에서 Playwright로 실제 Firestore 저장을 거치는 흐름은 샌드박스 네트워크 제약으로 `setDoc()`이 응답하지 않아 검증하지 못했음 (배포 환경에서는 정상 동작하는 기존 코드 경로). 대신 차트 컴포넌트만 별도로 렌더링하는 임시 테스트 페이지로 렌더링/호버 툴팁 동작을 확인한 뒤 삭제함.
 
 ---
 

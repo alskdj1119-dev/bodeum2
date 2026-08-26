@@ -6,6 +6,7 @@ import {
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
+import WeightGainChart from '../charts/WeightGainChart';
 
 // "직전" 카드는 가로 폭이 좁아 "23시간 59분 전"처럼 긴 경과시간이 잘릴 수 있음.
 // 카드 안에서 항상 안 잘리도록: 끝의 " 전"을 생략(라벨이 이미 "직전"이라 의미는 충분히 전달됨) + 폰트 축소.
@@ -235,6 +236,7 @@ export default function HomePanel() {
               </span>
             )}
           </div>
+          <WeightGainChart weights={weights} />
         </div>
       </div>
 

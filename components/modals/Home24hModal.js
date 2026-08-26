@@ -5,6 +5,7 @@ import {
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
+import HourBarChart from '../charts/HourBarChart';
 
 function StatBar({ value, max, color }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
@@ -37,7 +38,6 @@ function FeedDetail({ records, onEdit }) {
     const h = new Date(f.start || f.time).getHours();
     hourBuckets[h]++;
   });
-  const maxBucket = Math.max(...hourBuckets, 1);
 
   return (
     <>
@@ -52,18 +52,7 @@ function FeedDetail({ records, onEdit }) {
       {count > 0 && (
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수유</div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 40 }}>
-            {hourBuckets.map((v, h) => (
-              <div key={h} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                <div style={{ width: '100%', background: v > 0 ? 'var(--cf)' : 'var(--bdr)', borderRadius: '2px 2px 0 0', height: Math.max(3, (v / maxBucket) * 34) + 'px', transition: 'height .4s', opacity: v > 0 ? 1 : 0.4 }} />
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-            <span style={{ fontSize: 9, color: 'var(--muted)' }}>0시</span>
-            <span style={{ fontSize: 9, color: 'var(--muted)' }}>12시</span>
-            <span style={{ fontSize: 9, color: 'var(--muted)' }}>23시</span>
-          </div>
+          <HourBarChart buckets={hourBuckets} color="var(--cf)" formatTip={(h, v) => `${h}시대: ${v}회`} />
         </div>
       )}
 
@@ -102,7 +91,6 @@ function DiaperDetail({ records, onEdit }) {
 
   const hourBuckets = Array(24).fill(0);
   records.forEach(d => { hourBuckets[new Date(d.time).getHours()]++; });
-  const maxBucket = Math.max(...hourBuckets, 1);
 
   return (
     <>
@@ -127,16 +115,7 @@ function DiaperDetail({ records, onEdit }) {
           {/* 시간대 */}
           <div style={{ marginTop: 12 }}>
             <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>시간대별</div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30 }}>
-              {hourBuckets.map((v, h) => (
-                <div key={h} style={{ flex: 1, background: v > 0 ? 'var(--cd)' : 'var(--bdr)', borderRadius: '2px 2px 0 0', height: Math.max(3, (v / maxBucket) * 28) + 'px', opacity: v > 0 ? 1 : 0.4 }} />
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-              <span style={{ fontSize: 9, color: 'var(--muted)' }}>0시</span>
-              <span style={{ fontSize: 9, color: 'var(--muted)' }}>12시</span>
-              <span style={{ fontSize: 9, color: 'var(--muted)' }}>23시</span>
-            </div>
+            <HourBarChart buckets={hourBuckets} color="var(--cd)" height={30} formatTip={(h, v) => `${h}시대: ${v}회`} />
           </div>
         </div>
       )}
@@ -174,7 +153,6 @@ function SleepDetail({ records, onEdit }) {
       if (h === endH) break;
     }
   });
-  const maxBucket = Math.max(...hourBuckets, 1);
 
   return (
     <>
@@ -187,16 +165,7 @@ function SleepDetail({ records, onEdit }) {
       {count > 0 && (
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수면</div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 40 }}>
-            {hourBuckets.map((v, h) => (
-              <div key={h} style={{ flex: 1, background: v > 0 ? 'var(--cs)' : 'var(--bdr)', borderRadius: '2px 2px 0 0', height: Math.max(3, (v / maxBucket) * 34) + 'px', opacity: v > 0 ? 0.85 : 0.3 }} />
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-            <span style={{ fontSize: 9, color: 'var(--muted)' }}>0시</span>
-            <span style={{ fontSize: 9, color: 'var(--muted)' }}>12시</span>
-            <span style={{ fontSize: 9, color: 'var(--muted)' }}>23시</span>
-          </div>
+          <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />
         </div>
       )}
 

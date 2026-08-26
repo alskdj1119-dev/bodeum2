@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { fmtFull, groupByDay, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
+import WeightValueChart from '../charts/WeightValueChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
 const VACCINES = [
@@ -32,56 +33,6 @@ const STATUS_OPTS = [
   { code: 'skip',   label: '미접종',   color: 'var(--cd)' },
 ];
 
-// ──────────────────────────── 체중 차트 (WeightPanel에서 이식) ────────────────────────────
-function buildWeightChart(weights) {
-  const asc = [...weights].sort((a,b) => new Date(a.time) - new Date(b.time));
-  if (asc.length < 2) return null;
-
-  const byDay = {};
-  asc.forEach(w => { byDay[w.time.slice(0,10)] = w.kg; });
-  const days = Object.keys(byDay).sort().slice(-14);
-  const pts = days.map(d => ({ label: d.slice(5,7) + '/' + d.slice(8,10), kg: byDay[d] }));
-  if (pts.length < 2) return null;
-
-  const W = 360, H = 172, ml = 10, mr = 10, mt = 32, mb = 44;
-  const cW = W - ml - mr, cH = H - mt - mb;
-  const n = pts.length;
-  const kgs = pts.map(p => p.kg);
-  const minKg = Math.min(...kgs), maxKg = Math.max(...kgs);
-  const range = maxKg - minKg;
-  const pad = range < 0.05 ? 0.15 : range * 0.3;
-  const yMin = minKg - pad, yMax = maxKg + pad;
-
-  const xp = i => n === 1 ? ml + cW / 2 : ml + i * (cW / (n - 1));
-  const yp = kg => mt + (yMax - kg) / (yMax - yMin) * cH;
-
-  const ptStr = pts.map((p,i) => `${xp(i)},${yp(p.kg)}`).join(' ');
-  const area = `<path d="M${xp(0)},${mt+cH} L${ptStr.split(' ').join(' L')} L${xp(n-1)},${mt+cH} Z" fill="var(--cf)" opacity="0.09"/>`;
-  const line = `<polyline points="${ptStr}" fill="none" stroke="var(--cf)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
-
-  const gains = pts.slice(1).map((p,i) => Math.round((p.kg - pts[i].kg) * 1000));
-  const last7 = gains.slice(-7);
-  const avg7 = last7.length ? Math.round(last7.reduce((s,g) => s+g, 0) / last7.length) : null;
-
-  let dots = '', wlbls = '', dlbls = '', glbls = '';
-  pts.forEach((p,i) => {
-    const x = xp(i), y = yp(p.kg);
-    dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="var(--cf)" stroke="var(--surf)" stroke-width="2"/>`;
-    wlbls += `<text x="${x}" y="${y-10}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink)">${p.kg.toFixed(2)}</text>`;
-    const showDate = n <= 7 || i % Math.ceil(n/7) === 0 || i === n-1;
-    if (showDate) dlbls += `<text x="${x}" y="${H-mb+13}" text-anchor="middle" font-size="9" fill="var(--muted)">${p.label}</text>`;
-    if (i > 0) {
-      const gv = gains[i-1];
-      const gs = (gv >= 0 ? '+' : '') + gv + 'g';
-      const gc = gv >= 0 ? 'var(--cw)' : 'var(--cd)';
-      glbls += `<text x="${x}" y="${H-mb+27}" text-anchor="middle" font-size="9" font-weight="600" fill="${gc}">${gs}</text>`;
-    }
-  });
-
-  const avgColor = avg7 >= 0 ? 'var(--cw)' : 'var(--cd)';
-  return { svgStr: `<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg">${area}${line}${dots}${wlbls}${dlbls}${glbls}</svg>`, avg7, avgColor };
-}
-
 // ──────────────────────────── 메인 컴포넌트 ────────────────────────────
 export default function HealthPanel() {
   const {
@@ -111,7 +62,6 @@ export default function HealthPanel() {
   // 체중 데이터
   const weightSorted = [...weights].sort((a,b) => new Date(b.time) - new Date(a.time));
   const weightGrouped = groupByDay(weightSorted, w => w.time);
-  const weightChart = buildWeightChart(weights);
 
   // 예방접종
   const age = baby.birthDate
@@ -246,15 +196,10 @@ export default function HealthPanel() {
       {/* ─── 체중 탭 ─── */}
       {tab === 'weight' && (
         <>
-          {weightChart && (
+          {weights.length >= 2 && (
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 4 }}>일별 체중 추이</div>
-              <div dangerouslySetInnerHTML={{ __html: weightChart.svgStr }} />
-              {weightChart.avg7 !== null && (
-                <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', padding: '4px 0' }}>
-                  최근 7일 일평균 <strong style={{ color: weightChart.avgColor }}>{weightChart.avg7 >= 0 ? '+' : ''}{weightChart.avg7}g</strong>
-                </div>
-              )}
+              <WeightValueChart weights={weights} />
             </div>
           )}
 

@@ -248,4 +248,12 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 .wdial-unit{font-size:16px;font-weight:600;color:var(--muted);margin-top:44px;z-index:2;position:relative;margin-left:4px}
 .wdial-fade{position:absolute;inset:0;background:linear-gradient(to bottom,var(--surf) 0%,transparent 35%,transparent 65%,var(--surf) 100%);pointer-events:none;z-index:3;border-radius:var(--r)}
 
+/* ── 인터랙티브 차트 (호버/탭 시 세부 내용 툴팁) ── */
+.chart-wrap{position:relative}
+.chart-tip{position:absolute;transform:translate(-50%,-100%);margin-top:-10px;background:var(--ink);color:var(--bg);font-family:var(--sans);font-size:11px;font-weight:600;line-height:1.45;padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.chart-tip b{font-weight:700}
+.chart-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+.chart-hit{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chart-bar{cursor:pointer}
+
 ::-webkit-scrollbar{width:0}
