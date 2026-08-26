@@ -40,7 +40,7 @@ function itemSummary(item) {
     return `체중 ${item.kg != null ? item.kg.toFixed(2) + 'kg' : '—'} — ${fmtFull(item.time)}`;
   }
   if (t === 'temps') {
-    return `체온 ${item.celsius != null ? item.celsius + '°C' : '—'} — ${fmtFull(item.time)}`;
+    return `체온 ${item.temp != null ? item.temp.toFixed(1) + '°C' : '—'} — ${fmtFull(item.time)}`;
   }
   return '기록';
 }

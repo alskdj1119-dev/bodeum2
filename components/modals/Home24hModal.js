@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, directFeedMl,
+  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
@@ -27,12 +27,7 @@ function StatCard({ label, value, sub, color }) {
 
 // ─── 수유 상세 ───
 function FeedDetail({ records, onEdit }) {
-  const totalMl = records.reduce((acc, f) => {
-    let amt = f.amount;
-    if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end)
-      amt = directFeedMl(f.start, f.end);
-    return acc + (f.consumedAmount != null ? f.consumedAmount : (amt || 0));
-  }, 0);
+  const totalMl = records.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
   const count = records.length;
   const avgMl = count > 0 && totalMl > 0 ? Math.round(totalMl / count) : 0;
 
@@ -78,8 +73,7 @@ function FeedDetail({ records, onEdit }) {
         <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)', fontSize: 13 }}>기록이 없어요</div>
       )}
       {[...records].sort((a, b) => new Date(b.start || b.time) - new Date(a.start || a.time)).map((f, i) => {
-        let amt = f.amount;
-        if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) amt = directFeedMl(f.start, f.end);
+        const amt = feedAmountMl(f);
         const amtStr = f.consumedAmount != null && amt != null ? `준비 ${amt}ml / 섭취 ${f.consumedAmount}ml`
           : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
           : amt ? `${amt}ml` : '';

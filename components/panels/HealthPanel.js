@@ -4,8 +4,6 @@ import { useApp } from '../../lib/store';
 import { fmtFull, groupByDay, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
-const VACCINE_KEY = 'bodeum_vaccine_status';
-
 const VACCINES = [
   { code: 'hepb1',  name: 'B형간염 1차',        daysMin: 0,   daysMax: 7 },
   { code: 'bcg',    name: 'BCG (결핵)',           daysMin: 0,   daysMax: 28 },
@@ -86,12 +84,13 @@ function buildWeightChart(weights) {
 
 // ──────────────────────────── 메인 컴포넌트 ────────────────────────────
 export default function HealthPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, activeTab, healthInitTab, setHealthInitTab } = useApp();
-  const baby = useApp().baby;
+  const {
+    db, dispatch, saveDB, setOpenModal, setEditId, setEditType, activeTab, healthInitTab, setHealthInitTab,
+    baby, vaccineStatus, saveVaccineStatus, showToast,
+  } = useApp();
   const { temps = [], weights = [] } = db;
 
   const [tab, setTab] = useState('temp'); // 'temp' | 'weight' | 'vaccine'
-  const [vaccineStatus, setVaccineStatus] = useState({});
 
   // 홈에서 체중 카드 클릭 시 체중 탭으로 자동 이동
   useEffect(() => {
@@ -100,13 +99,6 @@ export default function HealthPanel() {
       setHealthInitTab(null);
     }
   }, [activeTab, healthInitTab]);
-
-  useEffect(() => {
-    try {
-      const s = localStorage.getItem(VACCINE_KEY);
-      if (s) setVaccineStatus(JSON.parse(s));
-    } catch (_) {}
-  }, []);
 
   // 체온 데이터
   const tempsSorted = [...temps].sort((a,b) => new Date(b.time) - new Date(a.time));
@@ -132,21 +124,32 @@ export default function HealthPanel() {
   function openWeightEdit(w) { setEditId(w.id); setEditType('weights'); setOpenModal('weight'); }
   function openWeightNew() { setEditId(null); setEditType(null); setOpenModal('weight'); }
 
+  // 수유/기저귀/수면과 동일하게 휴지통을 거치도록 통일 (기존엔 여기만 영구 삭제였음)
   async function delTemp(id) {
+    const item = temps.find(x => x.id === id);
+    if (!item) return;
+    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'temps' };
     const newTemps = temps.filter(x => x.id !== id);
+    const newTrash = [trashItem, ...(db.trash || [])];
     dispatch({ type: 'SET_TEMPS', payload: newTemps });
-    await saveDB({ ...db, temps: newTemps });
+    dispatch({ type: 'SET_TRASH', payload: newTrash });
+    await saveDB({ ...db, temps: newTemps, trash: newTrash });
+    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
   async function delWeight(id) {
+    const item = weights.find(x => x.id === id);
+    if (!item) return;
+    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'weights' };
     const newW = weights.filter(x => x.id !== id);
+    const newTrash = [trashItem, ...(db.trash || [])];
     dispatch({ type: 'SET_WEIGHTS', payload: newW });
-    await saveDB({ ...db, weights: newW });
+    dispatch({ type: 'SET_TRASH', payload: newTrash });
+    await saveDB({ ...db, weights: newW, trash: newTrash });
+    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
   function setVaccine(code, status) {
-    const next = { ...vaccineStatus, [code]: status };
-    setVaccineStatus(next);
-    try { localStorage.setItem(VACCINE_KEY, JSON.stringify(next)); } catch (_) {}
+    saveVaccineStatus({ ...vaccineStatus, [code]: status });
   }
 
   const TABS = [

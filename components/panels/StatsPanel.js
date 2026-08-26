@@ -1,6 +1,6 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { durStr, directFeedMl } from '../../lib/helpers';
+import { durStr, feedEffectiveMl } from '../../lib/helpers';
 
 // ──────────── 날짜 범위 헬퍼 (00:00~23:59 기준) ────────────
 function dayRange(offsetDays) {
@@ -36,13 +36,7 @@ function avgIntervalMin(feedList) {
 }
 
 function totalMl(list) {
-  return list.reduce((acc, f) => {
-    let amt = f.consumedAmount != null ? f.consumedAmount : f.amount;
-    if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
-      amt = directFeedMl(f.start, f.end);
-    }
-    return acc + (amt || 0);
-  }, 0);
+  return list.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
 }
 
 function fmtMin(m) {

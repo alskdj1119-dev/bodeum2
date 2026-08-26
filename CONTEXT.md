@@ -55,9 +55,10 @@ components/
     HealthPanel.js     # 건강 (체온/체중/예방접종 탭)
     StatsPanel.js      # 통계
     SettingsPanel.js   # 설정
-    WeightPanel.js     # (HealthPanel 내부에서 사용)
     ChangelogPanel.js  # 업데이트 내역
     RequestsPanel.js   # 건의사항
+    TrashPanel.js      # 삭제 기록 (복원 가능)
+    NotifHistoryPanel.js # 알림 내역
 
   modals/
     FeedModal.js       # 수유 기록 추가/수정
@@ -178,6 +179,8 @@ setOpenModal('feed');
 | `elapsedStr(iso)` | 경과 시간 문자열 |
 | `durStr(ms)` | N시간 N분 |
 | `directFeedMl(start, end)` | 직수 수유량 추정 (ml) |
+| `feedAmountMl(f)` | 수유 기록의 표시용 준비량(ml) — amount 없으면 직수 시간으로 추정 |
+| `feedEffectiveMl(f)` | 통계 합산용 실제 섭취량 — consumedAmount 우선, 없으면 feedAmountMl |
 | `groupByDay(arr, getter)` | 날짜별 그룹핑 |
 | `nowISO()` | 현재 시각 ISO |
 | `toLocal(iso)` / `fromLocal(str)` | datetime-local 변환 |

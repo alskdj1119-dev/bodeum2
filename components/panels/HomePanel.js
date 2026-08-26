@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import {
-  agoStr, durStr, fmt, fmtFull, elapsedStr, directFeedMl, timerStr,
+  agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -52,13 +52,7 @@ export default function HomePanel() {
   const sleepMs = sleep24.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
   const diaperWet24 = diaper24.filter(d => d.type === 'wet' || d.type === 'both').length;
   const diaperSoiled24 = diaper24.filter(d => d.type === 'soiled' || d.type === 'both').length;
-  const feedMl = feed24.reduce((acc, f) => {
-    let amt = f.amount;
-    if (amt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
-      amt = directFeedMl(f.start, f.end);
-    }
-    return acc + (f.consumedAmount != null ? f.consumedAmount : (amt || 0));
-  }, 0);
+  const feedMl = feed24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
 
   // Weight
   const sortedWeights = [...weights].sort((a,b) => new Date(b.time) - new Date(a.time));
@@ -97,8 +91,7 @@ export default function HomePanel() {
   const all = [];
   feeds.forEach(f => {
     const t = f.start || f.time;
-    let fAmt = f.amount;
-    if (fAmt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) fAmt = directFeedMl(f.start, f.end);
+    const fAmt = feedAmountMl(f);
     const amtStr = f.consumedAmount != null && fAmt != null ? `준비 ${fAmt}ml / 섭취 ${f.consumedAmount}ml`
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : fAmt ? `${fAmt}ml` : '';
@@ -215,7 +208,7 @@ export default function HomePanel() {
         <div className="sc" onClick={() => setDetail24('feed')}>
           <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
           <div className="sval" style={{ fontSize:'15px' }}>{feed24.length}회</div>
-          <div className="ssub">{feedMl > 0 ? `섭취 ${feedMl}ml` : (feed24.length > 0 ? ' ' : '기록 없음')}</div>
+          <div className="ssub">{feedMl > 0 ? `섭취 ${feedMl}ml` : (feed24.length > 0 ? ' ' : '기록 없음')}</div>
         </div>
         <div className="sc" onClick={() => setDetail24('diaper')}>
           <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>

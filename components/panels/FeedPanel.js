@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, directFeedMl,
+  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, FEED_SIDE_LABEL as TS,
 } from '../../lib/helpers';
 
@@ -52,10 +52,7 @@ export default function FeedPanel() {
   }
 
   function feedDetails(f) {
-    let dispAmt = f.amount;
-    if (dispAmt == null && f.type === 'breast' && f.subtype === 'direct' && f.start && f.end) {
-      dispAmt = directFeedMl(f.start, f.end);
-    }
+    const dispAmt = feedAmountMl(f);
     const amtStr = f.consumedAmount != null && dispAmt != null ? `준비 ${dispAmt}ml / 섭취 ${f.consumedAmount}ml`
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : dispAmt ? `${dispAmt}ml` : '';
