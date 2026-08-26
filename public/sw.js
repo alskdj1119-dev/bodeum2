@@ -1,5 +1,5 @@
 /* 보듬 Service Worker */
-var CACHE = 'bodeum-v5';
+var CACHE = 'bodeum-v6';
 
 /* ── 설치 ── */
 self.addEventListener('install', function(e) {
@@ -24,6 +24,10 @@ self.addEventListener('activate', function(e) {
 /* ── 네트워크 캐시 ── */
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
+  // 브라우저가 링크 미리 불러오기/뒤로가기 캐시 확인 등으로 만드는 특수 요청
+  // (cache:'only-if-cached' + mode!=='same-origin')을 그대로 fetch()에 넘기면
+  // 브라우저가 TypeError를 던져서 요청 자체가 "페이지 로드 실패"로 처리됨 — 건드리지 않고 지나간다.
+  if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') return;
   e.respondWith(
     fetch(e.request).then(function(res) {
       var clone = res.clone();
