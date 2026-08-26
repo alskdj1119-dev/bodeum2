@@ -13,6 +13,7 @@ import SettingsPanel from './panels/SettingsPanel';
 import ChangelogPanel from './panels/ChangelogPanel';
 import RequestsPanel from './panels/RequestsPanel';
 import TrashPanel from './panels/TrashPanel';
+import NotifHistoryPanel from './panels/NotifHistoryPanel';
 import StatsPanel from './panels/StatsPanel';
 import HealthPanel from './panels/HealthPanel';
 import FeedModal from './modals/FeedModal';
@@ -22,8 +23,8 @@ import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash'];
-const SUB_PANELS = ['changelog', 'requests', 'trash'];
+const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory'];
 
 export default function BodeumApp() {
   const {
@@ -155,7 +156,7 @@ export default function BodeumApp() {
   // stats/health/changelog/requests → back to settings
   const SWIPE_BACK_TARGET = {
     feed: 'home', diaper: 'home', sleep: 'home',
-    changelog: 'settings', requests: 'settings', trash: 'settings',
+    changelog: 'settings', requests: 'settings', trash: 'settings', notifHistory: 'settings',
   };
 
   function handleTouchStart(e) {
@@ -182,7 +183,7 @@ export default function BodeumApp() {
   const showBack = isSubPanel;
 
   function handleBack() {
-    if (activeTab === 'changelog' || activeTab === 'requests' || activeTab === 'trash') goTab('settings', 'back');
+    if (activeTab === 'changelog' || activeTab === 'requests' || activeTab === 'trash' || activeTab === 'notifHistory') goTab('settings', 'back');
     else goTab('home', 'back');
   }
 
@@ -203,6 +204,7 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('stats')}><StatsPanel /></div>
         <div className="panel" ref={panelRef('health')}><HealthPanel /></div>
         <div className="panel" ref={panelRef('trash')}><TrashPanel /></div>
+        <div className="panel" ref={panelRef('notifHistory')}><NotifHistoryPanel /></div>
       </div>
 
       <NavBar />

@@ -236,6 +236,18 @@ export default function SettingsPanel() {
 
       {/* ─── 메뉴 ─── */}
       <p className="seclbl" style={{ marginBottom:'10px' }}>기타</p>
+      <button className="settmenu" onClick={() => goTab('notifHistory', 'forward')}>
+        <div className="settmenu-ico" style={{ background:'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">알림 내역</div>
+          <div className="settmenu-sub">실제로 발송된 알림 확인</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
       <button className="settmenu" onClick={() => goTab('changelog', 'forward')}>
         <div className="settmenu-ico" style={{ background:'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>

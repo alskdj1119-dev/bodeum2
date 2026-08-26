@@ -47,11 +47,16 @@ function addGa(name) {
   const hasBatchim = syllable % 28 !== 0;
   return name + (hasBatchim ? '이가' : '가');
 }
+// 앱 다른 화면들(lib/helpers.js의 elapsedStr/agoStr/durStr)과 동일한 표기 규칙:
+// 시간과 분 사이에 공백을 넣고, 분이 0이면 "0분"을 붙이지 않는다.
+// (예전 버전은 "3시간45분"처럼 공백이 없고 "3시간0분"처럼 불필요한 0분이 붙어
+//  알림 문구가 이상하게 보이는 오류가 있었음)
 function elapsedLabel(ms) {
   const totalMin = Math.floor(ms / 60000);
   const hh = Math.floor(totalMin / 60);
   const mm = totalMin % 60;
-  return (hh > 0 ? hh + '시간' : '') + mm + '분';
+  if (hh === 0) return mm + '분';
+  return mm ? hh + '시간 ' + mm + '분' : hh + '시간';
 }
 
 // 한국 표준시(UTC+9, 서머타임 없음) 기준 "현재 몇 시"인지.
@@ -223,7 +228,15 @@ async function sendToFamily(docSnap) {
     });
   }
 
-  const update = { notifState: nextState };
+  // 이전 알림 내역 — 설정 화면에서 "알림 내역"으로 확인할 수 있도록 최근 발송분을 저장해둔다.
+  // 계속 쌓이면 문서가 무한정 커지므로 최근 MAX_LOG건만 유지한다.
+  const MAX_LOG = 50;
+  const prevLog = Array.isArray(family.notifLog) ? family.notifLog : [];
+  const newLogEntries = toSend.map((n) => ({ key: n.key, title: n.title, body: n.body, sentAt: nowMs }));
+  const update = {
+    notifState: nextState,
+    notifLog: [...prevLog, ...newLogEntries].slice(-MAX_LOG),
+  };
   if (invalidTokens.length) {
     update.fcmTokens = admin.firestore.FieldValue.arrayRemove(...invalidTokens);
   }
