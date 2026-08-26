@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy:functions:dev": "firebase deploy --only functions --project dev",
+    "deploy:functions:prod": "firebase deploy --only functions --project production"
   },
   "dependencies": {
     "firebase": "^12.18.0",

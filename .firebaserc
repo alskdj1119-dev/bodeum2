@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "kimel-54750"
+    "default": "kimel-54750",
+    "production": "kimel-54750"
   }
 }
