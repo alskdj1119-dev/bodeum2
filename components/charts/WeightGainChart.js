@@ -4,13 +4,15 @@ import { weightDailyPoints, weightGains, avgRecentGain } from '../../lib/helpers
 import ChartTooltip from './ChartTooltip';
 
 // 홈 화면 체중 카드에 들어가는 "일별 증가율" 선 그래프.
-// 전일 대비 증가/감소량(g)을 점으로 찍고, 마우스를 올리거나(데스크톱) 탭하면(모바일)
-// 해당 날짜의 정확한 증가량과 체중을 툴팁으로 보여준다.
+// 최근 기록이 있는 날짜 기준 최대 7일치만 표시한다.
+// 점을 누르면 해당 날짜의 증가량과 체중을 툴팁으로 보여주고, 손을 떼면 사라진다.
+// (드래그하며 계속 갱신하는 추적 기능은 홈 카드에서는 쓰지 않음 — 카드 자체가 클릭 가능한
+//  큰 영역(.sc)이라 누르는 동안 카드 전체에 눌림 애니메이션이 걸리는데, 손가락을 움직이며
+//  계속 추적하면 이 애니메이션과 겹쳐 툴팁이 간헐적으로 사라지는 문제가 있었음)
 export default function WeightGainChart({ weights }) {
   const svgRef = useRef(null);
   const [active, setActive] = useState(null);
-  const pressedRef = useRef(false); // 훅은 조건부 return보다 항상 위에 있어야 함(리액트 훅 규칙)
-  const points = weightDailyPoints(weights, 14);
+  const points = weightDailyPoints(weights, 7);
   const gains = weightGains(points);
   if (gains.length < 1) return null;
 
@@ -32,8 +34,6 @@ export default function WeightGainChart({ weights }) {
   const activeGain = active != null ? gains[active] : null;
   const activePoint = active != null ? points[active + 1] : null; // 증가량 쌍 중 나중 날짜
 
-  // 누르고 있는 동안만 툴팁을 보여준다. 손가락/마우스를 뗄 때 닫히고, 누른 채로
-  // 좌우로 움직이면 그 x좌표에서 가장 가까운 점으로 계속 갱신된다(매번 다시 누를 필요 없음).
   function nearestIndex(clientX) {
     const rect = svgRef.current.getBoundingClientRect();
     const relX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
@@ -47,16 +47,10 @@ export default function WeightGainChart({ weights }) {
   }
   function onDown(e) {
     e.stopPropagation();
-    pressedRef.current = true;
     e.currentTarget.setPointerCapture(e.pointerId);
     setActive(nearestIndex(e.clientX));
   }
-  function onMove(e) {
-    if (!pressedRef.current) return;
-    setActive(nearestIndex(e.clientX));
-  }
   function onUp() {
-    pressedRef.current = false;
     setActive(null);
   }
 
@@ -66,7 +60,7 @@ export default function WeightGainChart({ weights }) {
       <svg
         ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" xmlns="http://www.w3.org/2000/svg"
         style={{ touchAction: 'none' }}
-        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+        onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={onUp}
       >
         <line x1={ml} y1={zeroY} x2={W - mr} y2={zeroY} stroke="var(--bdr)" strokeWidth="1" />
         <polyline points={ptStr} fill="none" stroke="var(--cw)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
@@ -83,7 +77,6 @@ export default function WeightGainChart({ weights }) {
       </svg>
       {activePoint && (
         <ChartTooltip containerRef={svgRef} xPct={(xp(active) / W) * 100} yPct={(yp(activeGain) / H) * 100}>
-          <b>{activePoint.date}</b><br />
           {activeGain >= 0 ? '+' : ''}{activeGain}g · {activePoint.kg.toFixed(2)}kg
         </ChartTooltip>
       )}
