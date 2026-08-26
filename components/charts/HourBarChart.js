@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import ChartTooltip from './ChartTooltip';
 
 // 24개 시간대 버킷 막대 차트 (Home24hModal의 수유/기저귀/수면 "시간대별" 그래프에서 공통 사용).
 // 막대에 마우스를 올리거나(데스크톱) 탭하면(모바일) 해당 시간대의 정확한 수치를 툴팁으로 보여준다.
 export default function HourBarChart({ buckets, color, height = 40, formatTip }) {
+  const rowRef = useRef(null);
   const [active, setActive] = useState(null);
   const max = Math.max(...buckets, 1);
   const activeVal = active != null ? buckets[active] : null;
@@ -13,7 +14,7 @@ export default function HourBarChart({ buckets, color, height = 40, formatTip })
 
   return (
     <div className="chart-wrap">
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height }}>
+      <div ref={rowRef} style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height }}>
         {buckets.map((v, h) => (
           <div
             key={h}
@@ -36,7 +37,7 @@ export default function HourBarChart({ buckets, color, height = 40, formatTip })
         <span style={{ fontSize: 9, color: 'var(--muted)' }}>23시</span>
       </div>
       {active != null && (
-        <ChartTooltip xPct={((active + 0.5) / 24) * 100} yPct={0}>
+        <ChartTooltip containerRef={rowRef} xPct={((active + 0.5) / 24) * 100} yPct={0}>
           {formatTip ? formatTip(active, activeVal) : `${active}시: ${activeVal}`}
         </ChartTooltip>
       )}

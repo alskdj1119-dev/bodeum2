@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl,
+  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
@@ -35,7 +35,7 @@ function FeedDetail({ records, onEdit }) {
   // 시간대별 바 차트 (24개 버킷)
   const hourBuckets = Array(24).fill(0);
   records.forEach(f => {
-    const h = new Date(f.start || f.time).getHours();
+    const h = kstDate(new Date(f.start || f.time).getTime()).getUTCHours();
     hourBuckets[h]++;
   });
 
@@ -90,7 +90,7 @@ function DiaperDetail({ records, onEdit }) {
   const total = records.length;
 
   const hourBuckets = Array(24).fill(0);
-  records.forEach(d => { hourBuckets[new Date(d.time).getHours()]++; });
+  records.forEach(d => { hourBuckets[kstDate(new Date(d.time).getTime()).getUTCHours()]++; });
 
   return (
     <>
@@ -146,8 +146,8 @@ function SleepDetail({ records, onEdit }) {
 
   const hourBuckets = Array(24).fill(0);
   records.forEach(s => {
-    const startH = new Date(s.start).getHours();
-    const endH = new Date(s.end).getHours();
+    const startH = kstDate(new Date(s.start).getTime()).getUTCHours();
+    const endH = kstDate(new Date(s.end).getTime()).getUTCHours();
     for (let h = startH; h !== (endH + 1) % 24; h = (h + 1) % 24) {
       hourBuckets[h]++;
       if (h === endH) break;

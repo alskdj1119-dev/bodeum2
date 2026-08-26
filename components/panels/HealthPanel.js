@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, groupByDay, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
+import { fmtFull, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 import WeightValueChart from '../charts/WeightValueChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
@@ -63,9 +63,15 @@ export default function HealthPanel() {
   const weightSorted = [...weights].sort((a,b) => new Date(b.time) - new Date(a.time));
   const weightGrouped = groupByDay(weightSorted, w => w.time);
 
-  // 예방접종
+  // 예방접종 — 생년월일은 항상 "한국 날짜"로 해석해 만 며칠인지 계산 (기기 시간대 무관).
   const age = baby.birthDate
-    ? Math.floor((Date.now() - new Date(baby.birthDate).getTime()) / 86400000)
+    ? (() => {
+        const [by, bm, bd] = baby.birthDate.split('-').map(Number);
+        const birthMs = Date.UTC(by, bm - 1, bd, 0, 0) - KST_OFFSET_MS;
+        const nowKst = kstDate(Date.now());
+        const todayMs = Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate(), 0, 0) - KST_OFFSET_MS;
+        return Math.floor((todayMs - birthMs) / 86400000);
+      })()
     : null;
 
   function openTempEdit(t) { setEditId(t.id); setEditType('temps'); setOpenModal('temp'); }
@@ -239,8 +245,11 @@ export default function HealthPanel() {
           ) : (
             VACCINES.map((v) => {
               const status = vaccineStatus[v.code] || 'before';
-              const targetDate = new Date(baby.birthDate);
-              targetDate.setDate(targetDate.getDate() + v.daysMin);
+              // 생년월일 문자열을 UTC 기준 Date로 만들고 UTC getter/setter만 사용 —
+              // 기기 시간대와 무관하게 항상 같은 달력 날짜 계산이 되도록 한다.
+              const [vby, vbm, vbd] = baby.birthDate.split('-').map(Number);
+              const targetDate = new Date(Date.UTC(vby, vbm - 1, vbd));
+              targetDate.setUTCDate(targetDate.getUTCDate() + v.daysMin);
 
               const isNowPeriod = age !== null && age >= v.daysMin - 7 && age <= v.daysMax + 30;
               const isPastPeriod = age !== null && age > v.daysMax + 30;
@@ -265,7 +274,7 @@ export default function HealthPanel() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 500 }}>{v.name}</div>
                       <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                        권장: {targetDate.getMonth()+1}/{targetDate.getDate()}
+                        권장: {targetDate.getUTCMonth()+1}/{targetDate.getUTCDate()}
                         {isNowPeriod && status === 'before' && (
                           <span style={{ color: 'var(--cf)', fontWeight: 600, marginLeft: 6 }}>지금 시기</span>
                         )}

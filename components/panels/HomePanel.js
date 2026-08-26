@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
+  kstDate, KST_OFFSET_MS,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -32,9 +33,12 @@ export default function HomePanel() {
   // Day count
   let dayCount = null;
   if (baby.birthDate) {
-    const birth = new Date(baby.birthDate + 'T00:00:00');
-    const today = new Date(); today.setHours(0,0,0,0);
-    const d = Math.floor((today - birth) / 86400000) + 1;
+    // 생년월일은 항상 "한국 날짜"로 해석 — 기기 시간대와 무관하게 동일한 만난지 일수가 나오도록.
+    const [by, bm, bd] = baby.birthDate.split('-').map(Number);
+    const birthMs = Date.UTC(by, bm - 1, bd, 0, 0) - KST_OFFSET_MS;
+    const nowKst = kstDate(Date.now());
+    const todayMs = Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate(), 0, 0) - KST_OFFSET_MS;
+    const d = Math.floor((todayMs - birthMs) / 86400000) + 1;
     if (d >= 1) dayCount = d;
   }
 

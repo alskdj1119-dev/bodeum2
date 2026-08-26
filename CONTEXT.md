@@ -274,6 +274,14 @@ setOpenModal('feed');
 
 **참고:** 이 세션에서 Playwright로 실제 Firestore 저장을 거치는 흐름은 샌드박스 네트워크 제약으로 `setDoc()`이 응답하지 않아 검증하지 못했음 (배포 환경에서는 정상 동작하는 기존 코드 경로). 대신 차트 컴포넌트만 별도로 렌더링하는 임시 테스트 페이지로 렌더링/호버 툴팁 동작을 확인한 뒤 삭제함.
 
+### 2026-08-26 세션 6
+**작업 내용:**
+- **툴팁 잘림 버그 수정**: `ChartTooltip.js`를 `.chart-wrap` 기준 퍼센트 절대배치 → `createPortal(document.body)` + `position:fixed` 방식으로 전면 재작성. 차트(svg 또는 막대 행) `ref`의 `getBoundingClientRect()`로 뷰포트 좌표를 구하고, 툴팁 자신의 렌더된 크기를 측정해 뷰포트 안에 들어오도록 위치를 보정(가장자리 근처에서는 화살표만 원래 지점을 계속 가리키도록 이동). `.sc`/`.panel`의 `overflow:hidden`에 더 이상 잘리지 않음. `WeightGainChart`/`WeightValueChart`/`HourBarChart`에 `svgRef`/`rowRef` 추가해 `containerRef`로 전달. `globals.css`: `.chart-tip`을 `position:fixed`로, 화살표를 `::after` 대신 별도 `.chart-tip-arrow`(위/아래 반전 가능) 엘리먼트로 변경
+- **날짜/시간 전체 한국(KST, UTC+9) 기준 통일**: 기존에는 `nowISO`/`toLocal`/`fromLocal`/`fmt`/`fmtFull`/`dayLabel` 등이 "보는 사람 기기의 시간대"(`getTimezoneOffset()`, 로컬 getter)를 기준으로 동작해, 가족 구성원이 서로 다른 시간대 기기를 쓰면 같은 기록이 다른 날짜로 보일 수 있었음. `lib/helpers.js`에 `kstDate(ms)`(UTC+9 shift 후 UTC getter로 읽으면 한국 시각이 나오는 트릭) + `KST_OFFSET_MS` 상수를 추가하고, 위 함수들을 모두 이 기준으로 재작성. `weightDailyPoints()`의 날짜별 그룹핑도 기존 UTC 슬라이스(`w.time.slice(0,10)`) 대신 `toLocal()`(KST) 기준으로 변경 — 이것이 "23일 체중이 홈 차트에서 빠져 보인다"던 버그의 근본 원인이었음
+- 위 헬퍼 변경에 맞춰 기기 시간대 getter를 직접 쓰던 나머지 위치도 모두 KST 기준으로 수정: `Header.js`(상단 날짜 표시), `Home24hModal.js`(수유/기저귀/수면 시간대별 버킷 3곳), `HomePanel.js`(만난지 며칠째 `dayCount`), `HealthPanel.js`(예방접종 만 며칠 `age` 및 권장 접종일 `targetDate` 표시), `StatsPanel.js`(오늘/어제/최근 7일 날짜 경계, 낮잠/밤잠 구분 시각, 요일 라벨)
+- `_deletedAt`/`createdAt`/`endTime`/피드·수면 시작시각처럼 "특정 순간"을 나타내는 절대 타임스탬프(`new Date().toISOString()`)는 시간대와 무관하므로 그대로 둠 — 사람이 읽는 달력 날짜/시각으로 변환되는 지점만 수정
+- 검증: `weights` mock 데이터로 `toLocal`/`fromLocal`/`fmt`/`weightDailyPoints`를 node에서 직접 호출해 UTC↔KST 변환이 의도대로 동작하는지 확인 (예: UTC 23:30 → KST 다음날 08:30), 임시 테스트 페이지(`app/dbgcharttest2`, 삭제됨)에서 Playwright로 차트 좌/우 끝 지점에 마우스 호버해 툴팁이 뷰포트 밖으로 잘리지 않고 카드 안에 잘 보정되어 표시되는지 스크린샷으로 확인. `npm run build` 정상 통과
+
 ---
 
 ## 다음 세션 사용법

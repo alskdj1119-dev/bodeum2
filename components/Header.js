@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useApp } from '../lib/store';
+import { kstDate } from '../lib/helpers';
 
 export default function Header({ onBack, showBack, title, activeTab }) {
   const { syncState, toggleTheme, theme, goTab } = useApp();
@@ -9,8 +10,8 @@ export default function Header({ onBack, showBack, title, activeTab }) {
 
   useEffect(() => {
     function update() {
-      const d = new Date(), days = ['일','월','화','수','목','금','토'];
-      setDateStr(d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate() + ' (' + days[d.getDay()] + ')');
+      const d = kstDate(Date.now()), days = ['일','월','화','수','목','금','토'];
+      setDateStr(d.getUTCFullYear() + '.' + (d.getUTCMonth()+1) + '.' + d.getUTCDate() + ' (' + days[d.getUTCDay()] + ')');
     }
     update();
     const t = setInterval(update, 60000);

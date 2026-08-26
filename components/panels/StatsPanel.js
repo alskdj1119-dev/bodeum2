@@ -1,13 +1,17 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { durStr, feedEffectiveMl } from '../../lib/helpers';
+import { durStr, feedEffectiveMl, kstDate, KST_OFFSET_MS } from '../../lib/helpers';
 
-// ──────────── 날짜 범위 헬퍼 (00:00~23:59 기준) ────────────
+// ──────────── 날짜 범위 헬퍼 (한국 시간 00:00~23:59 기준) ────────────
+// 기기 시간대와 무관하게 항상 "한국 자정"을 기준으로 날짜 경계를 계산한다.
+function kstMidnightMs(offsetDays = 0) {
+  const nowKst = kstDate(Date.now());
+  return Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate() + offsetDays, 0, 0) - KST_OFFSET_MS;
+}
+
 function dayRange(offsetDays) {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + offsetDays);
-  return { start: d.getTime(), end: d.getTime() + 86400000 - 1 };
+  const start = kstMidnightMs(offsetDays);
+  return { start, end: start + 86400000 - 1 };
 }
 
 function inDay(isoTime, offsetDays) {
@@ -16,9 +20,9 @@ function inDay(isoTime, offsetDays) {
   return t >= start && t <= end;
 }
 
-// 낮잠(06-22) vs 밤잠(22-06)
+// 낮잠(06-22) vs 밤잠(22-06) — 한국 시각 기준
 function isNight(isoTime) {
-  const h = new Date(isoTime).getHours();
+  const h = kstDate(new Date(isoTime).getTime()).getUTCHours();
   return h >= 22 || h < 6;
 }
 
@@ -45,20 +49,17 @@ function fmtMin(m) {
   return h > 0 ? `${h}시간 ${mn}분` : `${mn}분`;
 }
 
-// 최근 7일 (오늘 포함 7일)
+// 최근 7일 (오늘 포함 7일) — 각 날의 "한국 자정" ms 타임스탬프 배열
 function last7Days() {
   const days = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - i);
-    days.push(d);
+    days.push(kstMidnightMs(-i));
   }
   return days;
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-function dayLabel(d) { return DAY_LABELS[d.getDay()]; }
+function dayLabel(ms) { return DAY_LABELS[kstDate(ms).getUTCDay()]; }
 
 // ──────────── 막대 차트 (수유 전용 — 횟수 + ml 표시) ────────────
 function FeedBar({ label, count, ml, maxCount, color }) {
@@ -116,7 +117,7 @@ export default function StatsPanel() {
   // 7일 일별 수유 횟수 + ml
   const days7 = last7Days();
   const feedByDay = days7.map(d => {
-    const start = d.getTime(), end = start + 86400000;
+    const start = d, end = start + 86400000;
     return feeds.filter(f => {
       const t = new Date(f.start || f.time).getTime();
       return t >= start && t < end;
@@ -139,7 +140,7 @@ export default function StatsPanel() {
   const nightMs = night24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
 
   const sleepByDay = days7.map(d => {
-    const start = d.getTime(), end = start + 86400000;
+    const start = d, end = start + 86400000;
     const ms = sleeps
       .filter(s => s.end && new Date(s.start).getTime() >= start && new Date(s.start).getTime() < end)
       .reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { weightDailyPoints, weightGains, avgRecentGain } from '../../lib/helpers';
 import ChartTooltip from './ChartTooltip';
 
@@ -7,6 +7,7 @@ import ChartTooltip from './ChartTooltip';
 // 전일 대비 증가/감소량(g)을 점으로 찍고, 마우스를 올리거나(데스크톱) 탭하면(모바일)
 // 해당 날짜의 정확한 증가량과 체중을 툴팁으로 보여준다.
 export default function WeightGainChart({ weights }) {
+  const svgRef = useRef(null);
   const [active, setActive] = useState(null);
   const points = weightDailyPoints(weights, 14);
   const gains = weightGains(points);
@@ -38,7 +39,7 @@ export default function WeightGainChart({ weights }) {
   return (
     <div className="chart-wrap" style={{ marginTop: 8 }} onClick={e => e.stopPropagation()}>
       <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginBottom: 4 }}>일별 증가율</div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" xmlns="http://www.w3.org/2000/svg">
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" xmlns="http://www.w3.org/2000/svg">
         <line x1={ml} y1={zeroY} x2={W - mr} y2={zeroY} stroke="var(--bdr)" strokeWidth="1" />
         <polyline points={ptStr} fill="none" stroke="var(--cw)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {gains.map((g, i) => {
@@ -59,7 +60,7 @@ export default function WeightGainChart({ weights }) {
         })}
       </svg>
       {activePoint && (
-        <ChartTooltip xPct={(xp(active) / W) * 100} yPct={(yp(activeGain) / H) * 100}>
+        <ChartTooltip containerRef={svgRef} xPct={(xp(active) / W) * 100} yPct={(yp(activeGain) / H) * 100}>
           <b>{activePoint.date}</b><br />
           {activeGain >= 0 ? '+' : ''}{activeGain}g · {activePoint.kg.toFixed(2)}kg
         </ChartTooltip>

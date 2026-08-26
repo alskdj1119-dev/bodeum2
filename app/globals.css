@@ -250,9 +250,13 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 
 /* ── 인터랙티브 차트 (호버/탭 시 세부 내용 툴팁) ── */
 .chart-wrap{position:relative}
-.chart-tip{position:absolute;transform:translate(-50%,-100%);margin-top:-10px;background:var(--ink);color:var(--bg);font-family:var(--sans);font-size:11px;font-weight:600;line-height:1.45;padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;z-index:5;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+/* .chart-tip은 document.body에 포탈로 렌더링되어 position:fixed로 배치된다
+   (ChartTooltip.js) — 카드/패널의 overflow:hidden에 잘리지 않도록 하기 위함.
+   left/top은 JS가 매번 인라인 style로 계산해서 넣어준다. */
+.chart-tip{position:fixed;background:var(--ink);color:var(--bg);font-family:var(--sans);font-size:11px;font-weight:600;line-height:1.45;padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;z-index:999;box-shadow:0 3px 10px rgba(0,0,0,.18)}
 .chart-tip b{font-weight:700}
-.chart-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+.chart-tip-arrow{position:absolute;top:100%;transform:translateX(-50%);width:0;height:0;border:5px solid transparent;border-top-color:var(--ink)}
+.chart-tip-arrow.up{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink)}
 .chart-hit{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .chart-bar{cursor:pointer}
 
