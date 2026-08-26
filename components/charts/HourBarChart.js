@@ -10,22 +10,40 @@ export default function HourBarChart({ buckets, color, height = 40, formatTip })
   const max = Math.max(...buckets, 1);
   const activeVal = active != null ? buckets[active] : null;
 
-  // 누르고 있는 동안만 툴팁을 보여주고, 떼거나(손가락을 치우거나) 벗어나면 바로 닫는다.
-  function press(h) { setActive(h); }
-  function release(h) { setActive(a => (a === h ? null : a)); }
+  // 누르고 있는 동안만 툴팁을 보여준다. 손가락/마우스를 뗄 때 닫히고, 누른 채로
+  // 좌우로 움직이면 그 x좌표에 해당하는 시간대로 계속 갱신된다(매번 다시 누를 필요 없음).
+  const pressedRef = useRef(false);
+  function hourAt(clientX) {
+    const rect = rowRef.current.getBoundingClientRect();
+    const relX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.min(23, Math.floor(relX * 24));
+  }
+  function onDown(e) {
+    pressedRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setActive(hourAt(e.clientX));
+  }
+  function onMove(e) {
+    if (!pressedRef.current) return;
+    setActive(hourAt(e.clientX));
+  }
+  function onUp() {
+    pressedRef.current = false;
+    setActive(null);
+  }
 
   return (
     <div className="chart-wrap">
-      <div ref={rowRef} style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height }}>
+      <div
+        ref={rowRef}
+        style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height, touchAction: 'pan-y' }}
+        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+      >
         {buckets.map((v, h) => (
           <div
             key={h}
             className="chart-bar chart-hit"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, height: '100%', justifyContent: 'flex-end', touchAction: 'manipulation' }}
-            onPointerDown={() => press(h)}
-            onPointerUp={() => release(h)}
-            onPointerLeave={() => release(h)}
-            onPointerCancel={() => release(h)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, height: '100%', justifyContent: 'flex-end' }}
           >
             <div style={{
               width: '100%', background: v > 0 ? color : 'var(--bdr)', borderRadius: '2px 2px 0 0',

@@ -31,14 +31,43 @@ export default function WeightGainChart({ weights }) {
   const activeGain = active != null ? gains[active] : null;
   const activePoint = active != null ? points[active + 1] : null; // 증가량 쌍 중 나중 날짜
 
-  // 누르고 있는 동안만 툴팁을 보여주고, 떼거나(손가락을 치우거나) 벗어나면 바로 닫는다.
-  function press(i, e) { e.stopPropagation(); setActive(i); }
-  function release(i) { setActive(a => (a === i ? null : a)); }
+  // 누르고 있는 동안만 툴팁을 보여준다. 손가락/마우스를 뗄 때 닫히고, 누른 채로
+  // 좌우로 움직이면 그 x좌표에서 가장 가까운 점으로 계속 갱신된다(매번 다시 누를 필요 없음).
+  const pressedRef = useRef(false);
+  function nearestIndex(clientX) {
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const svgX = relX * W;
+    let nearest = 0, minDist = Infinity;
+    for (let i = 0; i < n; i++) {
+      const d = Math.abs(xp(i) - svgX);
+      if (d < minDist) { minDist = d; nearest = i; }
+    }
+    return nearest;
+  }
+  function onDown(e) {
+    e.stopPropagation();
+    pressedRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setActive(nearestIndex(e.clientX));
+  }
+  function onMove(e) {
+    if (!pressedRef.current) return;
+    setActive(nearestIndex(e.clientX));
+  }
+  function onUp() {
+    pressedRef.current = false;
+    setActive(null);
+  }
 
   return (
     <div className="chart-wrap" style={{ marginTop: 8 }} onClick={e => e.stopPropagation()}>
       <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginBottom: 4 }}>일별 증가율</div>
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" xmlns="http://www.w3.org/2000/svg"
+        style={{ touchAction: 'pan-y' }}
+        onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+      >
         <line x1={ml} y1={zeroY} x2={W - mr} y2={zeroY} stroke="var(--bdr)" strokeWidth="1" />
         <polyline points={ptStr} fill="none" stroke="var(--cw)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {gains.map((g, i) => {
@@ -47,15 +76,7 @@ export default function WeightGainChart({ weights }) {
           return (
             <g key={points[i + 1].date}>
               <circle cx={x} cy={y} r="3" fill={color} stroke="var(--surf)" strokeWidth="1.5" />
-              <circle
-                className="chart-hit"
-                cx={x} cy={y} r="12" fill="transparent"
-                style={{ touchAction: 'manipulation' }}
-                onPointerDown={e => press(i, e)}
-                onPointerUp={() => release(i)}
-                onPointerLeave={() => release(i)}
-                onPointerCancel={() => release(i)}
-              />
+              <circle className="chart-hit" cx={x} cy={y} r="12" fill="transparent" />
             </g>
           );
         })}

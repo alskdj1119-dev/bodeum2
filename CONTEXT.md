@@ -289,6 +289,14 @@ setOpenModal('feed');
 - **정적 박스의 잘못된 눌림 애니메이션 제거**: `.sc`(클릭 시 `scale(.97)`로 눌리는 카드용 클래스)가 실제로는 클릭 이동하지 않는 정적 그룹 박스에도 재사용되고 있어서, 그 안의 버튼(`.sbtn` 등)을 누르면 `:active`가 조상인 `.sc`까지 전파되어 박스 전체가 눌리는 것처럼 보이는 문제가 있었음(알림 설정 화면에서 최초 발견). 전체 코드베이스에서 `.sc` 사용처 15곳을 전수 조사해 클릭 카드(7곳, `HomePanel.js`)와 정적 박스(8곳)를 구분: 시각적으로 동일하되 `cursor:pointer`/`:active` 눌림이 없는 `.sc-static` 클래스를 신설하고, `HomePanel.js`(알림 권한 안내 배너 1곳), `HealthPanel.js`(체온 최신값/예방접종 안내 박스 2곳), `NotifSettingsPanel.js`(권한 상태/세부 설정 박스 2곳), `StatsPanel.js`(수유/수면/기저귀 통계 요약 박스 3곳)의 `className="sc"`를 `"sc-static"`으로 교체
 - 이번 세션은 사용자 요청에 따라 각 변경 전 계획을 설명하고 명시적 확인("시작해")을 받은 뒤에만 코드를 수정하는 방식으로 진행함. `npm run build` 정상 통과
 
+### 2026-08-26 세션 8
+**작업 내용:**
+- **차트를 누른 채로 드래그하면 실시간으로 툴팁 갱신**: 기존엔 각 데이터 포인트(circle)마다 개별 `onPointerDown`을 걸어놔서, 터치 특성상 처음 누른 요소가 포인터를 계속 붙잡고 있어 다른 점으로 이동해도 반응하지 않고 매번 손을 떼고 다시 눌러야 했음. `WeightGainChart.js`/`WeightValueChart.js`(svg 전체) / `HourBarChart.js`(막대 행 전체)에서 `onPointerDown` 시 `e.currentTarget.setPointerCapture(e.pointerId)`로 포인터를 컨테이너에 캡처하고, `onPointerMove`에서 현재 x좌표에 가장 가까운 데이터 포인트/시간대를 계산해 `setActive()` — 누른 채로 좌우 이동 시 지나가는 위치의 툴팁이 계속 갱신되고, 뗄 때(`onPointerUp`/`onPointerCancel`)만 닫힘. `touchAction:'pan-y'`로 세로 스크롤은 그대로 허용. Playwright로 왼쪽에서 누른 뒤 떼지 않고 오른쪽으로 드래그 → 툴팁 내용이 실시간으로 바뀌는 것을 확인
+- **통계 분석 "7일 평균" 계산 수정**: 기존엔 `feed7d.length / 7`(고정 7)로 나눠서, 기록을 안 한 날이 있으면 평균이 부당하게 낮아 보였음(예: 7일 중 2일만 기록해도 7로 나눔). `StatsPanel.js`에 `feedActiveDays`(최근 7일 중 실제로 기록이 있었던 날짜 수)를 구해 횟수/ml 평균 모두 이 값으로 나누도록 수정(`avgFeedCount7d`, `avgFeedMl7d`). 정확히 사용자가 예시로 든 방식(기록 없는 날 제외하고 남은 날짜 수로 나눔)대로 계산. 기록이 하나도 없으면 평균은 `null`(화면엔 "—")
+- **수유 간격 0일 때 "0" 잘못 표시되던 버그 수정**: `{s.interval && <div>...}` 형태의 JSX는 `s.interval`이 숫자 `0`일 때 `0 && <div>`가 `0`으로 평가되어 그 숫자가 그대로 화면에 찍히는 React/JS의 잘 알려진 함정이었음. `{!!s.interval && <div>...}`로 명시적으로 boolean 변환해 해결
+- **"회" 단위를 줄바꿈 없이 숫자 옆에 표시**: 기존 `{s.count}`와 `회`가 별도의 두 줄(div)로 떨어져 있던 것을 하나의 div 안에 `<span>` 인라인으로 붙여서 "2회"처럼 한 줄에 보이도록 수정
+- 이번에도 각 항목 계획 설명 → 확인("시작해") → 적용 순서로 진행. `npm run build` 정상 통과, Playwright로 드래그 동작 검증, node로 활성 일수 기준 평균 계산 로직 별도 검증
+
 ---
 
 ## 다음 세션 사용법

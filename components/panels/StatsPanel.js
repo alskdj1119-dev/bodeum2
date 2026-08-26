@@ -127,6 +127,12 @@ export default function StatsPanel() {
   const feedMlByDay    = feedByDay.map(arr => Math.round(totalMl(arr)));
   const maxFeedDay = Math.max(...feedCountByDay, 1);
 
+  // "7일 평균"은 최근 7일을 그대로 7로 나누면 기록을 안 한 날 때문에 평균이 낮아 보이므로,
+  // 실제로 기록이 있었던 날짜 수로만 나눈다 (예: 7일 중 5일만 기록했으면 5로 나눔).
+  const feedActiveDays = feedCountByDay.filter(c => c > 0).length;
+  const avgFeedCount7d = feedActiveDays > 0 ? Math.round(feed7d.length / feedActiveDays * 10) / 10 : null;
+  const avgFeedMl7d    = feedActiveDays > 0 ? Math.round(totalMl(feed7d) / feedActiveDays) : null;
+
   // ══ 수면 ══
   const sleepToday = sleeps.filter(s => s.end && inDay(s.start, 0));
   const sleepYest  = sleeps.filter(s => s.end && inDay(s.start, -1));
@@ -165,14 +171,16 @@ export default function StatsPanel() {
           {[
             { label: '오늘', count: feedToday.length, ml: mlToday, interval: intToday },
             { label: '어제', count: feedYest.length,  ml: mlYest,  interval: intYest },
-            { label: '7일 평균', count: Math.round(feed7d.length / 7 * 10) / 10, ml: null, interval: int7d },
+            { label: '7일 평균', count: avgFeedCount7d, ml: avgFeedMl7d, interval: int7d },
           ].map((s, i) => (
             <div key={i} style={{ borderRight: i < 2 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>{s.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--cf)', fontFamily: 'var(--serif)' }}>{s.count}</div>
-              <div style={{ fontSize: 10, color: 'var(--muted)' }}>회</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--cf)', fontFamily: 'var(--serif)' }}>
+                {s.count != null ? s.count : '—'}
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)', marginLeft: 3 }}>회</span>
+              </div>
               {s.ml !== null && <div style={{ fontSize: 12, color: 'var(--ink)', marginTop: 2 }}>{s.ml > 0 ? s.ml + 'ml' : '—'}</div>}
-              {s.interval && <div style={{ fontSize: 10, color: 'var(--muted)' }}>간격 {fmtMin(s.interval)}</div>}
+              {!!s.interval && <div style={{ fontSize: 10, color: 'var(--muted)' }}>간격 {fmtMin(s.interval)}</div>}
             </div>
           ))}
         </div>
