@@ -36,7 +36,7 @@ export default function HourBarChart({ buckets, color, height = 40, formatTip })
     <div className="chart-wrap">
       <div
         ref={rowRef}
-        style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height, touchAction: 'pan-y' }}
+        style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height, touchAction: 'none' }}
         onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
       >
         {buckets.map((v, h) => (

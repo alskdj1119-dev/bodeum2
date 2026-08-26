@@ -66,7 +66,7 @@ export default function WeightValueChart({ weights }) {
     <div className="chart-wrap">
       <svg
         ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" xmlns="http://www.w3.org/2000/svg"
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: 'none' }}
         onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
       >
         <path d={areaD} fill="var(--cf)" opacity="0.09" />

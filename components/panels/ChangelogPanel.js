@@ -2,6 +2,13 @@
 
 const CHANGELOG = [
   {
+    version: '1.7.6',
+    date: '2026-08-26',
+    items: [
+      { tag: 'fix', text: '차트를 누른 채로 드래그할 때 손가락이 살짝만 위아래로 흔들려도 툴팁이 갑자기 사라지던 문제 수정' },
+    ],
+  },
+  {
     version: '1.7.5',
     date: '2026-08-26',
     items: [
