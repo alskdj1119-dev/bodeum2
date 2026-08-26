@@ -51,7 +51,7 @@ export default function NotifSettingsPanel() {
       </div>
 
       {/* 알림 권한 상태 */}
-      <div className="sc" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div className="sc-static" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div className="flbl" style={{ marginBottom: 4 }}>기기 알림 권한</div>
           {isOn && (
@@ -82,7 +82,7 @@ export default function NotifSettingsPanel() {
         )}
       </div>
 
-      <div className="sc">
+      <div className="sc-static">
         <div className="fld" style={{ marginBottom: 10 }}>
           <div className="flbl">기저귀 경과 알림 (시간)</div>
           <div className="seg">

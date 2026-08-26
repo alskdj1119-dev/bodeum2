@@ -282,6 +282,13 @@ setOpenModal('feed');
 - `_deletedAt`/`createdAt`/`endTime`/피드·수면 시작시각처럼 "특정 순간"을 나타내는 절대 타임스탬프(`new Date().toISOString()`)는 시간대와 무관하므로 그대로 둠 — 사람이 읽는 달력 날짜/시각으로 변환되는 지점만 수정
 - 검증: `weights` mock 데이터로 `toLocal`/`fromLocal`/`fmt`/`weightDailyPoints`를 node에서 직접 호출해 UTC↔KST 변환이 의도대로 동작하는지 확인 (예: UTC 23:30 → KST 다음날 08:30), 임시 테스트 페이지(`app/dbgcharttest2`, 삭제됨)에서 Playwright로 차트 좌/우 끝 지점에 마우스 호버해 툴팁이 뷰포트 밖으로 잘리지 않고 카드 안에 잘 보정되어 표시되는지 스크린샷으로 확인. `npm run build` 정상 통과
 
+### 2026-08-26 세션 7
+**작업 내용:**
+- **차트 툴팁 상호작용 방식 변경 (누르는 동안만 표시)**: 기존 `onMouseEnter`/`onMouseLeave`(호버) + `onClick`(토글) 혼용 방식이 모바일 터치에서 기기/브라우저마다 이벤트 순서가 달라 "눌렀다 바로 사라짐" / "계속 떠 있음" / "무반응"이 뒤섞이는 문제가 있었음. `WeightGainChart.js`/`WeightValueChart.js`/`HourBarChart.js`의 히트 영역을 Pointer Events(`onPointerDown`→표시, `onPointerUp`/`onPointerLeave`/`onPointerCancel`→닫기)로 통일 — 누르고 있는 동안만 보이고 떼면 즉시 사라짐. 마우스/터치 모두 동일하게 동작. Playwright로 mouse.down→툴팁 표시, mouse.up→즉시 사라짐을 확인
+- **앱 전체 텍스트 선택/iOS 콜아웃 방지**: `globals.css`에 `html,body,#__next{user-select:none;-webkit-touch-callout:none}`을 추가해 앱 전체에서 길게 눌러도 "복사하기/찾아보기/번역/웹 검색" 같은 네이티브 팝업이 뜨지 않게 함. 단 `input,textarea,[contenteditable="true"]`는 `user-select:text`로 다시 풀어줘서 아이 정보 등 직접 입력하는 필드는 그대로 선택 가능
+- **정적 박스의 잘못된 눌림 애니메이션 제거**: `.sc`(클릭 시 `scale(.97)`로 눌리는 카드용 클래스)가 실제로는 클릭 이동하지 않는 정적 그룹 박스에도 재사용되고 있어서, 그 안의 버튼(`.sbtn` 등)을 누르면 `:active`가 조상인 `.sc`까지 전파되어 박스 전체가 눌리는 것처럼 보이는 문제가 있었음(알림 설정 화면에서 최초 발견). 전체 코드베이스에서 `.sc` 사용처 15곳을 전수 조사해 클릭 카드(7곳, `HomePanel.js`)와 정적 박스(8곳)를 구분: 시각적으로 동일하되 `cursor:pointer`/`:active` 눌림이 없는 `.sc-static` 클래스를 신설하고, `HomePanel.js`(알림 권한 안내 배너 1곳), `HealthPanel.js`(체온 최신값/예방접종 안내 박스 2곳), `NotifSettingsPanel.js`(권한 상태/세부 설정 박스 2곳), `StatsPanel.js`(수유/수면/기저귀 통계 요약 박스 3곳)의 `className="sc"`를 `"sc-static"`으로 교체
+- 이번 세션은 사용자 요청에 따라 각 변경 전 계획을 설명하고 명시적 확인("시작해")을 받은 뒤에만 코드를 수정하는 방식으로 진행함. `npm run build` 정상 통과
+
 ---
 
 ## 다음 세션 사용법

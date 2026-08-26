@@ -160,7 +160,7 @@ export default function StatsPanel() {
 
       {/* ─── 수유 ─── */}
       <p className="seclbl" style={{ marginBottom: 10 }}>수유</p>
-      <div className="sc" style={{ marginBottom: 12 }}>
+      <div className="sc-static" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {[
             { label: '오늘', count: feedToday.length, ml: mlToday, interval: intToday },
@@ -185,7 +185,7 @@ export default function StatsPanel() {
 
       {/* ─── 수면 ─── */}
       <p className="seclbl" style={{ marginBottom: 10 }}>수면</p>
-      <div className="sc" style={{ marginBottom: 12 }}>
+      <div className="sc-static" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {[
             { label: '오늘 총 수면', val: sleepMsToday > 0 ? durStr(sleepMsToday) : '—', sub: sleepToday.length + '회' },
@@ -220,7 +220,7 @@ export default function StatsPanel() {
 
       {/* ─── 기저귀 ─── */}
       <p className="seclbl" style={{ marginBottom: 10 }}>기저귀</p>
-      <div className="sc" style={{ marginBottom: 20 }}>
+      <div className="sc-static" style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, textAlign: 'center' }}>
           {[
             { label: '오늘', total: diapToday.length, wet: wetToday, soiled: soiledToday },

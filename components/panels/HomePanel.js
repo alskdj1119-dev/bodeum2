@@ -132,7 +132,7 @@ export default function HomePanel() {
 
       {/* 알림 권한 아직 결정 안 됨 → 눈에 띄게 한 번 안내 */}
       {notifPermission === 'default' && (
-        <div className="sc" style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px', padding:'12px 14px' }}>
+        <div className="sc-static" style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px', padding:'12px 14px' }}>
           <span style={{ fontSize:'18px', lineHeight:1 }}>🔔</span>
           <span style={{ flex:1, fontSize:'12.5px', color:'var(--ink)' }}>수유·수면·기저귀 알림을 받으려면 알림을 허용해주세요.</span>
           <button className="bpri" style={{ padding:'8px 14px', fontSize:'12.5px', whiteSpace:'nowrap' }} onClick={requestNotifPermission}>허용하기</button>

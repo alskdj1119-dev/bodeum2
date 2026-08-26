@@ -10,7 +10,9 @@ export default function HourBarChart({ buckets, color, height = 40, formatTip })
   const max = Math.max(...buckets, 1);
   const activeVal = active != null ? buckets[active] : null;
 
-  function toggle(h) { setActive(a => (a === h ? null : h)); }
+  // 누르고 있는 동안만 툴팁을 보여주고, 떼거나(손가락을 치우거나) 벗어나면 바로 닫는다.
+  function press(h) { setActive(h); }
+  function release(h) { setActive(a => (a === h ? null : a)); }
 
   return (
     <div className="chart-wrap">
@@ -19,10 +21,11 @@ export default function HourBarChart({ buckets, color, height = 40, formatTip })
           <div
             key={h}
             className="chart-bar chart-hit"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, height: '100%', justifyContent: 'flex-end' }}
-            onMouseEnter={() => setActive(h)}
-            onMouseLeave={() => setActive(a => (a === h ? null : a))}
-            onClick={() => toggle(h)}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, height: '100%', justifyContent: 'flex-end', touchAction: 'manipulation' }}
+            onPointerDown={() => press(h)}
+            onPointerUp={() => release(h)}
+            onPointerLeave={() => release(h)}
+            onPointerCancel={() => release(h)}
           >
             <div style={{
               width: '100%', background: v > 0 ? color : 'var(--bdr)', borderRadius: '2px 2px 0 0',

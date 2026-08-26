@@ -31,10 +31,9 @@ export default function WeightGainChart({ weights }) {
   const activeGain = active != null ? gains[active] : null;
   const activePoint = active != null ? points[active + 1] : null; // 증가량 쌍 중 나중 날짜
 
-  function toggle(i, e) {
-    e.stopPropagation();
-    setActive(a => (a === i ? null : i));
-  }
+  // 누르고 있는 동안만 툴팁을 보여주고, 떼거나(손가락을 치우거나) 벗어나면 바로 닫는다.
+  function press(i, e) { e.stopPropagation(); setActive(i); }
+  function release(i) { setActive(a => (a === i ? null : a)); }
 
   return (
     <div className="chart-wrap" style={{ marginTop: 8 }} onClick={e => e.stopPropagation()}>
@@ -51,9 +50,11 @@ export default function WeightGainChart({ weights }) {
               <circle
                 className="chart-hit"
                 cx={x} cy={y} r="12" fill="transparent"
-                onMouseEnter={() => setActive(i)}
-                onMouseLeave={() => setActive(a => (a === i ? null : a))}
-                onClick={e => toggle(i, e)}
+                style={{ touchAction: 'manipulation' }}
+                onPointerDown={e => press(i, e)}
+                onPointerUp={() => release(i)}
+                onPointerLeave={() => release(i)}
+                onPointerCancel={() => release(i)}
               />
             </g>
           );

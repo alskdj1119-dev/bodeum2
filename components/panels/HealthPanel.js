@@ -145,7 +145,7 @@ export default function HealthPanel() {
       {tab === 'temp' && (
         <>
           {latestTemp && (
-            <div className="sc" style={{ marginBottom: 12 }}>
+            <div className="sc-static" style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ fontSize: 36, fontWeight: 700, fontFamily: 'var(--serif)',
                   color: latestTemp.temp >= 37.5 ? '#E05A4E' : 'var(--cw)' }}>
@@ -237,7 +237,7 @@ export default function HealthPanel() {
       {tab === 'vaccine' && (
         <>
           {!baby.birthDate ? (
-            <div className="sc">
+            <div className="sc-static">
               <div style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', padding: '12px 0' }}>
                 설정에서 생년월일을 입력하면 예방접종 일정이 표시돼요
               </div>

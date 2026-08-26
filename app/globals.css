@@ -23,6 +23,12 @@
 html,body{height:100%;overflow:hidden}
 body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 
+/* ── 앱 전체 텍스트 선택/길게 눌렀을 때 뜨는 iOS 콜아웃(복사하기/찾아보기 등) 방지 ──
+   앱처럼 동작해야 하는 화면이라 대부분의 텍스트는 선택할 필요가 없다.
+   단, 직접 입력하는 필드(input/textarea/contenteditable)는 아래에서 다시 풀어준다. */
+html,body,#__next{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
 /* ── APP LAYOUT ── */
 .app-root{max-width:430px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
 
@@ -101,6 +107,10 @@ body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--san
 /* ── CARDS ── */
 .sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 13px;box-shadow:var(--sh);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;min-width:0;overflow:hidden}
 .sc:active{transform:scale(.97)}
+/* .sc와 시각적으로 동일하지만, 그 자체는 클릭해서 어딘가로 이동하지 않는 "정적" 그룹 박스용.
+   .sc를 그대로 쓰면 안에 있는 버튼을 누를 때 :active 눌림 효과가 조상인 이 박스까지 전파되어
+   버튼 하나 누른 것뿐인데 큰 박스 전체가 움찔거리는 것처럼 보이는 문제가 있었음. */
+.sc-static{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 13px;box-shadow:var(--sh);min-width:0;overflow:hidden}
 .ec{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:11px 13px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);margin-bottom:8px;cursor:pointer;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s}
 .ec:active{transform:scale(.98)}
 .qbtn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--ink);font-weight:500;box-shadow:var(--sh);transition:transform .1s,opacity .15s;-webkit-tap-highlight-color:transparent}

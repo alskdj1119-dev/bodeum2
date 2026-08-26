@@ -33,7 +33,9 @@ export default function WeightValueChart({ weights }) {
   const activeP = active != null ? points[active] : null;
   const activeGain = active > 0 ? gains[active - 1] : null;
 
-  function closeIfSame(i) { setActive(a => (a === i ? null : a)); }
+  // 누르고 있는 동안만 툴팁을 보여주고, 떼거나(손가락을 치우거나) 벗어나면 바로 닫는다.
+  function press(i, e) { e.stopPropagation(); setActive(i); }
+  function release(i) { setActive(a => (a === i ? null : a)); }
 
   return (
     <div className="chart-wrap">
@@ -57,9 +59,11 @@ export default function WeightValueChart({ weights }) {
               <circle
                 className="chart-hit"
                 cx={x} cy={y} r="13" fill="transparent"
-                onMouseEnter={() => setActive(i)}
-                onMouseLeave={() => closeIfSame(i)}
-                onClick={() => setActive(a => (a === i ? null : i))}
+                style={{ touchAction: 'manipulation' }}
+                onPointerDown={e => press(i, e)}
+                onPointerUp={() => release(i)}
+                onPointerLeave={() => release(i)}
+                onPointerCancel={() => release(i)}
               />
             </g>
           );
