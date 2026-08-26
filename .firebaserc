@@ -1,6 +1,7 @@
 {
   "projects": {
     "default": "kimel-54750",
-    "production": "kimel-54750"
+    "production": "kimel-54750",
+    "dev": "bodeum-dev-85c98"
   }
 }
