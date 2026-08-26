@@ -326,6 +326,16 @@ setOpenModal('feed');
 - 카드 눌림 애니메이션(`.sc:active`)과 클릭 시 건강탭 체중 기록으로 이동하는 기능은 그대로 유지, 건강탭의 `WeightValueChart`/`HourBarChart`는 이번 변경과 무관하게 기존 드래그 추적 방식 그대로 둠
 - `npm run build` 정상 통과
 
+### 2026-08-26 세션 13
+**작업 내용:**
+- **홈 화면 체중 카드 그래프 — 누르기 상호작용 완전 제거, 항상 고정 표시로 전환**: 세션 12에서 press-and-hold 방식으로 되돌렸지만, 사용자가 아예 상호작용 자체를 없애고 그래프 아래에 최신 날짜의 값을 상시 표시하는 방식을 요청. `WeightGainChart.js`에서 포인터 이벤트(`onPointerDown`/`onPointerUp`/`onPointerCancel`)와 `ChartTooltip` 사용을 전부 제거하고, 마지막 데이터 포인트(`points[points.length-1]`, `gains[gains.length-1]`)를 그래프 바로 아래 고정 텍스트로 표시:
+  - 체중: `4.500kg` 형식, `var(--ink)` 검은색 굵게
+  - 증가량: `▲ 25g 증가`(늘었을 때) / `▼ 25g 감소`(줄었을 때) — 새로 추가한 CSS 변수 `--up`(파란색)/`--down`(빨간색)로 색상 구분. `app/globals.css`의 라이트/다크 테마 각 블록(`:root`, 다크 미디어 쿼리, `[data-theme="dark"]`, `[data-theme="light"]`)에 모두 추가함
+- 상호작용이 사라지면서 차트를 감싸던 `onClick={e=>e.stopPropagation()}`도 제거 — 이제 그래프 영역을 탭해도 카드 전체와 동일하게 건강탭으로 이동함(의도된 동작)
+- 기존 "최근 7일 평균 +Xg/일" 문구는 그대로 유지
+- 건강탭의 `WeightValueChart`/`HourBarChart`는 이번 변경과 무관, 기존 press-and-hold 방식 그대로 유지
+- `npm run build` 정상 통과
+
 ---
 
 ## 다음 세션 사용법
