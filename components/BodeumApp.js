@@ -10,6 +10,9 @@ import FeedPanel from './panels/FeedPanel';
 import DiaperPanel from './panels/DiaperPanel';
 import SleepPanel from './panels/SleepPanel';
 import SettingsPanel from './panels/SettingsPanel';
+import BabyInfoPanel from './panels/BabyInfoPanel';
+import FamilyCodePanel from './panels/FamilyCodePanel';
+import NotifSettingsPanel from './panels/NotifSettingsPanel';
 import ChangelogPanel from './panels/ChangelogPanel';
 import RequestsPanel from './panels/RequestsPanel';
 import TrashPanel from './panels/TrashPanel';
@@ -23,8 +26,16 @@ import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory'];
+const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode'];
+// 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
+// notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
+const BACK_TARGET = {
+  feed: 'home', diaper: 'home', sleep: 'home',
+  changelog: 'settings', requests: 'settings', trash: 'settings',
+  babyInfo: 'settings', notifSettings: 'settings', familyCode: 'settings',
+  notifHistory: 'home',
+};
 
 export default function BodeumApp() {
   const {
@@ -153,14 +164,9 @@ export default function BodeumApp() {
   // Swipe back gesture (left-edge swipe)
   // home, settings → no swipe back (top-level tabs)
   // feed/diaper/sleep/weight → back to home
-  // stats/health/changelog/requests → back to settings
-  const SWIPE_BACK_TARGET = {
-    feed: 'home', diaper: 'home', sleep: 'home',
-    changelog: 'settings', requests: 'settings', trash: 'settings', notifHistory: 'settings',
-  };
-
+  // stats/health/설정 하위 화면 → back to settings (BACK_TARGET 참고)
   function handleTouchStart(e) {
-    if (SWIPE_BACK_TARGET[activeTab] && e.touches[0].clientX < 30) {
+    if (BACK_TARGET[activeTab] && e.touches[0].clientX < 30) {
       touchStartX.current = e.touches[0].clientX;
     } else {
       touchStartX.current = null;
@@ -171,7 +177,7 @@ export default function BodeumApp() {
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     if (dx > 60) {
-      const dest = SWIPE_BACK_TARGET[activeTab];
+      const dest = BACK_TARGET[activeTab];
       if (dest) goTab(dest, 'back');
     }
     touchStartX.current = null;
@@ -183,15 +189,14 @@ export default function BodeumApp() {
   const showBack = isSubPanel;
 
   function handleBack() {
-    if (activeTab === 'changelog' || activeTab === 'requests' || activeTab === 'trash' || activeTab === 'notifHistory') goTab('settings', 'back');
-    else goTab('home', 'back');
+    goTab(BACK_TARGET[activeTab] || 'home', 'back');
   }
 
   if (!familyCode) return <SetupScreen />;
 
   return (
     <div className="app-root" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      <Header showBack={showBack} onBack={handleBack} />
+      <Header showBack={showBack} onBack={handleBack} activeTab={activeTab} />
 
       <div className="content">
         <div className="panel" ref={panelRef('home')}><HomePanel /></div>
@@ -199,6 +204,9 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('diaper')}><DiaperPanel /></div>
         <div className="panel" ref={panelRef('sleep')}><SleepPanel /></div>
         <div className="panel" ref={panelRef('settings')}><SettingsPanel /></div>
+        <div className="panel" ref={panelRef('babyInfo')}><BabyInfoPanel /></div>
+        <div className="panel" ref={panelRef('familyCode')}><FamilyCodePanel /></div>
+        <div className="panel" ref={panelRef('notifSettings')}><NotifSettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
         <div className="panel" ref={panelRef('requests')}><RequestsPanel /></div>
         <div className="panel" ref={panelRef('stats')}><StatsPanel /></div>

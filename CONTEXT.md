@@ -48,17 +48,20 @@ components/
   Toast.js
 
   panels/
-    HomePanel.js       # 홈 화면
+    HomePanel.js       # 홈 화면 (알림 내역 아이콘은 Header.js에 있음)
     FeedPanel.js       # 수유 전체 기록
     DiaperPanel.js     # 기저귀 전체 기록
     SleepPanel.js      # 수면 전체 기록
     HealthPanel.js     # 건강 (체온/체중/예방접종 탭)
     StatsPanel.js      # 통계
-    SettingsPanel.js   # 설정
+    SettingsPanel.js   # 설정 (메뉴 목록만 — 실제 내용은 아래 하위 화면들)
+    BabyInfoPanel.js   # 설정 > 아이 정보 (신규)
+    FamilyCodePanel.js # 설정 > 가족 코드 (신규)
+    NotifSettingsPanel.js # 설정 > 알림 설정 — 권한 on/off + 경과 시간 기준 (신규)
     ChangelogPanel.js  # 업데이트 내역
     RequestsPanel.js   # 건의사항
     TrashPanel.js      # 삭제 기록 (복원 가능)
-    NotifHistoryPanel.js # 알림 내역
+    NotifHistoryPanel.js # 알림 내역 (홈 화면 종 모양 아이콘으로 진입)
 
   modals/
     FeedModal.js       # 수유 기록 추가/수정
@@ -109,6 +112,10 @@ lib/
 | `setHealthInitTab` | 건강 초기 탭 설정 (신규) |
 | `showToast(msg)` | 토스트 메시지 |
 | `uid` | 고유 ID 생성 함수 |
+| `notifPermission` | 브라우저 알림 권한 (`'unsupported'\|'default'\|'granted'\|'denied'`) |
+| `requestNotifPermission()` | 알림 허용 요청 (이미 허용된 경우 `notifEnabled`도 다시 true로) |
+| `notifEnabled` | 이 기기에서 알림을 받을지 여부 (브라우저 권한과 별개, 앱 안에서 껐다 켤 수 있음, 신규) |
+| `disableNotif()` | 이 기기의 알림 끄기 — 브라우저 권한은 유지, 서버 FCM 토큰만 해제 (신규) |
 
 ---
 
@@ -232,6 +239,20 @@ setOpenModal('feed');
 **DB 변경:**
 - `notifSettings`: `feedAlertH`(수유 경과 알림, 기본 3), `quietDisabled`(방해 금지 시간대 미사용 여부, 기본 false) 필드 추가
 - `feeds[].consumedAmount`: 이제 `ConsumedModal`을 통해서만 기록됨 (모든 타입 공통)
+
+---
+
+### 2026-08-26 세션 4
+**작업 내용:**
+- 설정 메뉴 개편: 기존에 한 화면에 몰려있던 아이 정보 / 가족 코드 / 알림 설정을 각각 별도 하위 화면(`BabyInfoPanel`, `FamilyCodePanel`, `NotifSettingsPanel`)으로 분리. `SettingsPanel.js`는 이제 메뉴 목록만 렌더링
+- 알림 내역(`NotifHistoryPanel`) 진입점을 설정 메뉴에서 홈 화면 `Header.js` 우측 상단 종 모양 아이콘으로 이동 (뒤로가기 시 홈으로 복귀하도록 `BACK_TARGET.notifHistory = 'home'`)
+- `BodeumApp.js`: 기존 `SWIPE_BACK_TARGET`(스와이프 전용)과 `handleBack()`의 하드코딩된 분기를 하나의 `BACK_TARGET` 맵으로 통합 — 새 하위 화면(`babyInfo`/`notifSettings`/`familyCode`) 추가 시 이 맵에만 등록하면 되도록 정리
+- 알림 권한 on/off 기능 추가: 브라우저 `Notification` 권한은 한 번 허용하면 앱에서 되돌릴 수 없으므로, 별도의 앱 레벨 `notifEnabled` 플래그(`store.js`, localStorage `bodeum_notif_enabled`)를 도입. "끄기"를 누르면 이 기기의 FCM 토큰을 서버 문서에서 `arrayRemove`(신규 `unregisterFcmToken()`)하여 실제 발송을 중단시키고, 다시 "알림 허용하기"를 누르면 (권한이 이미 granted 상태이므로 브라우저 팝업 없이) 즉시 토큰을 재등록
+- 아이 정보 입력란 배경을 흰색으로 고정: `.finp-white` 클래스 추가 (다크모드에서도 항상 흰 배경 + 어두운 글자)
+- 홈 화면 카드 전반의 여백 축소: `.sc`/`.qbtn`/`.ec`/`.settmenu` 패딩, `.sgrid`/`.qgrid`/`.sr` 간격, `HomePanel.js`의 섹션 간 여백(`marginBottom`) 축소 — 카드가 더 꽉 차 보이도록 조정
+
+**DB/상태 변경:**
+- (Firestore 문서 아님, localStorage만) `bodeum_notif_enabled`: 이 기기의 알림 on/off 상태 (`'true'`/`'false'`)
 
 ---
 

@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '../lib/store';
 
-export default function Header({ onBack, showBack, title }) {
-  const { syncState, toggleTheme, theme } = useApp();
+export default function Header({ onBack, showBack, title, activeTab }) {
+  const { syncState, toggleTheme, theme, goTab } = useApp();
   const [dateStr, setDateStr] = useState('');
   const isDark = theme === 'dark';
 
@@ -41,6 +41,13 @@ export default function Header({ onBack, showBack, title }) {
         </>
       )}
       <div className="hdr-right">
+        {activeTab === 'home' && (
+          <button className="theme-btn" onClick={() => goTab('notifHistory', 'forward')} title="알림 내역">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+        )}
         <button className="theme-btn" onClick={toggleTheme} title="다크모드 전환">
           {isDark ? (
             <svg viewBox="0 0 24 24">

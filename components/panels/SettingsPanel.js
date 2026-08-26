@@ -1,255 +1,56 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 
 export default function SettingsPanel() {
-  const { baby, saveBaby, familyCode, showToast, goTab, notifSettings, saveNotifSettings, notifPermission, requestNotifPermission } = useApp();
-
-  const [form, setForm] = useState({
-    name: '',
-    prenatal: '',
-    birthDate: '',
-    birthTime: '',
-    birthWeight: '',
-  });
-  // 사용자가 폼을 직접 수정했으면 baby 상태 변경시 덮어쓰지 않음
-  const dirtyRef = useRef(false);
-
-  const [ns, setNs] = useState({
-    diaperAlertH: 3,
-    sleepAlertH: 2,
-    feedAlertH: 3,
-    feedTimerAlertMin: 30,
-    hungerRepeatMin: 5,
-    quietStart: 23,
-    quietEnd: 7,
-    quietDisabled: false,
-  });
-
-  useEffect(() => {
-    // 사용자가 직접 수정 중이면 baby 변경으로 폼 초기화 방지
-    if (dirtyRef.current) return;
-    setForm({
-      name: baby.name || '',
-      prenatal: baby.prenatal || '',
-      birthDate: baby.birthDate || '',
-      birthTime: baby.birthTime || '',
-      birthWeight: baby.birthWeight || '',
-    });
-  }, [baby]);
-
-  useEffect(() => {
-    if (notifSettings) setNs({ ...notifSettings });
-  }, [notifSettings]);
-
-  function set(k, v) { dirtyRef.current = true; setForm(p => ({ ...p, [k]: v })); }
-  function setN(k, v) { setNs(p => ({ ...p, [k]: v })); }
-
-  function save() {
-    const nb = { ...baby, ...form, name: (form.name || '').trim() || '아이' };
-    saveBaby(nb);
-    dirtyRef.current = false; // 저장 후 dirty 해제
-    showToast('아이 정보가 저장됐어요 ✓');
-  }
-
-  function saveNotif() {
-    const parsed = {
-      diaperAlertH: Number.isFinite(Number(ns.diaperAlertH)) ? Number(ns.diaperAlertH) : 3,
-      sleepAlertH: Number.isFinite(Number(ns.sleepAlertH)) ? Number(ns.sleepAlertH) : 2,
-      feedAlertH: Number.isFinite(Number(ns.feedAlertH)) ? Number(ns.feedAlertH) : 3,
-      feedTimerAlertMin: Number.isFinite(Number(ns.feedTimerAlertMin)) ? Number(ns.feedTimerAlertMin) : 30,
-      hungerRepeatMin: Number.isFinite(Number(ns.hungerRepeatMin)) && Number(ns.hungerRepeatMin) > 0 ? Number(ns.hungerRepeatMin) : 5,
-      quietStart: Number(ns.quietStart),
-      quietEnd: Number(ns.quietEnd),
-      quietDisabled: !!ns.quietDisabled,
-    };
-    saveNotifSettings(parsed);
-    showToast('알림 설정이 저장됐어요 ✓');
-  }
-
-  function copyCode() {
-    if (!familyCode) return;
-    navigator.clipboard.writeText(familyCode)
-      .then(() => showToast('코드가 복사됐어요 ✓'))
-      .catch(() => showToast(familyCode));
-  }
-
-  function changeFamily() {
-    if (!window.confirm('다른 가족 코드로 변경하시겠어요?\n현재 기기의 연결이 해제됩니다.')) return;
-    try { localStorage.removeItem('bodeum_family_code'); } catch(_) {}
-    window.location.reload();
-  }
-
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const { goTab } = useApp();
 
   return (
     <>
-      <h2 className="daytitle" style={{ fontSize:'22px', marginBottom:'20px' }}>설정</h2>
+      <h2 className="daytitle" style={{ fontSize: '22px', marginBottom: '18px' }}>설정</h2>
 
-      {/* ─── 아이 정보 ─── */}
-      <div className="fld">
-        <div className="flbl">이름</div>
-        <input className="finp" value={form.name} onChange={e => set('name', e.target.value)} placeholder="아기 이름" />
-      </div>
-      <div className="fld">
-        <div className="flbl">태명</div>
-        <input className="finp" value={form.prenatal} onChange={e => set('prenatal', e.target.value)} placeholder="태명 (선택)" />
-      </div>
-      <div className="fld">
-        <div className="flbl">생년월일</div>
-        <input className="finp" type="date" value={form.birthDate} onChange={e => set('birthDate', e.target.value)} />
-      </div>
-      <div className="fld">
-        <div className="flbl">출생 시간</div>
-        <input className="finp" type="time" value={form.birthTime} onChange={e => set('birthTime', e.target.value)} />
-      </div>
-      <div className="fld">
-        <div className="flbl">출생 체중 (kg)</div>
-        <input className="finp" type="number" step="0.001" value={form.birthWeight} onChange={e => set('birthWeight', e.target.value)} placeholder="예: 3.250" />
-      </div>
-      <button className="bpri" style={{ width:'100%', marginBottom:'24px' }} onClick={save}>아이 정보 저장</button>
-
-      {/* ─── 가족 코드 ─── */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>가족 코드</p>
-      <div className="code-display" style={{ marginBottom:'8px' }}>{familyCode || '—'}</div>
-      <p className="setup-hint" style={{ marginBottom:'8px' }}>파트너와 같은 코드를 사용하면 기록이 실시간으로 공유돼요</p>
-      <div style={{ display:'flex', gap:'8px', marginBottom:'24px' }}>
-        <button className="bcan" style={{ flex:1 }} onClick={copyCode}>코드 복사</button>
-        <button className="bcan" style={{ flex:1 }} onClick={changeFamily}>코드 변경</button>
-      </div>
-
-      {/* ─── 알림 설정 ─── */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>알림 설정</p>
-
-      {/* 알림 권한 상태 */}
-      <div className="sc" style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <div className="flbl" style={{ marginBottom: 4 }}>기기 알림 권한</div>
-          {notifPermission === 'granted' && (
-            <div style={{ fontSize: 13, color: 'var(--sage)', fontWeight: 600 }}>허용됨 — 아래 알림을 받을 수 있어요 ✓</div>
-          )}
-          {notifPermission === 'default' && (
-            <div style={{ fontSize: 13, color: 'var(--ink)' }}>아직 허용하지 않았어요. 버튼을 눌러 허용해주세요.</div>
-          )}
-          {notifPermission === 'denied' && (
-            <div style={{ fontSize: 13, color: 'var(--cd)' }}>차단됨 — 기기/브라우저 설정에서 이 앱의 알림을 직접 허용해야 해요.</div>
-          )}
-          {notifPermission === 'unsupported' && (
-            <div style={{ fontSize: 13, color: 'var(--muted)' }}>이 기기/브라우저는 알림을 지원하지 않아요.</div>
-          )}
+      <button className="settmenu" onClick={() => goTab('babyInfo', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+          </svg>
         </div>
-        {notifPermission !== 'granted' && notifPermission !== 'unsupported' && (
-          <button className="bpri" style={{ padding: '10px 16px', fontSize: 13, whiteSpace: 'nowrap' }} onClick={requestNotifPermission}>
-            알림 허용하기
-          </button>
-        )}
-      </div>
-
-      <div className="sc" style={{ marginBottom: 20 }}>
-        <div className="fld" style={{ marginBottom: 10 }}>
-          <div className="flbl">기저귀 경과 알림 (시간)</div>
-          <div className="seg">
-            {[2, 3, 4, 0].map(h => (
-              <button key={h} className={`sbtn${Number(ns.diaperAlertH) === h ? ' on' : ''}`}
-                onClick={() => setN('diaperAlertH', h)}>
-                {h === 0 ? '끔' : h + '시간'}
-              </button>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>마지막 기저귀 교체 후 해당 시간이 지나면 알림</div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">아이 정보</div>
+          <div className="settmenu-sub">이름, 태명, 생년월일, 출생 체중</div>
         </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
 
-        <div className="fld" style={{ marginBottom: 10 }}>
-          <div className="flbl">수면 타이머 알림 (시간)</div>
-          <div className="seg">
-            {[1, 2, 3, 0].map(h => (
-              <button key={h} className={`sbtn${Number(ns.sleepAlertH) === h ? ' on' : ''}`}
-                onClick={() => setN('sleepAlertH', h)}>
-                {h === 0 ? '끔' : h + '시간'}
-              </button>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>수면 타이머 시작 후 해당 시간이 지나면 알림</div>
+      <button className="settmenu" onClick={() => goTab('familyCode', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
         </div>
-
-        <div className="fld" style={{ marginBottom: 10 }}>
-          <div className="flbl">수유 경과 알림 (시간)</div>
-          <div className="seg">
-            {[2, 3, 4, 0].map(h => (
-              <button key={h} className={`sbtn${Number(ns.feedAlertH) === h ? ' on' : ''}`}
-                onClick={() => setN('feedAlertH', h)}>
-                {h === 0 ? '끔' : h + '시간'}
-              </button>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>마지막 수유 후 해당 시간이 지나면 알림</div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">가족 코드</div>
+          <div className="settmenu-sub">파트너와 기록 실시간 공유</div>
         </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
 
-        <div className="fld" style={{ marginBottom: 10, opacity: Number(ns.feedAlertH) === 0 ? 0.45 : 1, pointerEvents: Number(ns.feedAlertH) === 0 ? 'none' : 'auto' }}>
-          <div className="flbl">배고픔 알림 반복 간격 (분)</div>
-          <div className="seg">
-            {[5, 10, 15, 30].map(m => (
-              <button key={m} className={`sbtn${Number(ns.hungerRepeatMin) === m ? ' on' : ''}`}
-                onClick={() => setN('hungerRepeatMin', m)}>
-                {m}분마다
-              </button>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>수유 경과 알림 조건이 계속되는 동안 이 간격으로 반복 알림</div>
-        </div>
-
-        <div className="fld" style={{ marginBottom: 10 }}>
-          <div className="flbl">수유 타이머 알림 (분)</div>
-          <div className="seg">
-            {[20, 30, 40, 0].map(m => (
-              <button key={m} className={`sbtn${Number(ns.feedTimerAlertMin) === m ? ' on' : ''}`}
-                onClick={() => setN('feedTimerAlertMin', m)}>
-                {m === 0 ? '끔' : m + '분'}
-              </button>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>수유 타이머를 켠 채로 해당 시간이 지나면 알림</div>
-        </div>
-
-        <div className="fld" style={{ marginBottom: 10 }}>
-          <div className="flbl">방해 금지 시간대</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: ns.quietDisabled ? 0.45 : 1, pointerEvents: ns.quietDisabled ? 'none' : 'auto' }}>
-            <select className="finp" style={{ flex: 1 }} value={ns.quietStart} onChange={e => setN('quietStart', Number(e.target.value))}>
-              {hours.map(h => <option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}
-            </select>
-            <span style={{ color: 'var(--muted)', fontSize: 13 }}>~</span>
-            <select className="finp" style={{ flex: 1 }} value={ns.quietEnd} onChange={e => setN('quietEnd', Number(e.target.value))}>
-              {hours.map(h => <option key={h} value={h}>{String(h).padStart(2,'0')}:00</option>)}
-            </select>
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!ns.quietDisabled} onChange={e => setN('quietDisabled', e.target.checked)} />
-            <span style={{ fontSize: 12, color: 'var(--ink)' }}>설정하지 않음 (24시간 알림 수신)</span>
-          </label>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-            {ns.quietDisabled ? '방해 금지 시간대 없이 24시간 알림을 받아요' : '해당 시간대에는 알림이 오지 않아요'}
-          </div>
-        </div>
-
-        <button className="bpri" style={{ width: '100%', marginTop: 4 }} onClick={saveNotif}>알림 설정 저장</button>
-      </div>
-
-      {/* ─── 메뉴 ─── */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>기타</p>
-      <button className="settmenu" onClick={() => goTab('notifHistory', 'forward')}>
-        <div className="settmenu-ico" style={{ background:'var(--s-wash)' }}>
+      <button className="settmenu" onClick={() => goTab('notifSettings', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
         </div>
         <div className="settmenu-inf">
-          <div className="settmenu-title">알림 내역</div>
-          <div className="settmenu-sub">실제로 발송된 알림 확인</div>
+          <div className="settmenu-title">알림 설정</div>
+          <div className="settmenu-sub">알림 권한, 경과 시간 기준</div>
         </div>
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
+
+      <p className="seclbl" style={{ margin: '18px 0 10px' }}>기타</p>
+
       <button className="settmenu" onClick={() => goTab('changelog', 'forward')}>
-        <div className="settmenu-ico" style={{ background:'var(--s-wash)' }}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </div>
         <div className="settmenu-inf">
@@ -259,7 +60,7 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
       <button className="settmenu" onClick={() => goTab('requests', 'forward')}>
-        <div className="settmenu-ico" style={{ background:'var(--s-wash)' }}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <div className="settmenu-inf">
@@ -269,7 +70,7 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
       <button className="settmenu" onClick={() => goTab('trash', 'forward')}>
-        <div className="settmenu-ico" style={{ background:'var(--dw)' }}>
+        <div className="settmenu-ico" style={{ background: 'var(--dw)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--cd)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
           </svg>

@@ -136,7 +136,7 @@ export default function HomePanel() {
 
       {/* 진행 중인 타이머 — 얇은 한 줄 요약 배너 */}
       {(activeFeed || activeSleep) && (
-        <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'20px' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
           {activeFeed && (
             <div className="slive-mini banner-in">
               <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
@@ -157,8 +157,8 @@ export default function HomePanel() {
       )}
 
       {/* 빠른 기록 */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>빠른 기록</p>
-      <div className="qgrid" style={{ marginBottom:'20px' }}>
+      <p className="seclbl" style={{ marginBottom:'8px' }}>빠른 기록</p>
+      <div className="qgrid" style={{ marginBottom:'16px' }}>
         <button className="qbtn qf" onClick={() => { setEditId(null); setEditType(null); setOpenModal('feed'); }}>
           <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
           수유
@@ -174,8 +174,8 @@ export default function HomePanel() {
       </div>
 
       {/* 직전 — 클릭 시 수정 팝업 */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>직전</p>
-      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'20px' }}>
+      <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
+      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
         <div className="sc" onClick={() => openEditFeed(lastFeed)}>
           <div className="sr">
             <div className="slbl">수유</div>
@@ -203,8 +203,8 @@ export default function HomePanel() {
       </div>
 
       {/* 직전 24시간 — 클릭 시 상세 모달 */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>직전 24시간</p>
-      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'20px' }}>
+      <p className="seclbl" style={{ marginBottom:'8px' }}>직전 24시간</p>
+      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
         <div className="sc" onClick={() => setDetail24('feed')}>
           <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
           <div className="sval" style={{ fontSize:'15px' }}>{feed24.length}회</div>
@@ -223,7 +223,7 @@ export default function HomePanel() {
       </div>
 
       {/* 체중 — 클릭 시 건강 > 체중 탭 */}
-      <div className="sgrid" style={{ gridTemplateColumns:'1fr', marginBottom:'20px' }}>
+      <div className="sgrid" style={{ gridTemplateColumns:'1fr', marginBottom:'16px' }}>
         <div className="sc" onClick={openHealthWeight}>
           <div className="sr"><div className="slbl">체중</div><div className="sico w"><svg viewBox="0 0 24 24" style={{ width:'17px', height:'17px', fill:'none', stroke:'var(--cw)', strokeWidth:'1.8', strokeLinecap:'round', strokeLinejoin:'round' }}><path d="M12 3a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4z"/><path d="M4 7h16l-2 14H6L4 7z"/></svg></div></div>
           <div className="sval" style={{ fontSize:'26px', whiteSpace:'nowrap' }}>{latestW ? latestW.kg.toFixed(2) + ' kg' : '—'}</div>
@@ -239,7 +239,7 @@ export default function HomePanel() {
       </div>
 
       {/* 최근 기록 — 클릭 시 수정 팝업 */}
-      <p className="seclbl" style={{ marginBottom:'10px' }}>최근 기록</p>
+      <p className="seclbl" style={{ marginBottom:'8px' }}>최근 기록</p>
       {recent.length === 0 ? (
         <div className="empty"><div className="empty-lbl" style={{ fontSize:'15px' }}>아직 기록이 없어요 🌿</div></div>
       ) : (
