@@ -23,14 +23,15 @@ const DEFAULT_SETTINGS = {
   diaperAlertH: 3,
   sleepAlertH: 2,
   feedAlertH: 3,
+  feedTimerAlertMin: 30,
+  hungerRepeatMin: 5,
   quietStart: 23,
   quietEnd: 7,
   quietDisabled: false,
 };
 
 const HOUR = 3600 * 1000;
-const REPEAT_MS = 5 * 60 * 1000; // 배고픔 알림 반복 간격 (5분)
-const FEED_TIMER_MS = 30 * 60 * 1000; // 수유 타이머 알림 기준 (30분 경과)
+const MIN = 60 * 1000;
 
 // ── 이름 처리 헬퍼 (기존 sw.js 로직 그대로) ──
 function getFirstName(fullName) {
@@ -107,13 +108,14 @@ function decideNotifications(family, state, nowMs) {
     return { toSend: [], nextState: notifState };
   }
 
-  // 1) 수유 경과(배고픔) 알림 — 조건을 만족하는 동안 5분마다 반복
+  // 1) 수유 경과(배고픔) 알림 — 조건을 만족하는 동안 설정된 간격으로 반복
   if (state.lastFeedTime && !state.activeFeedStart && settings.feedAlertH > 0) {
     const elapsed = nowMs - new Date(state.lastFeedTime).getTime();
     if (elapsed >= settings.feedAlertH * HOUR) {
+      const repeatMs = (settings.hungerRepeatMin > 0 ? settings.hungerRepeatMin : 5) * MIN;
       const prev = notifState.hunger;
       const keyChanged = !prev || prev.lastKey !== state.lastFeedTime;
-      const dueForRepeat = keyChanged || !prev.lastSentAt || nowMs - prev.lastSentAt >= REPEAT_MS;
+      const dueForRepeat = keyChanged || !prev.lastSentAt || nowMs - prev.lastSentAt >= repeatMs;
       if (dueForRepeat) {
         out.push({
           key: 'hunger',
@@ -127,17 +129,17 @@ function decideNotifications(family, state, nowMs) {
     }
   }
 
-  // 2) 수유 타이머 알림 — 타이머 시작 후 30분, 1회만
-  if (state.activeFeedStart) {
+  // 2) 수유 타이머 알림 — 타이머 시작 후 설정 시간(분), 1회만
+  if (state.activeFeedStart && settings.feedTimerAlertMin > 0) {
     const elapsed = nowMs - new Date(state.activeFeedStart).getTime();
-    if (elapsed >= FEED_TIMER_MS) {
+    if (elapsed >= settings.feedTimerAlertMin * MIN) {
       const prev = notifState.feedTimer;
       const alreadySent = prev && prev.lastKey === state.activeFeedStart && prev.sent;
       if (!alreadySent) {
         out.push({
           key: 'feedTimer',
           title: '보듬 🌿',
-          body: '아직 맘마 중인가요? 맘마 다 먹었으면 타이머 종료해주세요.',
+          body: `${addGa(name)} 아직 맘마 중인가요? 맘마 다 먹었으면 타이머 종료해주세요.`,
         });
         nextState.feedTimer = { lastKey: state.activeFeedStart, sent: true };
       } else {
@@ -175,7 +177,7 @@ function decideNotifications(family, state, nowMs) {
         out.push({
           key: 'diaper',
           title: '보듬 🌿',
-          body: `기저귀 교체한 지 ${settings.diaperAlertH}시간이 지났어요. 확인해주세요.`,
+          body: `${addGa(name)} 기저귀 교체한 지 ${settings.diaperAlertH}시간이 지났어요. 확인해주세요.`,
         });
         nextState.diaper = { lastKey: state.lastDiaperTime, sent: true };
       } else {

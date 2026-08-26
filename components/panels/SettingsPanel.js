@@ -19,6 +19,8 @@ export default function SettingsPanel() {
     diaperAlertH: 3,
     sleepAlertH: 2,
     feedAlertH: 3,
+    feedTimerAlertMin: 30,
+    hungerRepeatMin: 5,
     quietStart: 23,
     quietEnd: 7,
     quietDisabled: false,
@@ -55,6 +57,8 @@ export default function SettingsPanel() {
       diaperAlertH: Number.isFinite(Number(ns.diaperAlertH)) ? Number(ns.diaperAlertH) : 3,
       sleepAlertH: Number.isFinite(Number(ns.sleepAlertH)) ? Number(ns.sleepAlertH) : 2,
       feedAlertH: Number.isFinite(Number(ns.feedAlertH)) ? Number(ns.feedAlertH) : 3,
+      feedTimerAlertMin: Number.isFinite(Number(ns.feedTimerAlertMin)) ? Number(ns.feedTimerAlertMin) : 30,
+      hungerRepeatMin: Number.isFinite(Number(ns.hungerRepeatMin)) && Number(ns.hungerRepeatMin) > 0 ? Number(ns.hungerRepeatMin) : 5,
       quietStart: Number(ns.quietStart),
       quietEnd: Number(ns.quietEnd),
       quietDisabled: !!ns.quietDisabled,
@@ -179,6 +183,32 @@ export default function SettingsPanel() {
             ))}
           </div>
           <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>마지막 수유 후 해당 시간이 지나면 알림</div>
+        </div>
+
+        <div className="fld" style={{ marginBottom: 10, opacity: Number(ns.feedAlertH) === 0 ? 0.45 : 1, pointerEvents: Number(ns.feedAlertH) === 0 ? 'none' : 'auto' }}>
+          <div className="flbl">배고픔 알림 반복 간격 (분)</div>
+          <div className="seg">
+            {[5, 10, 15, 30].map(m => (
+              <button key={m} className={`sbtn${Number(ns.hungerRepeatMin) === m ? ' on' : ''}`}
+                onClick={() => setN('hungerRepeatMin', m)}>
+                {m}분마다
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>수유 경과 알림 조건이 계속되는 동안 이 간격으로 반복 알림</div>
+        </div>
+
+        <div className="fld" style={{ marginBottom: 10 }}>
+          <div className="flbl">수유 타이머 알림 (분)</div>
+          <div className="seg">
+            {[20, 30, 40, 0].map(m => (
+              <button key={m} className={`sbtn${Number(ns.feedTimerAlertMin) === m ? ' on' : ''}`}
+                onClick={() => setN('feedTimerAlertMin', m)}>
+                {m === 0 ? '끔' : m + '분'}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>수유 타이머를 켠 채로 해당 시간이 지나면 알림</div>
         </div>
 
         <div className="fld" style={{ marginBottom: 10 }}>
