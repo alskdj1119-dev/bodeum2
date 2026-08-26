@@ -9,6 +9,7 @@ import ChartTooltip from './ChartTooltip';
 export default function WeightGainChart({ weights }) {
   const svgRef = useRef(null);
   const [active, setActive] = useState(null);
+  const pressedRef = useRef(false); // 훅은 조건부 return보다 항상 위에 있어야 함(리액트 훅 규칙)
   const points = weightDailyPoints(weights, 14);
   const gains = weightGains(points);
   if (gains.length < 1) return null;
@@ -33,7 +34,6 @@ export default function WeightGainChart({ weights }) {
 
   // 누르고 있는 동안만 툴팁을 보여준다. 손가락/마우스를 뗄 때 닫히고, 누른 채로
   // 좌우로 움직이면 그 x좌표에서 가장 가까운 점으로 계속 갱신된다(매번 다시 누를 필요 없음).
-  const pressedRef = useRef(false);
   function nearestIndex(clientX) {
     const rect = svgRef.current.getBoundingClientRect();
     const relX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
