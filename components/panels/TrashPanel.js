@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, durStr, fmt,
+  fmtFull, elapsedStr, durStr, fmt, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 
@@ -47,6 +47,7 @@ function itemSummary(item) {
 
 export default function TrashPanel() {
   const { db, dispatch, saveDB, showToast } = useApp();
+  useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
   const trash = db.trash || [];
 
   const sorted = [...trash].sort((a, b) => new Date(b._deletedAt) - new Date(a._deletedAt));

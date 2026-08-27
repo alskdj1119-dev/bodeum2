@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate,
+  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, useNowTick,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
@@ -192,6 +192,7 @@ export default function Home24hModal({ type, onClose }) {
   const { db, setOpenModal, setEditId, setEditType } = useApp();
   const { feeds, diapers, sleeps } = db;
   const [open, setOpen] = useState(false);
+  useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   useEffect(() => {
     // 슬라이드 업 애니메이션

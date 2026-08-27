@@ -1,6 +1,6 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { fmtFull, elapsedStr } from '../../lib/helpers';
+import { fmtFull, elapsedStr, useNowTick } from '../../lib/helpers';
 
 const KEY_LABEL = {
   hunger: '배고픔',
@@ -17,6 +17,7 @@ const KEY_DOT = {
 
 export default function NotifHistoryPanel() {
   const { notifLog } = useApp();
+  useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
   const sorted = [...(notifLog || [])].sort((a, b) => b.sentAt - a.sentAt);
 
   return (

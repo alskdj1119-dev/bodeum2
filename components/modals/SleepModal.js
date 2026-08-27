@@ -51,6 +51,13 @@ export default function SleepModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    // 종료 시간이 시작 시간보다 빠르면(=시작이 미래) 저장하지 않고 경고
+    // ("YYYY-MM-DDTHH:mm" 형식이라 문자열 비교로 시간 순서 비교가 가능함)
+    if (end && start && end < start) {
+      showToast('종료 시간이 시작 시간보다 빠를 수 없어요');
+      return;
+    }
+
     const newSleeps = [...db.sleeps];
     if (isEdit) {
       const idx = newSleeps.findIndex(s => s.id === editId);

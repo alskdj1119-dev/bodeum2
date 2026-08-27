@@ -1,13 +1,14 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, groupByDay,
+  fmtFull, elapsedStr, groupByDay, useNowTick,
   DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC,
 } from '../../lib/helpers';
 
 export default function DiaperPanel() {
   const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast } = useApp();
   const { diapers } = db;
+  useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const sorted = [...diapers].sort((a,b) => new Date(b.time) - new Date(a.time));
   const grouped = groupByDay(sorted, d => d.time);

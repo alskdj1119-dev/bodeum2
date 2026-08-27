@@ -1,13 +1,14 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr,
+  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, useNowTick,
   SLEEP_PLACE_LABEL as PL,
 } from '../../lib/helpers';
 
 export default function SleepPanel() {
   const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, stopActiveSleep } = useApp();
   const { sleeps } = db;
+  useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
   const done = sleeps.filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start));

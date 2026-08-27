@@ -1,13 +1,14 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl,
+  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, FEED_SIDE_LABEL as TS,
 } from '../../lib/helpers';
 
 export default function FeedPanel() {
   const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed } = useApp();
   const { feeds } = db;
+  useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const activeFeed = feeds.find(f => f.start && !f.end);
   const done = feeds.filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));

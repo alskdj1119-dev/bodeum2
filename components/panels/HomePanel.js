@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
-  kstDate, KST_OFFSET_MS,
+  kstDate, KST_OFFSET_MS, useNowTick,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -22,6 +22,9 @@ export default function HomePanel() {
     notifPermission, requestNotifPermission,
   } = useApp();
   const { feeds, diapers, sleeps, weights } = db;
+
+  // "직전"/"최근 기록"의 경과시간 텍스트가 시간이 지나도 갱신되도록 주기적으로 리렌더링
+  useNowTick();
 
   // 진행 중인 타이머 (홈 최상단 요약 배너용)
   const activeFeed = feeds.find(f => f.start && !f.end);
