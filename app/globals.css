@@ -273,3 +273,13 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .chart-bar{cursor:pointer}
 
 ::-webkit-scrollbar{width:0}
+
+/* ── 가로 모드 오버레이 (OrientationGuard.js) ──
+   화면을 옆으로 돌리면 전체를 덮어서, 타이머 진행 중이면 크게 보여주고
+   아니면 세로 모드로 돌려달라는 안내를 띄운다. */
+.orient-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff}
+.orient-overlay.orient-rotate{background:var(--bg);color:var(--ink)}
+.orient-timer-label{font-size:18px;font-weight:600;opacity:.85;letter-spacing:.02em}
+.orient-timer-value{font-size:clamp(56px,14vw,120px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.orient-rotate-icon{width:64px;height:64px;color:var(--muted);animation:orient-rotate-hint 1.8s ease-in-out infinite}
+@keyframes orient-rotate-hint{0%,100%{transform:rotate(-90deg)}50%{transform:rotate(0deg)}}

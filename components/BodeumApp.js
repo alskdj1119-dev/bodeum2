@@ -25,6 +25,7 @@ import SleepModal from './modals/SleepModal';
 import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
+import OrientationGuard from './OrientationGuard';
 
 const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode'];
 const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode'];
@@ -225,6 +226,8 @@ export default function BodeumApp() {
       {openModal === 'temp' && <TempModal />}
 
       <Toast />
+
+      <OrientationGuard />
     </div>
   );
 }
