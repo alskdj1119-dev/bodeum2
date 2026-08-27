@@ -36,11 +36,15 @@ export default function WeightGainChart({ weights }) {
           const gainColor = g > 0 ? 'var(--up)' : g < 0 ? 'var(--down)' : 'var(--muted)';
           const arrow = g > 0 ? '▲' : g < 0 ? '▼' : '—';
           const p = points[i + 1];
+          // 맨 처음/마지막 점은 가운데 정렬로 두면 라벨이 그래프 좌우 바깥으로
+          // 삐져나가 잘리기 때문에, 양 끝은 안쪽으로 붙는 정렬을 쓴다.
+          const anchor = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
+          const tx = i === 0 ? x + 3 : i === n - 1 ? x - 3 : x;
           return (
             <g key={p.date}>
               <circle cx={x} cy={y} r="3" fill={dotColor} stroke="var(--surf)" strokeWidth="1.5" />
-              <text x={x} y={H - mb + 13} textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--ink)">{p.kg.toFixed(2)}</text>
-              <text x={x} y={H - mb + 27} textAnchor="middle" fontSize="9" fontWeight="600" fill={gainColor}>{arrow} {Math.abs(g)}g</text>
+              <text x={tx} y={H - mb + 13} textAnchor={anchor} fontSize="9" fontWeight="700" fill="var(--ink)">{p.kg.toFixed(2)}</text>
+              <text x={tx} y={H - mb + 27} textAnchor={anchor} fontSize="9" fontWeight="600" fill={gainColor}>{arrow} {Math.abs(g)}g</text>
             </g>
           );
         })}
