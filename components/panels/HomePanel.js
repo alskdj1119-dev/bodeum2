@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
@@ -74,11 +74,22 @@ export default function HomePanel() {
   // 직전 24시간 상세 모달
   const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
 
-  // 홈 상단 응원 문구 — 컴포넌트가 처음 마운트될 때(=앱을 새로 열 때) 한 번만 랜덤으로 고르고,
-  // 이후 탭을 오가는 동안에는 계속 같은 문구를 유지한다.
-  const [encouragePhrase] = useState(
+  // 홈 상단 응원 문구 — 앱을 처음 열 때 랜덤으로 고르고, 이후 탭을 오가는 동안에는 유지하되,
+  // 앱이 백그라운드로 내려갔다가 다시 화면에 보이게 될 때(visibilitychange)마다 새로 랜덤으로 뽑는다.
+  const [encouragePhrase, setEncouragePhrase] = useState(
     () => HOME_ENCOURAGE_PHRASES[Math.floor(Math.random() * HOME_ENCOURAGE_PHRASES.length)]
   );
+  useEffect(() => {
+    function pickRandomPhrase() {
+      if (document.visibilityState === 'visible') {
+        setEncouragePhrase(
+          HOME_ENCOURAGE_PHRASES[Math.floor(Math.random() * HOME_ENCOURAGE_PHRASES.length)]
+        );
+      }
+    }
+    document.addEventListener('visibilitychange', pickRandomPhrase);
+    return () => document.removeEventListener('visibilitychange', pickRandomPhrase);
+  }, []);
 
   // Day count
   let dayCount = null;
