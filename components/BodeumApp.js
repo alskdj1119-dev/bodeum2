@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../lib/store';
 import SetupScreen from './SetupScreen';
 import SplashScreen from './SplashScreen';
@@ -197,11 +197,35 @@ export default function BodeumApp() {
     goTab(BACK_TARGET[activeTab] || 'home', 'back');
   }
 
+  // 스플래시 → 홈 화면 크로스페이드.
+  // initializing이 끝나도 스플래시를 바로 없애지 않고, 페이드 아웃 애니메이션(400ms)이
+  // 끝날 때까지는 계속 화면 위에 겹쳐 그리면서 아래 홈 화면이 함께 페이드 인 되게 한다.
+  const CROSSFADE_MS = 400;
+  const [splashPhase, setSplashPhase] = useState('visible'); // 'visible' | 'fading' | 'done'
+  const [appVisible, setAppVisible] = useState(false);
+
+  useEffect(() => {
+    if (!initializing && splashPhase === 'visible') {
+      setSplashPhase('fading');
+      const raf = requestAnimationFrame(() => setAppVisible(true));
+      const t = setTimeout(() => setSplashPhase('done'), CROSSFADE_MS);
+      return () => {
+        cancelAnimationFrame(raf);
+        clearTimeout(t);
+      };
+    }
+  }, [initializing, splashPhase]);
+
   if (initializing) return <SplashScreen />;
   if (!familyCode) return <SetupScreen />;
 
   return (
-    <div className="app-root" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <>
+    <div
+      className="app-root"
+      style={{ opacity: appVisible ? 1 : 0, transition: `opacity ${CROSSFADE_MS}ms ease` }}
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
+    >
       <Header showBack={showBack} onBack={handleBack} activeTab={activeTab} />
 
       <div className="content">
@@ -236,5 +260,7 @@ export default function BodeumApp() {
 
       <OrientationGuard />
     </div>
+    {splashPhase !== 'done' && <SplashScreen fading={splashPhase === 'fading'} />}
+    </>
   );
 }
