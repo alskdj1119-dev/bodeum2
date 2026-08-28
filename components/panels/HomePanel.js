@@ -109,6 +109,10 @@ export default function HomePanel() {
   const diaperWet24 = diaper24.filter(d => d.type === 'wet' || d.type === 'both').length;
   const diaperSoiled24 = diaper24.filter(d => d.type === 'soiled' || d.type === 'both').length;
   const feedMl = feed24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
+  const breastFeeds24 = feed24.filter(f => f.type === 'breast');
+  const bottleFeeds24 = feed24.filter(f => f.type === 'bottle');
+  const breastMl24 = breastFeeds24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
+  const bottleMl24 = bottleFeeds24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
 
   // Weight
   const sortedWeights = [...weights].sort((a,b) => new Date(b.time) - new Date(a.time));
