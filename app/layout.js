@@ -35,6 +35,7 @@ export default function RootLayout({ children }) {
           href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
         />
         <link rel="apple-touch-icon" href="/icon-512.svg" />
+        <link rel="preload" as="image" href="/splash.jpg" />
       </head>
       <body>{children}</body>
     </html>
