@@ -1,13 +1,13 @@
 /* 보듬 Service Worker */
-var CACHE = 'bodeum-v6';
+// 배포할 때마다 정적 파일 경로(빌드 해시)가 바뀌기 때문에, 캐시 이름을 바꾸지 않으면
+// 예전 배포 때 저장해둔 캐시가 그대로 남아있게 된다. 지금 버전을 올려서 폰에 남아있는
+// 낡은 캐시를 한 번 정리한다 — 앞으로도 캐시 구조를 크게 바꿀 때는 이 숫자를 올려줄 것.
+var CACHE = 'bodeum-v7';
 
 /* ── 설치 ── */
+// '/'(홈 문서)는 더 이상 여기서 미리 캐시하지 않는다 — fetch 핸들러에서 내비게이션
+// 요청은 캐시를 아예 타지 않도록 바꿨기 때문에(아래 참고), 여기 미리 캐시해봐야 쓰이지 않는다.
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE).then(function(c) {
-      return c.addAll(['/']).catch(function() {});
-    })
-  );
   self.skipWaiting();
 });
 
@@ -28,6 +28,14 @@ self.addEventListener('fetch', function(e) {
   // (cache:'only-if-cached' + mode!=='same-origin')을 그대로 fetch()에 넘기면
   // 브라우저가 TypeError를 던져서 요청 자체가 "페이지 로드 실패"로 처리됨 — 건드리지 않고 지나간다.
   if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') return;
+
+  // 페이지 문서(HTML 내비게이션) 요청은 캐시에 저장하지도, 캐시에서 꺼내 쓰지도 않고
+  // 항상 네트워크로만 처리한다. 예전엔 이것도 캐시했었는데, 배포 때마다 안의 정적 파일
+  // 경로(빌드 해시)가 바뀌다 보니 네트워크가 불안정할 때 예전 빌드를 가리키는 낡은 HTML이
+  // 캐시에서 튀어나와 이미 삭제된 파일을 불러오려다 "페이지를 불러올 수 없음" 오류로
+  // 이어지는 문제가 있었다 — 브라우저 기본 동작에 맡겨서 항상 최신 버전만 받도록 한다.
+  if (e.request.mode === 'navigate') return;
+
   e.respondWith(
     fetch(e.request).then(function(res) {
       var clone = res.clone();
