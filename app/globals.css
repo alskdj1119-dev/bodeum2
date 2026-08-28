@@ -21,19 +21,6 @@
 :root[data-theme="dark"]{--bg:#18150F;--surf:#221E17;--surf2:#2C271F;--ink:#EDE8E1;--muted:#8A8278;--sage:#7FAF91;--s-wash:rgba(127,175,145,.13);--cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;--fw:rgba(127,175,145,.13);--dw:rgba(196,154,107,.12);--sw:rgba(120,153,184,.12);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);--bdr:rgba(237,232,225,.08);--sh:0 2px 6px rgba(0,0,0,.3);--up:#5B93F5;--down:#FF6B6F;}
 :root[data-theme="light"]{--bg:#FDF4D2;--surf:#FFFEF5;--surf2:#F5EEC8;--ink:#2C2438;--muted:#8A7E96;--sage:#7660A2;--s-wash:#EDE7F6;--cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;--fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--bdr:rgba(44,36,54,.08);--sh:0 1px 4px rgba(44,36,54,.06);--up:#2F6FED;--down:#E5484D;}
 
-/* 스플래시 화면 라이트/다크 이미지 전환 — 위 테마 변수들과 동일한 우선순위 규칙을 그대로 따른다:
-   기본은 라이트 이미지, 기기가 다크모드면(prefers-color-scheme) 다크 이미지로, 앱 설정에서
-   테마를 명시적으로 지정했으면([data-theme]) 그 값이 항상 우선한다. */
-.splash-img-dark{display:none}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  .splash-img-light{display:none}
-  .splash-img-dark{display:block}
-}}
-:root[data-theme="dark"] .splash-img-light{display:none}
-:root[data-theme="dark"] .splash-img-dark{display:block}
-:root[data-theme="light"] .splash-img-light{display:block}
-:root[data-theme="light"] .splash-img-dark{display:none}
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}

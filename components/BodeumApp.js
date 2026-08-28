@@ -1,8 +1,7 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApp } from '../lib/store';
 import SetupScreen from './SetupScreen';
-import SplashScreen from './SplashScreen';
 import Header from './Header';
 import NavBar from './NavBar';
 import Toast from './Toast';
@@ -44,7 +43,7 @@ const BACK_TARGET = {
 
 export default function BodeumApp() {
   const {
-    familyCode, db, initializing,
+    familyCode, db,
     activeTab, tabDir, goTab,
     setFeedTimerMs,
     setSleepTimerMs,
@@ -197,42 +196,10 @@ export default function BodeumApp() {
     goTab(BACK_TARGET[activeTab] || 'home', 'back');
   }
 
-  // 스플래시 → 홈 화면 크로스페이드.
-  // initializing이 끝나도 스플래시를 바로 없애지 않고, 페이드 아웃 애니메이션(400ms)이
-  // 끝날 때까지는 계속 화면 위에 겹쳐 그리면서 아래 홈 화면이 함께 페이드 인 되게 한다.
-  const CROSSFADE_MS = 400;
-  const [splashPhase, setSplashPhase] = useState('visible'); // 'visible' | 'fading' | 'done'
-  const [appVisible, setAppVisible] = useState(false);
-  // 아래 effect가 splashPhase를 "읽고 또 갱신"하다 보니, splashPhase를 의존성 배열에 넣으면
-  // splashPhase가 'fading'으로 바뀌는 순간 effect가 다시 실행되면서 cleanup이 먼저 돌아
-  // 아직 발동 전이던 requestAnimationFrame/setTimeout이 취소되어버려 appVisible이 영영
-  // true가 되지 못하고(=홈 화면이 계속 투명 상태로 남아 안 보이는) 버그가 있었다.
-  // 그래서 ref로 "이미 한 번 시작했는지"만 체크하고, 의존성은 initializing만 둔다.
-  const fadeStartedRef = useRef(false);
-
-  useEffect(() => {
-    if (!initializing && !fadeStartedRef.current) {
-      fadeStartedRef.current = true;
-      setSplashPhase('fading');
-      const raf = requestAnimationFrame(() => setAppVisible(true));
-      const t = setTimeout(() => setSplashPhase('done'), CROSSFADE_MS);
-      return () => {
-        cancelAnimationFrame(raf);
-        clearTimeout(t);
-      };
-    }
-  }, [initializing]);
-
-  if (initializing) return <SplashScreen />;
   if (!familyCode) return <SetupScreen />;
 
   return (
-    <>
-    <div
-      className="app-root"
-      style={{ opacity: appVisible ? 1 : 0, transition: `opacity ${CROSSFADE_MS}ms ease` }}
-      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
-    >
+    <div className="app-root" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <Header showBack={showBack} onBack={handleBack} activeTab={activeTab} />
 
       <div className="content">
@@ -267,7 +234,5 @@ export default function BodeumApp() {
 
       <OrientationGuard />
     </div>
-    {splashPhase !== 'done' && <SplashScreen fading={splashPhase === 'fading'} />}
-    </>
   );
 }
