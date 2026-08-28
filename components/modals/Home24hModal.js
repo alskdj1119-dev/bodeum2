@@ -66,7 +66,13 @@ function FeedDetail({ records, onEdit }) {
         const amtStr = f.consumedAmount != null && amt != null ? `준비 ${amt}ml / 섭취 ${f.consumedAmount}ml`
           : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
           : amt ? `${amt}ml` : '';
-        const durTxt = (f.start && f.end) ? ' · ' + durStr(new Date(f.end) - new Date(f.start)) : '';
+        let durMs = null;
+        if (f.sideTimes) {
+          durMs = Object.values(f.sideTimes).reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
+        } else if (f.start && f.end) {
+          durMs = new Date(f.end) - new Date(f.start);
+        }
+        const durTxt = durMs ? ' · ' + durStr(durMs) : '';
         return (
           <div key={f.id || i} className="ec" onClick={() => onEdit(f)} style={{ marginBottom: 8 }}>
             <div className="edot f" />

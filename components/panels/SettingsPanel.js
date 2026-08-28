@@ -34,6 +34,19 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
 
+      <button className="settmenu" onClick={() => goTab('feedSettings', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">직수 계산 설정</div>
+          <div className="settmenu-sub">직수 섭취량 계산 기준 (분당 ml)</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+
       <button className="settmenu" onClick={() => goTab('notifSettings', 'forward')}>
         <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

@@ -41,7 +41,7 @@ export default function HealthPanel() {
   } = useApp();
   const { temps = [], weights = [] } = db;
 
-  const [tab, setTab] = useState('temp'); // 'temp' | 'weight' | 'vaccine'
+  const [tab, setTab] = useState('weight'); // 'temp' | 'weight' | 'vaccine'
 
   // 홈에서 체중 카드 클릭 시 체중 탭으로 자동 이동
   useEffect(() => {
@@ -104,13 +104,29 @@ export default function HealthPanel() {
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
+  // vaccineStatus[code]는 예전엔 문자열('before'|'done'|'skip')만 저장했는데,
+  // 접종완료일자를 함께 기록해야 해서 { status, doneDate } 객체로 확장한다.
+  // 기존에 문자열로 저장된 값도 그대로 읽을 수 있도록 아래 getVaccineInfo()에서 정규화한다.
+  function getVaccineInfo(code) {
+    const v = vaccineStatus[code];
+    if (!v) return { status: 'before', doneDate: '' };
+    if (typeof v === 'string') return { status: v, doneDate: '' };
+    return { status: v.status || 'before', doneDate: v.doneDate || '' };
+  }
+
   function setVaccine(code, status) {
-    saveVaccineStatus({ ...vaccineStatus, [code]: status });
+    const cur = getVaccineInfo(code);
+    saveVaccineStatus({ ...vaccineStatus, [code]: { status, doneDate: cur.doneDate } });
+  }
+
+  function setVaccineDate(code, doneDate) {
+    const cur = getVaccineInfo(code);
+    saveVaccineStatus({ ...vaccineStatus, [code]: { status: cur.status, doneDate } });
   }
 
   const TABS = [
-    { id: 'temp',    label: '체온' },
     { id: 'weight',  label: '체중' },
+    { id: 'temp',    label: '체온' },
     { id: 'vaccine', label: '예방접종' },
   ];
 
@@ -244,7 +260,7 @@ export default function HealthPanel() {
             </div>
           ) : (
             VACCINES.map((v) => {
-              const status = vaccineStatus[v.code] || 'before';
+              const { status, doneDate } = getVaccineInfo(v.code);
               // 생년월일 문자열을 UTC 기준 Date로 만들고 UTC getter/setter만 사용 —
               // 기기 시간대와 무관하게 항상 같은 달력 날짜 계산이 되도록 한다.
               const [vby, vbm, vbd] = baby.birthDate.split('-').map(Number);
@@ -298,6 +314,14 @@ export default function HealthPanel() {
                       </button>
                     ))}
                   </div>
+                  {status === 'done' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderTop: '1px solid var(--bdr)' }}>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>접종 완료일자</div>
+                      <input type="date" className="finp" value={doneDate}
+                        onChange={e => setVaccineDate(v.code, e.target.value)}
+                        style={{ padding: '5px 8px', fontSize: 12, width: 'auto', flex: 1 }} />
+                    </div>
+                  )}
                 </div>
               );
             })

@@ -102,6 +102,10 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .finp{width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:10px 13px;font-family:var(--sans);font-size:16px;color:var(--ink);outline:none;transition:border-color .15s}
 .finp:focus{border-color:var(--sage)}
 .finp-white{background:#fff;color:#2C2438;border-color:rgba(44,36,54,.15)}
+/* 아이정보 화면의 생년월일/출생시간(type=date, type=time)이 네이티브 캘린더/시계
+   아이콘 때문에 우측이 짤려 보이던 문제 — 다른 입력란과 동일한 폭을 명시적으로 고정. */
+.fld input[type="date"].finp,
+.fld input[type="time"].finp{width:100%;min-width:0;max-width:100%;box-sizing:border-box;padding-right:10px}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
 .sbtn{flex:1;min-width:60px;padding:9px 6px;border:1.5px solid var(--bdr);border-radius:10px;background:var(--bg);font-family:var(--sans);font-size:13px;color:var(--muted);cursor:pointer;text-align:center;transition:all .18s cubic-bezier(.4,0,.2,1);-webkit-tap-highlight-color:transparent}
 .sbtn.on{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:600}
@@ -279,7 +283,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
    아니면 세로 모드로 돌려달라는 안내를 띄운다. */
 .orient-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff}
 .orient-overlay.orient-rotate{background:var(--bg);color:var(--ink)}
-.orient-timer-label{font-size:18px;font-weight:600;opacity:.85;letter-spacing:.02em}
-.orient-timer-value{font-size:clamp(56px,14vw,120px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.orient-timer-label{font-size:26px;font-weight:700;opacity:.85;letter-spacing:.02em}
+.orient-timer-value{font-size:clamp(80px,20vw,170px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .orient-rotate-icon{width:64px;height:64px;color:var(--muted);animation:orient-rotate-hint 1.8s ease-in-out infinite}
 @keyframes orient-rotate-hint{0%,100%{transform:rotate(-90deg)}50%{transform:rotate(0deg)}}

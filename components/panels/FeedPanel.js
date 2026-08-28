@@ -57,7 +57,14 @@ export default function FeedPanel() {
     const amtStr = f.consumedAmount != null && dispAmt != null ? `준비 ${dispAmt}ml / 섭취 ${f.consumedAmount}ml`
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : dispAmt ? `${dispAmt}ml` : '';
-    const dur = (f.start && f.end) ? durStr(new Date(f.end) - new Date(f.start)) : '';
+    // 직수를 왼쪽/오른쪽 이어서 한 기록은 sideTimes 각 구간의 합으로 실제 수유 시간을 계산.
+    let durMs = null;
+    if (f.sideTimes) {
+      durMs = Object.values(f.sideTimes).reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
+    } else if (f.start && f.end) {
+      durMs = new Date(f.end) - new Date(f.start);
+    }
+    const dur = durMs ? durStr(durMs) : '';
     const side = f.side ? TS[f.side] : '';
     return [amtStr, dur, side, f.note || ''].filter(Boolean).join(' · ');
   }

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { toLocal, fromLocal } from '../../lib/helpers';
+import { toLocal, fromLocal, directFeedMlFromMs } from '../../lib/helpers';
 
 // Color scheme per feed type
 const FEED_COLOR = {
@@ -37,6 +37,11 @@ export default function FeedModal() {
   const [author, setAuthor] = useState('mom');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  // 직수(직접 수유) 수정 화면에서 왼쪽/오른쪽 각각의 시작·종료 시간을 따로 확인/수정하기 위한 상태.
+  const [leftStart, setLeftStart] = useState('');
+  const [leftEnd, setLeftEnd] = useState('');
+  const [rightStart, setRightStart] = useState('');
+  const [rightEnd, setRightEnd] = useState('');
 
   useEffect(() => {
     if (existing) {
@@ -49,6 +54,26 @@ export default function FeedModal() {
       setAuthor(existing.author || '');
       setStart(existing.start ? toLocal(existing.start) : '');
       setEnd(existing.end ? toLocal(existing.end) : '');
+
+      const existingIsDirect = (existing.type || 'breast') === 'breast' && (existing.subtype || 'direct') === 'direct';
+      if (existingIsDirect) {
+        const st = existing.sideTimes;
+        if (st) {
+          setLeftStart(st.left ? toLocal(st.left.start) : '');
+          setLeftEnd(st.left ? toLocal(st.left.end) : '');
+          setRightStart(st.right ? toLocal(st.right.start) : '');
+          setRightEnd(st.right ? toLocal(st.right.end) : '');
+        } else {
+          // sideTimes가 없는 예전 방식 기록(단일 start/end) — 기록된 side 쪽에 그대로 채워준다.
+          const legacySide = existing.side === 'right' ? 'right' : 'left';
+          setLeftStart(legacySide === 'left' && existing.start ? toLocal(existing.start) : '');
+          setLeftEnd(legacySide === 'left' && existing.end ? toLocal(existing.end) : '');
+          setRightStart(legacySide === 'right' && existing.start ? toLocal(existing.start) : '');
+          setRightEnd(legacySide === 'right' && existing.end ? toLocal(existing.end) : '');
+        }
+      } else {
+        setLeftStart(''); setLeftEnd(''); setRightStart(''); setRightEnd('');
+      }
     } else {
       setType('breast');
       setSubtype('direct');
@@ -59,6 +84,7 @@ export default function FeedModal() {
       setAuthor('mom');
       setStart('');
       setEnd('');
+      setLeftStart(''); setLeftEnd(''); setRightStart(''); setRightEnd('');
     }
   }, [editId]);
 
@@ -93,18 +119,45 @@ export default function FeedModal() {
     if (isEdit) {
       const idx = newFeeds.findIndex(f => f.id === editId);
       if (idx < 0) return;
-      newFeeds[idx] = {
-        ...newFeeds[idx],
-        type,
-        subtype: type === 'breast' ? subtype : undefined,
-        side: isDirectBreast ? side : undefined,
-        amount: amount ? parseFloat(amount) : undefined,
-        consumedAmount: (!isDirectBreast && consumedAmount !== '') ? parseFloat(consumedAmount) : undefined,
-        note: note || undefined,
-        author: author || undefined,
-        start: fromLocal(start),
-        end: end ? fromLocal(end) : undefined,
-      };
+
+      if (isDirectBreast) {
+        const sideTimes = {};
+        if (leftStart && leftEnd) sideTimes.left = { start: fromLocal(leftStart), end: fromLocal(leftEnd) };
+        if (rightStart && rightEnd) sideTimes.right = { start: fromLocal(rightStart), end: fromLocal(rightEnd) };
+        const entries = Object.values(sideTimes);
+        if (entries.length === 0) {
+          showToast('왼쪽 또는 오른쪽 시작/종료 시간을 입력해주세요');
+          return;
+        }
+        const totalMs = entries.reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
+        const keys = Object.keys(sideTimes);
+        newFeeds[idx] = {
+          ...newFeeds[idx],
+          type, subtype,
+          side: keys.length === 2 ? 'both' : keys[0],
+          sideTimes,
+          amount: directFeedMlFromMs(totalMs),
+          consumedAmount: undefined,
+          note: note || undefined,
+          author: author || undefined,
+          start: new Date(Math.min(...entries.map(t => new Date(t.start).getTime()))).toISOString(),
+          end: new Date(Math.max(...entries.map(t => new Date(t.end).getTime()))).toISOString(),
+        };
+      } else {
+        newFeeds[idx] = {
+          ...newFeeds[idx],
+          type,
+          subtype: type === 'breast' ? subtype : undefined,
+          side: undefined,
+          sideTimes: undefined,
+          amount: amount ? parseFloat(amount) : undefined,
+          consumedAmount: (consumedAmount !== '') ? parseFloat(consumedAmount) : undefined,
+          note: note || undefined,
+          author: author || undefined,
+          start: fromLocal(start),
+          end: end ? fromLocal(end) : undefined,
+        };
+      }
       const newDB = { ...db, feeds: newFeeds };
       dispatch({ type: 'SET_FEEDS', payload: newFeeds });
       await saveDB(newDB);
@@ -173,8 +226,8 @@ export default function FeedModal() {
             </div>
           )}
 
-          {/* Side (direct breast only) */}
-          {isDirectBreast && (
+          {/* Side (direct breast, new record only — 수정 화면은 아래 왼쪽/오른쪽 시간 편집으로 대체) */}
+          {isDirectBreast && !isEdit && (
             <div className="fld">
               <div className="flbl">방향</div>
               <div className="seg">
@@ -184,9 +237,6 @@ export default function FeedModal() {
                 <button className={`sbtn${side === 'right' ? ' on' : ''}`}
                   style={side === 'right' ? { background: fc.main, borderColor: fc.main } : {}}
                   onClick={() => setSide('right')}>오른쪽</button>
-                <button className={`sbtn${side === 'both' ? ' on' : ''}`}
-                  style={side === 'both' ? { background: fc.main, borderColor: fc.main } : {}}
-                  onClick={() => setSide('both')}>양쪽</button>
               </div>
             </div>
           )}
@@ -233,8 +283,27 @@ export default function FeedModal() {
             <input className="finp" value={note} onChange={e => setNote(e.target.value)} placeholder="선택 사항" />
           </div>
 
-          {/* Edit mode: time fields */}
-          {isEdit && (
+          {/* Edit mode: time fields — 직수는 왼쪽/오른쪽 각각 편집, 그 외는 단일 시작/종료 편집 */}
+          {isEdit && isDirectBreast ? (
+            <>
+              <div className="fld">
+                <div className="flbl">왼쪽 시작 시간</div>
+                <input className="finp" type="datetime-local" value={leftStart} onChange={e => setLeftStart(e.target.value)} />
+              </div>
+              <div className="fld">
+                <div className="flbl">왼쪽 종료 시간</div>
+                <input className="finp" type="datetime-local" value={leftEnd} onChange={e => setLeftEnd(e.target.value)} />
+              </div>
+              <div className="fld">
+                <div className="flbl">오른쪽 시작 시간</div>
+                <input className="finp" type="datetime-local" value={rightStart} onChange={e => setRightStart(e.target.value)} />
+              </div>
+              <div className="fld">
+                <div className="flbl">오른쪽 종료 시간</div>
+                <input className="finp" type="datetime-local" value={rightEnd} onChange={e => setRightEnd(e.target.value)} />
+              </div>
+            </>
+          ) : isEdit && (
             <>
               <div className="fld">
                 <div className="flbl">시작 시간</div>
