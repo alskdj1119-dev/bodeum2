@@ -13,17 +13,26 @@ export default function OrientationGuard() {
   const [isLandscape, setIsLandscape] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia('(orientation: landscape)');
-    const update = () => setIsLandscape(mq.matches);
+    // (orientation: landscape)는 "창 너비 > 높이"만 보는 순수 비율 체크라
+    // PC 브라우저처럼 원래 옆으로 넓은 창도 전부 "가로 모드"로 잡혀버린다.
+    // 실제로 손으로 들고 돌릴 수 있는 터치 기기(폰/태블릿)에서만 이 오버레이를 적용하도록
+    // "마우스 없이 터치가 주 조작 방식인 기기"인지(coarse pointer, hover 없음)를 함께 확인한다.
+    const touchMq = window.matchMedia('(hover: none) and (pointer: coarse)');
+    const orientationMq = window.matchMedia('(orientation: landscape)');
+    const update = () => setIsLandscape(touchMq.matches && orientationMq.matches);
     update();
-    mq.addEventListener('change', update);
+    touchMq.addEventListener('change', update);
+    orientationMq.addEventListener('change', update);
 
     // 지원하는 환경(주로 안드로이드)에서는 세로 고정도 시도 — 실패해도 조용히 무시
     if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('portrait').catch(() => {});
     }
 
-    return () => mq.removeEventListener('change', update);
+    return () => {
+      touchMq.removeEventListener('change', update);
+      orientationMq.removeEventListener('change', update);
+    };
   }, []);
 
   if (!isLandscape) return null;
