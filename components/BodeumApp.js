@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useApp } from '../lib/store';
 import SetupScreen from './SetupScreen';
+import SplashScreen from './SplashScreen';
 import Header from './Header';
 import NavBar from './NavBar';
 import Toast from './Toast';
@@ -43,7 +44,7 @@ const BACK_TARGET = {
 
 export default function BodeumApp() {
   const {
-    familyCode, db,
+    familyCode, db, initializing,
     activeTab, tabDir, goTab,
     setFeedTimerMs,
     setSleepTimerMs,
@@ -196,6 +197,7 @@ export default function BodeumApp() {
     goTab(BACK_TARGET[activeTab] || 'home', 'back');
   }
 
+  if (initializing) return <SplashScreen />;
   if (!familyCode) return <SetupScreen />;
 
   return (

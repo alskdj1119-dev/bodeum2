@@ -56,6 +56,21 @@ function encourageFontSize(text) {
   return 12;
 }
 
+// 직전에 보여줬던 문구를 기기에 기록해뒀다가, 다음에 뽑을 때는 후보에서 제외한다.
+// (완전 종료 후 재실행 / 백그라운드 복귀 어느 경우든 바로 직전과 같은 문구가 연달아 나오지 않도록)
+const LAST_ENCOURAGE_KEY = 'bodeum_last_encourage_phrase';
+function pickEncouragePhrase() {
+  let last = null;
+  try { last = localStorage.getItem(LAST_ENCOURAGE_KEY); } catch (_) {}
+  const candidates = last
+    ? HOME_ENCOURAGE_PHRASES.filter(p => p !== last)
+    : HOME_ENCOURAGE_PHRASES;
+  const pool = candidates.length > 0 ? candidates : HOME_ENCOURAGE_PHRASES;
+  const picked = pool[Math.floor(Math.random() * pool.length)];
+  try { localStorage.setItem(LAST_ENCOURAGE_KEY, picked); } catch (_) {}
+  return picked;
+}
+
 export default function HomePanel() {
   const {
     db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
@@ -76,19 +91,15 @@ export default function HomePanel() {
 
   // 홈 상단 응원 문구 — 앱을 처음 열 때 랜덤으로 고르고, 이후 탭을 오가는 동안에는 유지하되,
   // 앱이 백그라운드로 내려갔다가 다시 화면에 보이게 될 때(visibilitychange)마다 새로 랜덤으로 뽑는다.
-  const [encouragePhrase, setEncouragePhrase] = useState(
-    () => HOME_ENCOURAGE_PHRASES[Math.floor(Math.random() * HOME_ENCOURAGE_PHRASES.length)]
-  );
+  const [encouragePhrase, setEncouragePhrase] = useState(() => pickEncouragePhrase());
   useEffect(() => {
-    function pickRandomPhrase() {
+    function handleVisibility() {
       if (document.visibilityState === 'visible') {
-        setEncouragePhrase(
-          HOME_ENCOURAGE_PHRASES[Math.floor(Math.random() * HOME_ENCOURAGE_PHRASES.length)]
-        );
+        setEncouragePhrase(pickEncouragePhrase());
       }
     }
-    document.addEventListener('visibilitychange', pickRandomPhrase);
-    return () => document.removeEventListener('visibilitychange', pickRandomPhrase);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   // Day count
