@@ -203,9 +203,16 @@ export default function BodeumApp() {
   const CROSSFADE_MS = 400;
   const [splashPhase, setSplashPhase] = useState('visible'); // 'visible' | 'fading' | 'done'
   const [appVisible, setAppVisible] = useState(false);
+  // 아래 effect가 splashPhase를 "읽고 또 갱신"하다 보니, splashPhase를 의존성 배열에 넣으면
+  // splashPhase가 'fading'으로 바뀌는 순간 effect가 다시 실행되면서 cleanup이 먼저 돌아
+  // 아직 발동 전이던 requestAnimationFrame/setTimeout이 취소되어버려 appVisible이 영영
+  // true가 되지 못하고(=홈 화면이 계속 투명 상태로 남아 안 보이는) 버그가 있었다.
+  // 그래서 ref로 "이미 한 번 시작했는지"만 체크하고, 의존성은 initializing만 둔다.
+  const fadeStartedRef = useRef(false);
 
   useEffect(() => {
-    if (!initializing && splashPhase === 'visible') {
+    if (!initializing && !fadeStartedRef.current) {
+      fadeStartedRef.current = true;
       setSplashPhase('fading');
       const raf = requestAnimationFrame(() => setAppVisible(true));
       const t = setTimeout(() => setSplashPhase('done'), CROSSFADE_MS);
@@ -214,7 +221,7 @@ export default function BodeumApp() {
         clearTimeout(t);
       };
     }
-  }, [initializing, splashPhase]);
+  }, [initializing]);
 
   if (initializing) return <SplashScreen />;
   if (!familyCode) return <SetupScreen />;

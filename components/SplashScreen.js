@@ -12,7 +12,7 @@ export default function SplashScreen({ fading = false }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#FDF4D2',
+        background: 'var(--bg)',
         zIndex: 9999,
         opacity: fading ? 0 : 1,
         transition: 'opacity 400ms ease',
