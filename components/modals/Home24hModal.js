@@ -241,6 +241,7 @@ export default function Home24hModal({ type, onClose }) {
     >
       <div
         className="msheet"
+        onClick={e => e.stopPropagation()}
         style={{
           maxHeight: '88vh',
           display: 'flex',
