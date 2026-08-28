@@ -15,6 +15,48 @@ function agoShort(iso) {
   return agoStr(iso).replace(/ 전$/, '');
 }
 
+// 홈 화면 좌측 상단 — 앱을 열 때마다(재접속 시) 랜덤하게 하나씩 보여주는 부모 응원 문구.
+// 길이가 짧은 것부터 긴 것까지 섞여 있어서, 아래 encourageFontSize로 길이에 맞게 폰트를 줄여 표시한다.
+const HOME_ENCOURAGE_PHRASES = [
+  '잘하고 있어요.',
+  '오늘도 정말 애썼네요. 수고 많았어요.',
+  '천천히, 그러나 꾸준히.',
+  '완벽하지 않아도 괜찮아요.',
+  '당신도 잘 크고 있어요.',
+  '지금 이 순간도 충분히 잘하고 있어요.',
+  '오늘도 아기를 위해 애쓴 당신, 정말 잘하고 있어요.',
+  '지친 하루였어도, 당신은 이미 충분히 해냈어요.',
+  '완벽하지 않아도, 당신의 손은 따뜻하고 충분해요.',
+  '천천히 가도 괜찮아요. 당신은 꾸준히 걸어가고 있어요.',
+  '매일이 처음처럼 낯설어도, 당신은 조금씩 성장하고 있어요',
+  '작은 실수 하나쯤은 괜찮아요. 사랑이 더 크니까요.',
+  '지금 이 순간, 당신은 이미 좋은 부모예요.',
+  '매일이 처음이라 버거워도, 당신은 해내고 있어요.',
+  '아기를 안아주는 그 손이, 이미 가장 좋은 손이에요',
+  '작은 하루가 쌓여 큰 사랑이 되고 있어요.',
+  '지금 이 모습 그대로도, 당신은 충분히 잘하고 있어요.',
+  '천천히, 그러나 당신답게. 그게 제일 좋아요.',
+  '걱정이 많아서 힘들죠. 그래도 당신은 오늘도 아기를 위해 애썼어요.',
+  '부모가 된다는 건 원래 한 번에 완성되지 않아요. 천천히 가도 돼요.',
+  '걱정과 피로가 밀려와도, 당신은 오늘도 최선을 다했어요.',
+  '힘들고 지치고, 어떻게 해야 할지 몰라서 걱정되는 마음… 다 알아요. 그래도 당신은 잘하고 있어요.',
+  '오늘은 아무것도 못한 것 같아도, 당신은 이미 충분히 애썼어요.',
+  '걱정이 많아도, 아기를 위해 고민하는 그 마음이 가장 소중해요.',
+  '지쳐 쓰러질 것 같아도, 당신은 오늘도 해냈어요.',
+  '초보 엄마·아빠인 당신도, 함께 잘 자라고 있어요.',
+];
+
+// 문구 길이에 따라 폰트 크기를 단계적으로 줄여서, 짧은 문구는 기존 크기를 유지하고
+// 긴 문구는 헤더 레이아웃이 과도하게 커지거나 어색하게 보이지 않도록 한다.
+function encourageFontSize(text) {
+  const len = text.length;
+  if (len <= 12) return 19;
+  if (len <= 19) return 17;
+  if (len <= 27) return 15;
+  if (len <= 35) return 13.5;
+  return 12;
+}
+
 export default function HomePanel() {
   const {
     db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
@@ -32,6 +74,12 @@ export default function HomePanel() {
 
   // 직전 24시간 상세 모달
   const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
+
+  // 홈 상단 응원 문구 — 컴포넌트가 처음 마운트될 때(=앱을 새로 열 때) 한 번만 랜덤으로 고르고,
+  // 이후 탭을 오가는 동안에는 계속 같은 문구를 유지한다.
+  const [encouragePhrase] = useState(
+    () => HOME_ENCOURAGE_PHRASES[Math.floor(Math.random() * HOME_ENCOURAGE_PHRASES.length)]
+  );
 
   // Day count
   let dayCount = null;
@@ -122,8 +170,8 @@ export default function HomePanel() {
   return (
     <>
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:'16px' }}>
-        <h1 className="daytitle" style={{ fontSize:'19px', marginBottom:0, flex:1 }}>
-          할 수 있다! {baby.name || '아이'} 육성기록
+        <h1 className="daytitle" style={{ fontSize: encourageFontSize(encouragePhrase) + 'px', wordBreak:'keep-all', marginBottom:0, flex:1 }}>
+          {encouragePhrase}
         </h1>
         {dayCount !== null && (
           <div style={{ textAlign:'right', fontSize:'11px', color:'var(--muted)', lineHeight:'1.5', paddingTop:'2px', flexShrink:0, marginLeft:'10px' }}>
