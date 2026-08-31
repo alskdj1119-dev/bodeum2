@@ -6,7 +6,7 @@ import { useApp } from '../../lib/store';
 // "OO분 = OOml" 형태로 입력받아 1분당 ml(rate)로 환산해 저장한다.
 // 기본값은 "15분 = 40ml" 기준.
 export default function FeedSettingsPanel() {
-  const { feedSettings, saveFeedSettings, showToast } = useApp();
+  const { feedSettings, saveFeedSettings, showToast, goTab } = useApp();
 
   const [minutes, setMinutes] = useState('15');
   const [ml, setMl] = useState('40');
@@ -68,6 +68,24 @@ export default function FeedSettingsPanel() {
       </div>
 
       <button className="bpri" style={{ width: '100%' }} onClick={save}>저장</button>
+
+      <button
+        onClick={() => goTab('recalcFeeds', 'forward')}
+        style={{
+          width: '100%',
+          marginTop: 10,
+          padding: '12px',
+          fontSize: '14px',
+          fontWeight: 600,
+          borderRadius: '100px',
+          border: '1.5px solid var(--sage)',
+          background: 'transparent',
+          color: 'var(--sage)',
+          cursor: 'pointer',
+        }}
+      >
+        기존 기록 다시 계산하기
+      </button>
     </>
   );
 }
