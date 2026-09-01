@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>보듬</title>
+<style>
+  html,body{height:100%;margin:0;}
+  body{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    text-align:center;padding:24px;
+    background:#FDF4D2;color:#2C2438;
+  }
+  .msg{font-size:16px;font-weight:600;line-height:1.6;margin-bottom:10px;}
+  .sub{font-size:13px;color:#8A7E96;margin-bottom:28px;line-height:1.6;}
+  button{
+    padding:12px 28px;border-radius:100px;border:1.5px solid #7660A2;
+    background:transparent;color:#7660A2;font-size:14px;font-weight:600;
+  }
+  @media (prefers-color-scheme: dark) {
+    body{background:#18150F;color:#EDE8E1;}
+    .sub{color:#8A8278;}
+    button{border-color:#7FAF91;color:#7FAF91;}
+  }
+</style>
+</head>
+<body>
+  <div class="msg">연결이 불안정해요</div>
+  <div class="sub">네트워크 상태를 확인하고 있어요.<br>연결되면 자동으로 다시 열게요.</div>
+  <button onclick="location.reload()">다시 시도</button>
+<script>
+  function tryReload() {
+    fetch('/', { cache: 'no-store' }).then(function (r) {
+      if (r && r.ok) location.reload();
+    }).catch(function () {});
+  }
+  window.addEventListener('online', tryReload);
+  setInterval(tryReload, 3000);
+</script>
+</body>
+</html>
