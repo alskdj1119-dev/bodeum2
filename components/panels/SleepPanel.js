@@ -14,6 +14,13 @@ export default function SleepPanel() {
   const done = sleeps.filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start));
   const grouped = groupByDay(done, s => s.start);
 
+  function openActiveEdit() {
+    if (!activeSleep) return;
+    setEditId(activeSleep.id);
+    setEditType('sleeps');
+    setOpenModal('activeTimerEdit');
+  }
+
   function openEdit(s) {
     setEditId(s.id); setEditType('sleeps');
     setOpenModal('sleep');
@@ -40,13 +47,13 @@ export default function SleepPanel() {
   return (
     <>
       {activeSleep && (
-        <div className="slive banner-in" style={{ background:'var(--sw)' }}>
+        <div className="slive banner-in" style={{ background:'var(--sw)', cursor:'pointer' }} onClick={openActiveEdit}>
           <div className="spulse" style={{ background:'var(--cs)' }}></div>
           <div className="sliveinf">
             <div className="slivelbl">수면 중</div>
             <div className="slivetimer">{timerStr(sleepTimerMs)}</div>
           </div>
-          <button className="sstop" style={{ background:'var(--cs)' }} onClick={stopActiveSleep}>종료</button>
+          <button className="sstop" style={{ background:'var(--cs)' }} onClick={e => { e.stopPropagation(); stopActiveSleep(); }}>종료</button>
         </div>
       )}
 

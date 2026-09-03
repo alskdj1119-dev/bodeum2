@@ -14,6 +14,13 @@ export default function FeedPanel() {
   const done = feeds.filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));
   const grouped = groupByDay(done, f => f.start || f.time);
 
+  function openActiveEdit() {
+    if (!activeFeed) return;
+    setEditId(activeFeed.id);
+    setEditType('feeds');
+    setOpenModal('activeTimerEdit');
+  }
+
   function openEdit(f) {
     if (!f.end) { showToast('진행 중인 수유는 종료 후 수정할 수 있어요'); return; }
     setEditId(f.id);
@@ -72,13 +79,13 @@ export default function FeedPanel() {
   return (
     <>
       {activeFeed && (
-        <div className="slive banner-in" style={{ background:'var(--fw)' }}>
+        <div className="slive banner-in" style={{ background:'var(--fw)', cursor:'pointer' }} onClick={openActiveEdit}>
           <div className="spulse" style={{ background:'var(--cf)' }}></div>
           <div className="sliveinf">
             <div className="slivelbl">수유 중</div>
             <div className="slivetimer">{timerStr(feedTimerMs)}</div>
           </div>
-          <button className="sstop" style={{ background:'var(--cf)' }} onClick={stopActiveFeed}>종료</button>
+          <button className="sstop" style={{ background:'var(--cf)' }} onClick={e => { e.stopPropagation(); stopActiveFeed(); }}>종료</button>
         </div>
       )}
 

@@ -219,19 +219,21 @@ export default function HomePanel() {
       {(activeFeed || activeSleep) && (
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
           {activeFeed && (
-            <div className="slive-mini banner-in">
+            <div className="slive-mini banner-in" style={{ cursor:'pointer' }}
+              onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
               <span className="slive-mini-lbl">수유 중</span>
               <span className="slive-mini-timer">{timerStr(feedTimerMs)}</span>
-              <button className="slive-mini-stop" style={{ background:'var(--cf)' }} onClick={stopActiveFeed}>종료</button>
+              <button className="slive-mini-stop" style={{ background:'var(--cf)' }} onClick={e => { e.stopPropagation(); stopActiveFeed(); }}>종료</button>
             </div>
           )}
           {activeSleep && (
-            <div className="slive-mini banner-in">
+            <div className="slive-mini banner-in" style={{ cursor:'pointer' }}
+              onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
               <span className="slive-mini-lbl">수면 중</span>
               <span className="slive-mini-timer">{timerStr(sleepTimerMs)}</span>
-              <button className="slive-mini-stop" style={{ background:'var(--cs)' }} onClick={stopActiveSleep}>종료</button>
+              <button className="slive-mini-stop" style={{ background:'var(--cs)' }} onClick={e => { e.stopPropagation(); stopActiveSleep(); }}>종료</button>
             </div>
           )}
         </div>
