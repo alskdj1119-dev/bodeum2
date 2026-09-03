@@ -1,29 +1,28 @@
 /* ── THEME ───────────────────────────────────────────────── */
 :root {
-  --bg:#FDF4D2;--surf:#FFFEF5;--surf2:#F5EEC8;--ink:#2C2438;--muted:#8A7E96;
+  /* 2026-09 리스킨: 사용자가 전달한 배차앱 스크린샷에서 뽑은 파랑/주황/네이비 팔레트 (dev 실험용) */
+  --bg:#E4E5E9;--surf:#F9FAFB;--surf2:#E1E3E8;--ink:#15151A;--muted:#7B808C;
   --cw:#5E9E8D;--ww:rgba(94,158,141,.12);
-  --sage:#7660A2;--s-wash:#EDE7F6;
-  --cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;
-  --fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);
+  --sage:#2F6FED;--s-wash:rgba(47,111,237,.12);
+  --cf:#2F6FED;--cd:#DF630B;--cs:#14224E;
+  --fw:rgba(47,111,237,.12);--dw:rgba(223,99,11,.12);--sw:rgba(20,34,78,.10);
   --cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);
-  --bdr:rgba(44,36,54,.08);--sh:0 1px 4px rgba(44,36,54,.06);--r:18px;
+  --bdr:rgba(21,21,26,.08);--sh:0 1px 4px rgba(21,21,26,.06);--r:20px;
   --serif:'Pretendard',system-ui,sans-serif;--sans:'Pretendard',system-ui,sans-serif;
   --up:#2F6FED;--down:#E5484D;
   --warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);
-  --cf-glow:rgba(91,140,181,.35);--cd-glow:rgba(148,109,109,.35);--cs-glow:rgba(139,123,170,.35);
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#18150F;--surf:#221E17;--surf2:#2C271F;--ink:#EDE8E1;--muted:#8A8278;
-  --sage:#7FAF91;--s-wash:rgba(127,175,145,.13);--cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;
-  --fw:rgba(127,175,145,.13);--dw:rgba(196,154,107,.12);--sw:rgba(120,153,184,.12);
+  --bg:#0F1424;--surf:#171D33;--surf2:#212844;--ink:#E8EAF0;--muted:#8890A3;
+  --sage:#5B8CFF;--s-wash:rgba(91,140,255,.16);--cf:#5B8CFF;--cd:#FF9142;--cs:#7C90D6;
+  --fw:rgba(91,140,255,.16);--dw:rgba(255,145,66,.16);--sw:rgba(124,144,214,.14);
   --cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);
-  --bdr:rgba(237,232,225,.08);--sh:0 2px 6px rgba(0,0,0,.3);
+  --bdr:rgba(232,234,240,.08);--sh:0 2px 6px rgba(0,0,0,.35);
   --up:#5B93F5;--down:#FF6B6F;
   --warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);
-  --cf-glow:rgba(127,175,145,.4);--cd-glow:rgba(196,154,107,.4);--cs-glow:rgba(120,153,184,.4);
 }}
-:root[data-theme="dark"]{--bg:#18150F;--surf:#221E17;--surf2:#2C271F;--ink:#EDE8E1;--muted:#8A8278;--sage:#7FAF91;--s-wash:rgba(127,175,145,.13);--cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;--fw:rgba(127,175,145,.13);--dw:rgba(196,154,107,.12);--sw:rgba(120,153,184,.12);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);--bdr:rgba(237,232,225,.08);--sh:0 2px 6px rgba(0,0,0,.3);--up:#5B93F5;--down:#FF6B6F;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);--cf-glow:rgba(127,175,145,.4);--cd-glow:rgba(196,154,107,.4);--cs-glow:rgba(120,153,184,.4);}
-:root[data-theme="light"]{--bg:#FDF4D2;--surf:#FFFEF5;--surf2:#F5EEC8;--ink:#2C2438;--muted:#8A7E96;--sage:#7660A2;--s-wash:#EDE7F6;--cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;--fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--bdr:rgba(44,36,54,.08);--sh:0 1px 4px rgba(44,36,54,.06);--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);--cf-glow:rgba(91,140,181,.35);--cd-glow:rgba(148,109,109,.35);--cs-glow:rgba(139,123,170,.35);}
+:root[data-theme="dark"]{--bg:#0F1424;--surf:#171D33;--surf2:#212844;--ink:#E8EAF0;--muted:#8890A3;--sage:#5B8CFF;--s-wash:rgba(91,140,255,.16);--cf:#5B8CFF;--cd:#FF9142;--cs:#7C90D6;--fw:rgba(91,140,255,.16);--dw:rgba(255,145,66,.16);--sw:rgba(124,144,214,.14);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);--bdr:rgba(232,234,240,.08);--sh:0 2px 6px rgba(0,0,0,.35);--up:#5B93F5;--down:#FF6B6F;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}
+:root[data-theme="light"]{--bg:#E4E5E9;--surf:#F9FAFB;--surf2:#E1E3E8;--ink:#15151A;--muted:#7B808C;--sage:#2F6FED;--s-wash:rgba(47,111,237,.12);--cf:#2F6FED;--cd:#DF630B;--cs:#14224E;--fw:rgba(47,111,237,.12);--dw:rgba(223,99,11,.12);--sw:rgba(20,34,78,.10);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--bdr:rgba(21,21,26,.08);--sh:0 1px 4px rgba(21,21,26,.06);--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);}
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -123,29 +122,23 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .sc-static{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 13px;box-shadow:var(--sh);min-width:0;overflow:hidden}
 .ec{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:11px 13px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);margin-bottom:8px;cursor:pointer;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s}
 .ec:active{transform:scale(.98)}
-/* 빠른 기록 버튼 — 피그마 "Locked/Unlocked" 도어락 카드의 유리질감 카드 스타일을 응용.
-   평소(안 누른 상태)는 Locked 카드처럼 차분한 그라데이션 카드, 누르고 있는 동안(:active)은
-   Unlocked 카드처럼 각 버튼 고유 색으로 밝아지며 은은한 글로우가 생기도록 함.
+/* 빠른 기록 버튼 — 배차앱 스크린샷 톤에 맞춰 플랫한 "아이콘 워시 사각형 + 카드" 스타일로 단순화.
    라벨/아이콘(수유·기저귀·수면)은 원래 그대로 유지. */
 .qbtn{
-  display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;
-  background:linear-gradient(160deg, var(--surf) 0%, var(--surf2) 100%);
-  border:1px solid var(--bdr);border-radius:22px;cursor:pointer;
-  font-family:var(--sans);font-size:13px;color:var(--ink);font-weight:500;
-  box-shadow:var(--sh), inset 0 1px 0 rgba(255,255,255,.35), inset 0 -10px 16px -12px rgba(0,0,0,.06);
-  transition:transform .15s, box-shadow .2s, background .2s, color .2s;
+  display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;
+  background:var(--surf);
+  border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;
+  font-family:var(--sans);font-size:12.5px;color:var(--ink);font-weight:700;
+  box-shadow:var(--sh);
+  transition:transform .12s, background .15s;
   -webkit-tap-highlight-color:transparent;
 }
 .qbtn:active{transform:scale(.96)}
-.qbtn svg{width:24px;height:24px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s,filter .2s}
+.qbtn-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.qbtn svg{width:20px;height:20px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.qbtn.qf .qbtn-ico{background:var(--fw)}.qbtn.qd .qbtn-ico{background:var(--dw)}.qbtn.qs .qbtn-ico{background:var(--sw)}
 .qbtn.qf svg{stroke:var(--cf)}.qbtn.qd svg{stroke:var(--cd)}.qbtn.qs svg{stroke:var(--cs)}
-
-.qbtn.qf:active{background:linear-gradient(160deg, var(--surf) 0%, var(--fw) 100%);box-shadow:0 0 0 1px var(--cf) inset, 0 8px 22px -4px var(--cf-glow), inset 0 1px 0 rgba(255,255,255,.35);color:var(--cf)}
-.qbtn.qd:active{background:linear-gradient(160deg, var(--surf) 0%, var(--dw) 100%);box-shadow:0 0 0 1px var(--cd) inset, 0 8px 22px -4px var(--cd-glow), inset 0 1px 0 rgba(255,255,255,.35);color:var(--cd)}
-.qbtn.qs:active{background:linear-gradient(160deg, var(--surf) 0%, var(--sw) 100%);box-shadow:0 0 0 1px var(--cs) inset, 0 8px 22px -4px var(--cs-glow), inset 0 1px 0 rgba(255,255,255,.35);color:var(--cs)}
-.qbtn.qf:active svg{filter:drop-shadow(0 0 6px var(--cf-glow))}
-.qbtn.qd:active svg{filter:drop-shadow(0 0 6px var(--cd-glow))}
-.qbtn.qs:active svg{filter:drop-shadow(0 0 6px var(--cs-glow))}
+.qbtn.qf:active{background:var(--fw)}.qbtn.qd:active{background:var(--dw)}.qbtn.qs:active{background:var(--sw)}
 
 /* ── HOME ── */
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
