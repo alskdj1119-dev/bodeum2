@@ -162,6 +162,42 @@ export default function HomePanel() {
     setOpenModal('sleep');
   }
 
+  // "직전" 수유/기저귀 카드 — 경과 시간이 오래될수록 눈에 띄게 색을 바꿔서
+  // 한눈에 "슬슬 확인해야 할 때"를 알 수 있도록 함. 1시간 미만은 평소 그대로.
+  const ELAPSED_TIER_STYLE = {
+    caution: { border: 'var(--cd-wet)', bg: 'var(--dw-wet)' },
+    warn:    { border: 'var(--warn)',   bg: 'var(--warn-wash)' },
+    alert:   { border: 'var(--alert)',  bg: 'var(--alert-wash)' },
+  };
+  function elapsedTier(iso) {
+    if (!iso) return null;
+    const hrs = (Date.now() - new Date(iso).getTime()) / 3600000;
+    if (hrs >= 3) return 'alert';
+    if (hrs >= 2) return 'warn';
+    if (hrs >= 1) return 'caution';
+    return null;
+  }
+  function tierCardStyle(tier) {
+    if (!tier) return undefined;
+    const t = ELAPSED_TIER_STYLE[tier];
+    return { background: t.bg, borderColor: t.border };
+  }
+  function tierIcoStyle(tier) {
+    if (!tier) return undefined;
+    return { background: ELAPSED_TIER_STYLE[tier].bg };
+  }
+  function tierSvgStyle(tier) {
+    if (!tier) return undefined;
+    return { stroke: ELAPSED_TIER_STYLE[tier].border };
+  }
+  function tierValStyle(tier) {
+    if (!tier) return undefined;
+    return { color: ELAPSED_TIER_STYLE[tier].border, fontWeight: 700 };
+  }
+
+  const feedTier = elapsedTier(lastFeed ? (lastFeed.start || lastFeed.time) : null);
+  const diaperTier = elapsedTier(lastDiaper ? lastDiaper.time : null);
+
   // 체중 카드 클릭 → 건강 > 체중 탭
   function openHealthWeight() {
     setHealthInitTab('weight');
@@ -259,20 +295,20 @@ export default function HomePanel() {
       {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
       <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
-        <div className="sc" onClick={() => openEditFeed(lastFeed)}>
+        <div className="sc" onClick={() => openEditFeed(lastFeed)} style={tierCardStyle(feedTier)}>
           <div className="sr">
             <div className="slbl">수유</div>
-            <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+            <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
           <div className="ssub">{lastFeed ? fmt(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
         </div>
-        <div className="sc" onClick={() => openEditDiaper(lastDiaper)}>
+        <div className="sc" onClick={() => openEditDiaper(lastDiaper)} style={tierCardStyle(diaperTier)}>
           <div className="sr">
             <div className="slbl">기저귀</div>
-            <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
+            <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(diaperTier) }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
           <div className="ssub">{lastDiaper ? fmt(lastDiaper.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditSleep(lastSleep)}>
