@@ -1,14 +1,19 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { getDb, collection, addDoc, query, orderBy, onSnapshot } from '../../lib/firebase';
+import { getDb, collection, doc, addDoc, updateDoc, query, orderBy, onSnapshot } from '../../lib/firebase';
 
 const REQUESTS_COLLECTION = 'bodeum_requests';
 
+const STATUS_OPTIONS = ['접수', '처리중', '처리완료', '미진행'];
+
 const STATUS_STYLES = {
-  '접수':  { bg:'rgba(125,91,56,.12)',  color:'var(--cd)', border:'rgba(125,91,56,.25)' },
+  '접수':   { bg:'rgba(125,91,56,.12)',  color:'var(--cd)', border:'rgba(125,91,56,.25)' },
   '처리중': { bg:'rgba(61,90,120,.12)',  color:'var(--cs)', border:'rgba(61,90,120,.25)' },
-  '완료':  { bg:'rgba(120,120,120,.1)', color:'var(--muted)', border:'rgba(120,120,120,.2)' },
+  '처리완료': { bg:'rgba(127,175,145,.12)', color:'var(--sage)', border:'rgba(127,175,145,.25)' },
+  '미진행': { bg:'rgba(120,120,120,.1)', color:'var(--muted)', border:'rgba(120,120,120,.2)' },
+  // 예전에 저장된 문서에 남아있을 수 있는 옛 상태값('완료') 호환용
+  '완료':   { bg:'rgba(127,175,145,.12)', color:'var(--sage)', border:'rgba(127,175,145,.25)' },
 };
 
 export default function RequestsPanel() {
@@ -27,6 +32,15 @@ export default function RequestsPanel() {
     }, () => {});
     return () => unsub();
   }, []);
+
+  async function changeStatus(id, status) {
+    try {
+      const db = getDb();
+      await updateDoc(doc(db, REQUESTS_COLLECTION, id), { status });
+    } catch (e) {
+      showToast('상태 변경 중 오류가 발생했어요: ' + e.message);
+    }
+  }
 
   async function submit() {
     const t = text.trim();
@@ -83,12 +97,21 @@ export default function RequestsPanel() {
             display:'flex', alignItems:'flex-start', gap:'10px',
             padding:'12px 0', borderBottom:'1px solid var(--line)'
           }}>
-            <span style={{
-              flexShrink:0, fontSize:'11px', fontWeight:700,
-              padding:'2px 8px', borderRadius:'100px',
-              background:s.bg, color:s.color, border:`1.5px solid ${s.border}`,
-              marginTop:2,
-            }}>{r.status || '접수'}</span>
+            <select
+              value={r.status || '접수'}
+              onChange={e => changeStatus(r.id, e.target.value)}
+              style={{
+                flexShrink:0, fontSize:'11px', fontWeight:700,
+                padding:'2px 6px', borderRadius:'100px',
+                background:s.bg, color:s.color, border:`1.5px solid ${s.border}`,
+                marginTop:1, WebkitAppearance:'none', appearance:'none',
+                cursor:'pointer', textAlignLast:'center',
+              }}
+            >
+              {STATUS_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:'14px', color:'var(--ink)', lineHeight:1.5 }}>{r.text}</div>
               <div style={{ fontSize:'11px', color:'var(--muted)', marginTop:3 }}>
