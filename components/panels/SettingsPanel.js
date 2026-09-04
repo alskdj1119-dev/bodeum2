@@ -47,6 +47,20 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
 
+      <button className="settmenu" onClick={() => goTab('cardColorSettings', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--warn-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="13.5" cy="6.5" r="0.5"/><circle cx="17.5" cy="10.5" r="0.5"/><circle cx="8.5" cy="7.5" r="0.5"/><circle cx="6.5" cy="12.5" r="0.5"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.6 0 1-.4 1-1 0-.3-.1-.5-.3-.7-.2-.2-.3-.5-.3-.8 0-.6.4-1 1-1h1.5c2.5 0 4.6-2.1 4.6-4.6C19.5 6.1 16.2 2 12 2z"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">카드 색상 설정</div>
+          <div className="settmenu-sub">직전 카드 경과 시간별 색상 기준</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+
       <button className="settmenu" onClick={() => goTab('notifSettings', 'forward')}>
         <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

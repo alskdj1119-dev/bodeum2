@@ -12,6 +12,7 @@ import SleepPanel from './panels/SleepPanel';
 import SettingsPanel from './panels/SettingsPanel';
 import BabyInfoPanel from './panels/BabyInfoPanel';
 import FeedSettingsPanel from './panels/FeedSettingsPanel';
+import CardColorSettingsPanel from './panels/CardColorSettingsPanel';
 import RecalcFeedsPanel from './panels/RecalcFeedsPanel';
 import FamilyCodePanel from './panels/FamilyCodePanel';
 import NotifSettingsPanel from './panels/NotifSettingsPanel';
@@ -31,8 +32,8 @@ import TempModal from './modals/TempModal';
 import ActiveTimerEditModal from './modals/ActiveTimerEditModal';
 import OrientationGuard from './OrientationGuard';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds'];
+const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
@@ -40,6 +41,7 @@ const BACK_TARGET = {
   changelog: 'settings', requests: 'settings', trash: 'settings',
   babyInfo: 'settings', notifSettings: 'settings', familyCode: 'settings',
   feedSettings: 'settings',
+  cardColorSettings: 'settings',
   recalcFeeds: 'feedSettings',
   notifHistory: 'home',
 };
@@ -214,6 +216,7 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('babyInfo')}><BabyInfoPanel /></div>
         <div className="panel" ref={panelRef('feedSettings')}><FeedSettingsPanel /></div>
         <div className="panel" ref={panelRef('recalcFeeds')}><RecalcFeedsPanel /></div>
+        <div className="panel" ref={panelRef('cardColorSettings')}><CardColorSettingsPanel /></div>
         <div className="panel" ref={panelRef('familyCode')}><FamilyCodePanel /></div>
         <div className="panel" ref={panelRef('notifSettings')}><NotifSettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
-  kstDate, KST_OFFSET_MS, useNowTick,
+  kstDate, KST_OFFSET_MS, useNowTick, elapsedTier,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -169,14 +169,6 @@ export default function HomePanel() {
     warn:    { border: 'var(--warn)',   bg: 'var(--warn-wash)' },
     alert:   { border: 'var(--alert)',  bg: 'var(--alert-wash)' },
   };
-  function elapsedTier(iso) {
-    if (!iso) return null;
-    const hrs = (Date.now() - new Date(iso).getTime()) / 3600000;
-    if (hrs >= 3) return 'alert';
-    if (hrs >= 2) return 'warn';
-    if (hrs >= 1) return 'caution';
-    return null;
-  }
   function tierCardStyle(tier) {
     if (!tier) return undefined;
     const t = ELAPSED_TIER_STYLE[tier];
