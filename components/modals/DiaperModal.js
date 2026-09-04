@@ -26,7 +26,7 @@ export default function DiaperModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid,
+    uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -70,7 +70,7 @@ export default function DiaperModal() {
       };
     } else {
       newDiapers.unshift({
-        id: uid(), time: fromLocal(time), type,
+        id: uid(), babyId: activeBabyId || undefined, time: fromLocal(time), type,
         color: color || undefined,
         note: note || undefined,
         author: author || undefined,

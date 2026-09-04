@@ -20,7 +20,7 @@ export default function SleepModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid,
+    uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -73,6 +73,7 @@ export default function SleepModal() {
     } else {
       newSleeps.unshift({
         id: uid(),
+        babyId: activeBabyId || undefined,
         start: new Date().toISOString(),
         end: end ? fromLocal(end) : undefined,
         place,

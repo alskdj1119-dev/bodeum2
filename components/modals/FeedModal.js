@@ -22,7 +22,7 @@ export default function FeedModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid,
+    uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -170,6 +170,7 @@ export default function FeedModal() {
       const id = uid();
       const entry = {
         id,
+        babyId: activeBabyId || undefined,
         type,
         subtype: type === 'breast' ? subtype : undefined,
         side: isDirectBreast ? side : undefined,

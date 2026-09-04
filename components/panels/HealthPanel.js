@@ -37,9 +37,10 @@ const STATUS_OPTS = [
 export default function HealthPanel() {
   const {
     db, dispatch, saveDB, setOpenModal, setEditId, setEditType, activeTab, healthInitTab, setHealthInitTab,
-    baby, vaccineStatus, saveVaccineStatus, showToast,
+    baby, vaccineStatus, saveVaccineStatus, showToast, filterByActiveBaby,
   } = useApp();
-  const { temps = [], weights = [] } = db;
+  const temps = filterByActiveBaby(db.temps || []);
+  const weights = filterByActiveBaby(db.weights || []);
 
   const [tab, setTab] = useState('weight'); // 'temp' | 'weight' | 'vaccine'
 
@@ -82,10 +83,10 @@ export default function HealthPanel() {
 
   // 수유/기저귀/수면과 동일하게 휴지통을 거치도록 통일 (기존엔 여기만 영구 삭제였음)
   async function delTemp(id) {
-    const item = temps.find(x => x.id === id);
+    const item = (db.temps || []).find(x => x.id === id);
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'temps' };
-    const newTemps = temps.filter(x => x.id !== id);
+    const newTemps = (db.temps || []).filter(x => x.id !== id);
     const newTrash = [trashItem, ...(db.trash || [])];
     dispatch({ type: 'SET_TEMPS', payload: newTemps });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
@@ -93,10 +94,10 @@ export default function HealthPanel() {
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
   async function delWeight(id) {
-    const item = weights.find(x => x.id === id);
+    const item = (db.weights || []).find(x => x.id === id);
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'weights' };
-    const newW = weights.filter(x => x.id !== id);
+    const newW = (db.weights || []).filter(x => x.id !== id);
     const newTrash = [trashItem, ...(db.trash || [])];
     dispatch({ type: 'SET_WEIGHTS', payload: newW });
     dispatch({ type: 'SET_TRASH', payload: newTrash });

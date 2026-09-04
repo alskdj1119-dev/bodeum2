@@ -6,8 +6,10 @@ import {
 } from '../../lib/helpers';
 
 export default function FeedPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed } = useApp();
-  const { feeds } = db;
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed, filterByActiveBaby, activeBabyId, babies } = useApp();
+  // 화면에는 지금 보고 있는 아이의 기록만 — 실제 삭제/저장은 항상 db.feeds(전체) 기준으로 해서
+  // 다른 아이의 기록이 실수로 사라지지 않게 한다 (아래 delFeed 참고).
+  const feeds = filterByActiveBaby(db.feeds);
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const activeFeed = feeds.find(f => f.start && !f.end);
@@ -34,10 +36,10 @@ export default function FeedPanel() {
   }
 
   function delFeed(id) {
-    const item = feeds.find(x => x.id === id);
+    const item = db.feeds.find(x => x.id === id);
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'feeds' };
-    const newFeeds = feeds.filter(x => x.id !== id);
+    const newFeeds = db.feeds.filter(x => x.id !== id);
     const newTrash = [trashItem, ...(db.trash || [])];
     const newDB = { ...db, feeds: newFeeds, trash: newTrash };
     dispatch({ type: 'SET_FEEDS', payload: newFeeds });

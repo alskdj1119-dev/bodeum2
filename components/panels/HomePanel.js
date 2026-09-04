@@ -73,11 +73,16 @@ function pickEncouragePhrase() {
 
 export default function HomePanel() {
   const {
-    db, baby, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
+    db, baby, babies, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
     feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep,
     notifPermission, requestNotifPermission,
+    filterByActiveBaby, activeBabyId, switchBaby,
   } = useApp();
-  const { feeds, diapers, sleeps, weights } = db;
+  // 아이가 2명 이상 등록돼 있으면 지금 보고 있는 아이의 기록만 걸러서 보여준다.
+  const feeds = filterByActiveBaby(db.feeds);
+  const diapers = filterByActiveBaby(db.diapers);
+  const sleeps = filterByActiveBaby(db.sleeps);
+  const weights = filterByActiveBaby(db.weights);
 
   // "직전"/"최근 기록"의 경과시간 텍스트가 시간이 지나도 갱신되도록 주기적으로 리렌더링
   useNowTick();
@@ -233,6 +238,28 @@ export default function HomePanel() {
           </div>
         )}
       </div>
+
+      {/* 아이가 2명 이상 등록돼 있을 때만 보이는 전환 칩 — 1명뿐이면 화면을 복잡하게 하지 않도록 숨김 */}
+      {babies.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
+          {babies.map(b => {
+            const on = b.id === activeBabyId;
+            const icon = b.gender === 'boy' ? '👦' : b.gender === 'girl' ? '👧' : '🧒';
+            return (
+              <button key={b.id} onClick={() => switchBaby(b.id)} style={{
+                flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
+                padding: '7px 14px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                fontSize: 13, fontWeight: on ? 700 : 500,
+                color: on ? '#fff' : 'var(--ink)',
+                background: on ? 'var(--sage)' : 'var(--surf)',
+                boxShadow: on ? 'var(--sh-sm)' : 'var(--sh-inset)',
+              }}>
+                <span>{icon}</span>{b.name || '아이'}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* 알림 권한 아직 결정 안 됨 → 눈에 띄게 한 번 안내 */}
       {notifPermission === 'default' && (

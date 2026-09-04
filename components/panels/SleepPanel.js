@@ -6,8 +6,8 @@ import {
 } from '../../lib/helpers';
 
 export default function SleepPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, stopActiveSleep } = useApp();
-  const { sleeps } = db;
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, stopActiveSleep, filterByActiveBaby } = useApp();
+  const sleeps = filterByActiveBaby(db.sleeps);
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
@@ -32,10 +32,10 @@ export default function SleepPanel() {
   }
 
   function delSleep(id) {
-    const item = sleeps.find(x => x.id === id);
+    const item = db.sleeps.find(x => x.id === id);
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'sleeps' };
-    const newSleeps = sleeps.filter(x => x.id !== id);
+    const newSleeps = db.sleeps.filter(x => x.id !== id);
     const newTrash = [trashItem, ...(db.trash || [])];
     const newDB = { ...db, sleeps: newSleeps, trash: newTrash };
     dispatch({ type: 'SET_SLEEPS', payload: newSleeps });

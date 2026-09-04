@@ -40,7 +40,7 @@ function WDial({ value, onChange, min = 0, max = 9 }) {
 export default function WeightModal() {
   const {
     db, dispatch, saveDB, showToast,
-    setOpenModal, editId, setEditId, setEditType, uid,
+    setOpenModal, editId, setEditId, setEditType, uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -82,7 +82,7 @@ export default function WeightModal() {
       if (idx < 0) return;
       newWeights[idx] = { ...newWeights[idx], kg: parseFloat(kg), time: isoTime };
     } else {
-      newWeights.push({ id: uid(), kg: parseFloat(kg), time: isoTime });
+      newWeights.push({ id: uid(), babyId: activeBabyId || undefined, kg: parseFloat(kg), time: isoTime });
     }
     newWeights.sort((a, b) => new Date(a.time) - new Date(b.time));
     const newDB = { ...db, weights: newWeights };

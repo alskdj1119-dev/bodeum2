@@ -13,7 +13,7 @@ const METHOD_OPTIONS = [
 export default function TempModal() {
   const {
     db, dispatch, saveDB, showToast,
-    setOpenModal, editId, setEditId, setEditType, uid,
+    setOpenModal, editId, setEditId, setEditType, uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -52,7 +52,7 @@ export default function TempModal() {
       if (idx < 0) return;
       newTemps[idx] = { ...newTemps[idx], time: fromLocal(time), temp, method, note: note || undefined };
     } else {
-      newTemps.unshift({ id: uid(), time: fromLocal(time), temp, method, note: note || undefined });
+      newTemps.unshift({ id: uid(), babyId: activeBabyId || undefined, time: fromLocal(time), temp, method, note: note || undefined });
     }
     const newDB = { ...db, temps: newTemps };
     dispatch({ type: 'SET_TEMPS', payload: newTemps });

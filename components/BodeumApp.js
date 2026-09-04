@@ -53,6 +53,7 @@ export default function BodeumApp() {
     setFeedTimerMs,
     setSleepTimerMs,
     openModal,
+    filterByActiveBaby, activeBabyId,
   } = useApp();
 
   const panelRefs = useRef({});
@@ -67,9 +68,9 @@ export default function BodeumApp() {
     }
   }, []);
 
-  // Feed timer
+  // Feed timer — 지금 보고 있는 아이의 진행 중인 수유만 카운트한다.
   useEffect(() => {
-    const activeFeed = db.feeds.find(f => f.start && !f.end);
+    const activeFeed = filterByActiveBaby(db.feeds).find(f => f.start && !f.end);
     if (!activeFeed) { setFeedTimerMs(0); return; }
     const tick = () => {
       setFeedTimerMs(Date.now() - new Date(activeFeed.start).getTime());
@@ -77,11 +78,11 @@ export default function BodeumApp() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [db.feeds]);
+  }, [db.feeds, activeBabyId]);
 
-  // Sleep timer
+  // Sleep timer — 지금 보고 있는 아이의 진행 중인 수면만 카운트한다.
   useEffect(() => {
-    const activeSleep = db.sleeps.find(s => s.start && !s.end);
+    const activeSleep = filterByActiveBaby(db.sleeps).find(s => s.start && !s.end);
     if (!activeSleep) { setSleepTimerMs(0); return; }
     const tick = () => {
       setSleepTimerMs(Date.now() - new Date(activeSleep.start).getTime());
@@ -89,7 +90,7 @@ export default function BodeumApp() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [db.sleeps]);
+  }, [db.sleeps, activeBabyId]);
 
   // Panel slide animation
   useEffect(() => {
