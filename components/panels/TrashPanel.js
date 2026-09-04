@@ -15,6 +15,8 @@ const TYPE_LABEL = {
   solids: '이유식',
   visits: '병원기록',
   symptoms: '증상·투약',
+  heights: '키',
+  headCircs: '머리둘레',
 };
 const TYPE_DOT = {
   feeds: 'f',
@@ -25,6 +27,8 @@ const TYPE_DOT = {
   solids: 'n',
   visits: 'v',
   symptoms: 'y',
+  heights: 'w',
+  headCircs: 'v',
 };
 function itemSummary(item) {
   const t = item._type;
@@ -59,6 +63,12 @@ function itemSummary(item) {
   if (t === 'symptoms') {
     return `${item.symptom || '증상'}${item.medicine ? ' · ' + item.medicine : ''} — ${fmtFull(item.time)}`;
   }
+  if (t === 'heights') {
+    return `키 ${item.cm != null ? item.cm.toFixed(1) + 'cm' : '—'} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'headCircs') {
+    return `머리둘레 ${item.cm != null ? item.cm.toFixed(1) + 'cm' : '—'} — ${fmtFull(item.time)}`;
+  }
   return '기록';
 }
 
@@ -86,6 +96,8 @@ export default function TrashPanel() {
       case 'solids':  dispatch({ type: 'SET_SOLIDS',  payload: restored }); break;
       case 'visits':  dispatch({ type: 'SET_VISITS',  payload: restored }); break;
       case 'symptoms': dispatch({ type: 'SET_SYMPTOMS', payload: restored }); break;
+      case 'heights':  dispatch({ type: 'SET_HEIGHTS',  payload: restored }); break;
+      case 'headCircs': dispatch({ type: 'SET_HEAD_CIRCS', payload: restored }); break;
     }
     await saveDB(newDB);
     showToast('복원됐어요 ✓');
