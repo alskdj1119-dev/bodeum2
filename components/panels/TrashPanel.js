@@ -13,6 +13,8 @@ const TYPE_LABEL = {
   weights: '체중',
   temps: '체온',
   solids: '이유식',
+  visits: '병원기록',
+  symptoms: '증상·투약',
 };
 const TYPE_DOT = {
   feeds: 'f',
@@ -21,6 +23,8 @@ const TYPE_DOT = {
   weights: 'w',
   temps: 'w',
   solids: 'n',
+  visits: 'v',
+  symptoms: 'y',
 };
 function itemSummary(item) {
   const t = item._type;
@@ -49,6 +53,12 @@ function itemSummary(item) {
     const reaction = item.reaction ? ` · ${TSR[item.reaction] || ''}` : '';
     return `${item.food || '이유식'}${reaction} — ${fmtFull(item.time)}`;
   }
+  if (t === 'visits') {
+    return `${item.hospital || '병원 방문'}${item.reason ? ' · ' + item.reason : ''} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'symptoms') {
+    return `${item.symptom || '증상'}${item.medicine ? ' · ' + item.medicine : ''} — ${fmtFull(item.time)}`;
+  }
   return '기록';
 }
 
@@ -74,6 +84,8 @@ export default function TrashPanel() {
       case 'weights': dispatch({ type: 'SET_WEIGHTS', payload: restored }); break;
       case 'temps':   dispatch({ type: 'SET_TEMPS',   payload: restored }); break;
       case 'solids':  dispatch({ type: 'SET_SOLIDS',  payload: restored }); break;
+      case 'visits':  dispatch({ type: 'SET_VISITS',  payload: restored }); break;
+      case 'symptoms': dispatch({ type: 'SET_SYMPTOMS', payload: restored }); break;
     }
     await saveDB(newDB);
     showToast('복원됐어요 ✓');

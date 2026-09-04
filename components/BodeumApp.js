@@ -34,6 +34,8 @@ import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
 import ActiveTimerEditModal from './modals/ActiveTimerEditModal';
 import SolidModal from './modals/SolidModal';
+import VisitModal from './modals/VisitModal';
+import SymptomModal from './modals/SymptomModal';
 import OrientationGuard from './OrientationGuard';
 
 const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
@@ -244,6 +246,8 @@ export default function BodeumApp() {
       {openModal === 'diaper' && <DiaperModal />}
       {openModal === 'sleep' && <SleepModal />}
       {openModal === 'solid' && <SolidModal />}
+      {openModal === 'visit' && <VisitModal />}
+      {openModal === 'symptom' && <SymptomModal />}
       {openModal === 'weight' && <WeightModal />}
       {openModal === 'consumed' && <ConsumedModal />}
       {openModal === 'temp' && <TempModal />}

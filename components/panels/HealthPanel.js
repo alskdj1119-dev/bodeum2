@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
+import { fmtFull, elapsedStr, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
+import TeethChart from '../charts/TeethChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
 const VACCINES = [
@@ -36,11 +37,13 @@ const STATUS_OPTS = [
 export default function HealthPanel() {
   const {
     db, dispatch, saveDB, setOpenModal, setEditId, setEditType,
-    baby, vaccineStatus, saveVaccineStatus, showToast, filterByActiveBaby,
+    baby, vaccineStatus, saveVaccineStatus, teethStatus, saveTeethStatus, showToast, filterByActiveBaby,
   } = useApp();
   const temps = filterByActiveBaby(db.temps || []);
+  const visits = filterByActiveBaby(db.visits || []);
+  const symptoms = filterByActiveBaby(db.symptoms || []);
 
-  const [tab, setTab] = useState('temp'); // 'temp' | 'vaccine' — 체중은 2단계부터 '성장' 탭으로 이동
+  const [tab, setTab] = useState('temp'); // 'temp' | 'vaccine' | 'visit' | 'symptom' | 'teeth' — 체중은 2단계부터 '성장' 탭으로 이동
 
   // 체온 데이터
   const tempsSorted = [...temps].sort((a,b) => new Date(b.time) - new Date(a.time));
@@ -77,6 +80,44 @@ export default function HealthPanel() {
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
+  function openVisitEdit(v) { setEditId(v.id); setEditType('visits'); setOpenModal('visit'); }
+  function openVisitNew() { setEditId(null); setEditType(null); setOpenModal('visit'); }
+  async function delVisit(id) {
+    const item = (db.visits || []).find(x => x.id === id);
+    if (!item) return;
+    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'visits' };
+    const newVisits = (db.visits || []).filter(x => x.id !== id);
+    const newTrash = [trashItem, ...(db.trash || [])];
+    dispatch({ type: 'SET_VISITS', payload: newVisits });
+    dispatch({ type: 'SET_TRASH', payload: newTrash });
+    await saveDB({ ...db, visits: newVisits, trash: newTrash });
+    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
+  }
+
+  function openSymptomEdit(s) { setEditId(s.id); setEditType('symptoms'); setOpenModal('symptom'); }
+  function openSymptomNew() { setEditId(null); setEditType(null); setOpenModal('symptom'); }
+  async function delSymptom(id) {
+    const item = (db.symptoms || []).find(x => x.id === id);
+    if (!item) return;
+    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'symptoms' };
+    const newSymptoms = (db.symptoms || []).filter(x => x.id !== id);
+    const newTrash = [trashItem, ...(db.trash || [])];
+    dispatch({ type: 'SET_SYMPTOMS', payload: newSymptoms });
+    dispatch({ type: 'SET_TRASH', payload: newTrash });
+    await saveDB({ ...db, symptoms: newSymptoms, trash: newTrash });
+    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
+  }
+
+  function toggleTooth(toothId) {
+    const cur = { ...teethStatus };
+    if (cur[toothId]) delete cur[toothId];
+    else cur[toothId] = kstDate(Date.now()).toISOString().slice(0, 10);
+    saveTeethStatus(cur);
+  }
+  function setToothDate(toothId, date) {
+    saveTeethStatus({ ...teethStatus, [toothId]: date });
+  }
+
   // vaccineStatus[code]는 예전엔 문자열('before'|'done'|'skip')만 저장했는데,
   // 접종완료일자를 함께 기록해야 해서 { status, doneDate } 객체로 확장한다.
   // 기존에 문자열로 저장된 값도 그대로 읽을 수 있도록 아래 getVaccineInfo()에서 정규화한다.
@@ -100,6 +141,9 @@ export default function HealthPanel() {
   const TABS = [
     { id: 'temp',    label: '체온' },
     { id: 'vaccine', label: '예방접종' },
+    { id: 'visit',   label: '병원기록' },
+    { id: 'symptom', label: '증상·투약' },
+    { id: 'teeth',   label: '치아' },
   ];
 
   return (
@@ -111,6 +155,18 @@ export default function HealthPanel() {
           <button className="addbtn" onClick={openTempNew}>
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             체온 추가
+          </button>
+        )}
+        {tab === 'visit' && (
+          <button className="addbtn" onClick={openVisitNew}>
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            방문 추가
+          </button>
+        )}
+        {tab === 'symptom' && (
+          <button className="addbtn" onClick={openSymptomNew}>
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            기록 추가
           </button>
         )}
       </div>
@@ -259,6 +315,81 @@ export default function HealthPanel() {
             })
           )}
         </>
+      )}
+
+      {/* ─── 병원기록 탭 ─── */}
+      {tab === 'visit' && (
+        <>
+          {visits.length === 0 ? (
+            <div className="empty"><div className="empty-ico">🏥</div><div className="empty-lbl">병원 방문 기록이 없어요</div></div>
+          ) : (
+            groupByDay([...visits].sort((a,b) => new Date(b.time) - new Date(a.time)), v => v.time).map(([day, items]) => (
+              <div key={day} className="daygrp">
+                <div className="daylbl">{day}</div>
+                {items.map(v => {
+                  const sub = [v.reason, v.diagnosis].filter(Boolean).join(' · ');
+                  return (
+                    <div key={v.id} className="ec" onClick={() => openVisitEdit(v)}>
+                      <div className="edot v" />
+                      <div className="emain">
+                        <div className="epri">{v.hospital || '병원 방문'}</div>
+                        <div className="esec">{sub || ' '}</div>
+                        {v.followUpDate && <div style={{ fontSize: 11, color: 'var(--cv)', marginTop: 2 }}>다음 방문: {v.followUpDate}</div>}
+                      </div>
+                      <div className="etime">{fmtFull(v.time)}<br/><span className="eago">{elapsedStr(v.time)}</span></div>
+                      <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 병원 방문 기록을 삭제하시겠어요?')) delVisit(v.id); }}>
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))
+          )}
+        </>
+      )}
+
+      {/* ─── 증상·투약 탭 ─── */}
+      {tab === 'symptom' && (
+        <>
+          {symptoms.length === 0 ? (
+            <div className="empty"><div className="empty-ico">💊</div><div className="empty-lbl">증상·투약 기록이 없어요</div></div>
+          ) : (
+            groupByDay([...symptoms].sort((a,b) => new Date(b.time) - new Date(a.time)), s => s.time).map(([day, items]) => (
+              <div key={day} className="daygrp">
+                <div className="daylbl">{day}</div>
+                {items.map(s => {
+                  const sub = [s.medicine ? `${s.medicine}${s.dose ? ' ' + s.dose : ''}` : '', s.note || ''].filter(Boolean).join(' · ');
+                  return (
+                    <div key={s.id} className="ec" onClick={() => openSymptomEdit(s)}>
+                      <div className="edot y" />
+                      <div className="emain">
+                        <div className="epri">
+                          {s.symptom}
+                          {s.resolved ? (
+                            <span style={{ fontSize: 10, background: 'var(--ww)', color: 'var(--cw)', borderRadius: 4, padding: '1px 6px', marginLeft: 6 }}>호전됨</span>
+                          ) : (
+                            <span style={{ fontSize: 10, background: 'var(--yw)', color: 'var(--cy)', borderRadius: 4, padding: '1px 6px', marginLeft: 6 }}>진행 중</span>
+                          )}
+                        </div>
+                        <div className="esec">{sub || ' '}</div>
+                      </div>
+                      <div className="etime">{fmtFull(s.time)}<br/><span className="eago">{elapsedStr(s.time)}</span></div>
+                      <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 증상·투약 기록을 삭제하시겠어요?')) delSymptom(s.id); }}>
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))
+          )}
+        </>
+      )}
+
+      {/* ─── 치아 탭 ─── */}
+      {tab === 'teeth' && (
+        <TeethChart teethStatus={teethStatus} onToggle={toggleTooth} onDateChange={setToothDate} />
       )}
     </>
   );
