@@ -20,7 +20,7 @@ export default function TempModal() {
   const existing = isEdit ? (db.temps || []).find(t => t.id === editId) : null;
 
   const [time, setTime] = useState(nowISO());
-  const [tempStr, setTempStr] = useState('36.5');
+  const [tempStr, setTempStr] = useState('');
   const [method, setMethod] = useState('ear');
   const [note, setNote] = useState('');
 
@@ -32,7 +32,7 @@ export default function TempModal() {
       setNote(existing.note || '');
     } else {
       setTime(nowISO());
-      setTempStr('36.5');
+      setTempStr('');
       setMethod('ear');
       setNote('');
     }
@@ -87,6 +87,7 @@ export default function TempModal() {
                 max="43"
                 value={tempStr}
                 onChange={e => setTempStr(e.target.value)}
+                placeholder="36.5"
                 style={{ flex: 1, fontSize: 24, fontWeight: 700, textAlign: 'center', color: accentColor }}
               />
               <span style={{ fontSize: 20, color: 'var(--muted)', fontWeight: 500 }}>°C</span>
