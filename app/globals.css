@@ -89,14 +89,27 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── SETUP OVERLAY ── */
 .setup-ov{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px}
-.setup-card{width:100%;max-width:360px;background:var(--surf);border-radius:24px;padding:32px 24px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
-.setup-logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:28px}
-.setup-title{font-family:var(--serif);font-size:32px;font-weight:700;color:var(--ink)}
-.setup-sub{font-size:13px;color:var(--muted);text-align:center;line-height:1.6}
+.setup-card{width:100%;max-width:360px;background:var(--surf);border-radius:28px;padding:40px 28px 32px;box-shadow:0 4px 6px -1px rgba(0,0,0,.03),0 12px 24px -4px rgba(0,0,0,.06);border:1px solid var(--bdr)}
+.setup-logo{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:32px}
+.setup-logo-icon{margin-bottom:16px;filter:drop-shadow(0 4px 8px rgba(47,111,237,.15))}
+.setup-title{font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-bottom:8px}
+.setup-sub{font-size:14px;color:var(--muted);line-height:1.55}
 .code-display{background:var(--bg);border:2px dashed var(--sage);border-radius:14px;padding:14px;text-align:center;font-size:22px;letter-spacing:.15em;font-weight:700;color:var(--sage);margin-bottom:6px;font-family:var(--serif)}
 .setup-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px}
-.setup-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--muted);font-size:12px}
+.setup-divider{display:flex;align-items:center;gap:14px;margin-bottom:18px;color:var(--muted);font-size:13px}
 .setup-divider::before,.setup-divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.setup-start-btn{width:100%;padding:15px;border-radius:16px;font-size:15.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:20px;box-shadow:0 4px 14px rgba(47,111,237,.25)}
+.setup-start-btn:active:not(:disabled){transform:scale(.98)}
+.setup-start-btn:disabled{opacity:.5;cursor:not-allowed}
+.setup-generate-btn{width:100%;padding:14px;border:1.5px solid var(--bdr);border-radius:16px;background:transparent;font-family:var(--sans);font-size:14.5px;font-weight:500;color:var(--ink);cursor:pointer;transition:background .2s,border-color .2s}
+.setup-generate-btn:active{transform:scale(.98)}
+.setup-desc{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6}
+/* Setup 카드 안의 입력창만 살짝 더 크고 둥글게 — 다른 화면이 쓰는 전역 .fld/.flbl/.finp에는 영향 없도록 .setup-card 안으로 범위를 좁힘 */
+.setup-card .fld{margin-bottom:16px}
+.setup-card .flbl{font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-bottom:8px;padding-left:2px}
+.setup-card .finp{padding:15px 16px;background:var(--surf2);border:1.5px solid transparent;border-radius:16px;font-size:15px;text-transform:uppercase;letter-spacing:.08em}
+.setup-card .finp::placeholder{color:var(--muted);letter-spacing:0;text-transform:none}
+.setup-card .finp:focus{background:var(--surf);border-color:var(--sage);box-shadow:0 0 0 4px var(--s-wash)}
 
 /* ── FORM ELEMENTS ── */
 .fld{margin-bottom:12px}
