@@ -21,8 +21,8 @@ export const viewport = {
   userScalable: false,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FDF4D2" },
-    { media: "(prefers-color-scheme: dark)", color: "#18150F" },
+    { media: "(prefers-color-scheme: light)", color: "#FDFBF9" },
+    { media: "(prefers-color-scheme: dark)", color: "#1B140D" },
   ],
 };
 
@@ -33,6 +33,10 @@ export default function RootLayout({ children }) {
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap"
         />
         <link rel="apple-touch-icon" href="/icon-512.svg" />
       </head>
