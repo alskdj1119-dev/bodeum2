@@ -3,6 +3,7 @@ import { useApp } from '../../lib/store';
 import {
   fmtFull, elapsedStr, durStr, fmt, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, DIAPER_TYPE_LABEL as TD,
+  SOLID_REACTION_LABEL as TSR,
 } from '../../lib/helpers';
 
 const TYPE_LABEL = {
@@ -11,6 +12,7 @@ const TYPE_LABEL = {
   sleeps: '수면',
   weights: '체중',
   temps: '체온',
+  solids: '이유식',
 };
 const TYPE_DOT = {
   feeds: 'f',
@@ -18,6 +20,7 @@ const TYPE_DOT = {
   sleeps: 's',
   weights: 'w',
   temps: 'w',
+  solids: 'n',
 };
 function itemSummary(item) {
   const t = item._type;
@@ -41,6 +44,10 @@ function itemSummary(item) {
   }
   if (t === 'temps') {
     return `체온 ${item.temp != null ? item.temp.toFixed(1) + '°C' : '—'} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'solids') {
+    const reaction = item.reaction ? ` · ${TSR[item.reaction] || ''}` : '';
+    return `${item.food || '이유식'}${reaction} — ${fmtFull(item.time)}`;
   }
   return '기록';
 }
@@ -66,6 +73,7 @@ export default function TrashPanel() {
       case 'sleeps':  dispatch({ type: 'SET_SLEEPS',  payload: restored }); break;
       case 'weights': dispatch({ type: 'SET_WEIGHTS', payload: restored }); break;
       case 'temps':   dispatch({ type: 'SET_TEMPS',   payload: restored }); break;
+      case 'solids':  dispatch({ type: 'SET_SOLIDS',  payload: restored }); break;
     }
     await saveDB(newDB);
     showToast('복원됐어요 ✓');

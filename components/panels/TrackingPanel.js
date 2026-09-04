@@ -9,10 +9,12 @@ export default function TrackingPanel() {
   const feeds = filterByActiveBaby(db.feeds);
   const diapers = filterByActiveBaby(db.diapers);
   const sleeps = filterByActiveBaby(db.sleeps);
+  const solids = filterByActiveBaby(db.solids || []);
 
   const lastFeed = [...feeds].filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time))[0];
   const lastDiaper = [...diapers].sort((a,b) => new Date(b.time) - new Date(a.time))[0];
   const lastSleep = [...sleeps].filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start))[0];
+  const lastSolid = [...solids].sort((a,b) => new Date(b.time) - new Date(a.time))[0];
 
   const ITEMS = [
     {
@@ -42,6 +44,16 @@ export default function TrackingPanel() {
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'solid', label: '이유식 트래커',
+      sub: lastSolid ? `직전 ${agoStr(lastSolid.time)}` : '기록 없음',
+      wash: 'var(--nw)', color: 'var(--cn)',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12a8 8 0 0 0 16 0z"/><path d="M4 12a8 8 0 0 1 16 0"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M8 6c.5-1.5 1.5-2.5 3-3"/>
         </svg>
       ),
     },

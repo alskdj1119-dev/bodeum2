@@ -30,7 +30,7 @@ const TABS = [
 ];
 
 // 트래킹 하위 화면(수유/기저귀/수면)에 있을 때도 하단 네비에서는 "트래킹"이 활성 상태로 보이게 한다.
-const TAB_GROUP = { feed: 'tracking', diaper: 'tracking', sleep: 'tracking' };
+const TAB_GROUP = { feed: 'tracking', diaper: 'tracking', sleep: 'tracking', solid: 'tracking' };
 
 export default function NavBar() {
   const { activeTab, goTab } = useApp();

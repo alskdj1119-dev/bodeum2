@@ -2,7 +2,7 @@
 import { useApp } from '../../lib/store';
 import {
   fmtFull, elapsedStr, groupByDay, useNowTick,
-  DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC,
+  DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC, DIAPER_CONSISTENCY_LABEL as TCS,
 } from '../../lib/helpers';
 
 export default function DiaperPanel() {
@@ -62,7 +62,12 @@ export default function DiaperPanel() {
           <div key={day} className="daygrp">
             <div className="daylbl">{day}</div>
             {items.map(d => {
-              const sub = [d.color ? TC[d.color] : '', d.note || ''].filter(Boolean).join(' · ');
+              const sub = [
+                d.color ? TC[d.color] : '',
+                d.consistency ? TCS[d.consistency] : '',
+                d.rash ? '발진' : '',
+                d.note || '',
+              ].filter(Boolean).join(' · ');
               const dc = diaperColor(d.type);
               return (
                 <div key={d.id} className="ec" onClick={() => openEdit(d)} style={{ background: dc.bg }}>

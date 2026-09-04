@@ -4,6 +4,7 @@ import {
   fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, useNowTick,
   SLEEP_PLACE_LABEL as PL,
 } from '../../lib/helpers';
+import SleepBarChart from '../charts/SleepBarChart';
 
 export default function SleepPanel() {
   const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, stopActiveSleep, filterByActiveBaby } = useApp();
@@ -65,6 +66,12 @@ export default function SleepPanel() {
           추가
         </button>
       </div>
+
+      {done.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <SleepBarChart sleeps={done} />
+        </div>
+      )}
 
       {done.length === 0 && !activeSleep ? (
         <div className="empty"><div className="empty-ico">🌙</div><div className="empty-lbl">수면 기록이 없어요</div></div>
