@@ -52,8 +52,8 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange }) {
         style={{ cursor: 'pointer' }}
         onClick={() => { onToggle(tooth.id); setSelected(tooth.id); }}
       >
-        <circle cx={pt.x} cy={pt.y} r="12" fill={erupted ? 'var(--cv)' : 'var(--bg)'}
-          stroke={isSelected ? 'var(--cv)' : 'var(--bdr)'} strokeWidth={isSelected ? 2.5 : 1.5} />
+        <circle cx={pt.x} cy={pt.y} r="12" fill={erupted ? 'var(--cv)' : 'var(--surf)'}
+          stroke={isSelected ? 'var(--cv)' : 'var(--muted)'} strokeWidth={isSelected ? 2.5 : 1.5} strokeOpacity={isSelected ? 1 : 0.5} />
         {erupted && <circle cx={pt.x} cy={pt.y} r="4" fill="var(--surf)" opacity="0.9" />}
       </g>
     );
@@ -70,7 +70,7 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange }) {
       </div>
       <div className="chart-wrap">
         <svg viewBox={`0 0 ${W} 140`} width="100%" xmlns="http://www.w3.org/2000/svg">
-          <line x1="20" y1="80" x2={W - 20} y2="80" stroke="var(--bdr)" strokeDasharray="3 4" />
+          <line x1="20" y1="80" x2={W - 20} y2="80" stroke="var(--muted)" strokeOpacity="0.25" strokeDasharray="3 4" />
           {UPPER_TEETH.map((t, i) => <ToothDot key={t.id} tooth={t} pt={upperPts[i]} />)}
           {LOWER_TEETH.map((t, i) => <ToothDot key={t.id} tooth={t} pt={lowerPts[i]} />)}
         </svg>
