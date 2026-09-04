@@ -1,14 +1,13 @@
 'use client';
 import { useApp } from '../lib/store';
 
+// 2단계 네비게이션 재편 — 7탭(홈/수유/기저귀/수면/건강/통계/설정) → 4탭(홈/트래킹/건강/성장).
+// 수유·기저귀·수면은 "트래킹" 안에서 목록으로 들어가고, 통계·설정은 홈 우측 상단 톱니바퀴로 이동.
 const TAB_ACTIVE_COLOR = {
   home:     'var(--sage)',
-  feed:     'var(--cf)',
-  diaper:   'var(--cd)',
-  sleep:    'var(--cs)',
+  tracking: 'var(--sage)',
   health:   'var(--cw)',
-  stats:    'var(--sage)',
-  settings: 'var(--sage)',
+  growth:   'var(--cw)',
 };
 
 const TABS = [
@@ -17,33 +16,25 @@ const TABS = [
     icon: <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   },
   {
-    id: 'feed', label: '수유',
-    icon: <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-  },
-  {
-    id: 'diaper', label: '기저귀',
-    icon: <svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg>
-  },
-  {
-    id: 'sleep', label: '수면',
-    icon: <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    id: 'tracking', label: '트래킹',
+    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
   },
   {
     id: 'health', label: '건강',
     icon: <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
   },
   {
-    id: 'stats', label: '통계',
+    id: 'growth', label: '성장',
     icon: <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-  },
-  {
-    id: 'settings', label: '설정',
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   },
 ];
 
+// 트래킹 하위 화면(수유/기저귀/수면)에 있을 때도 하단 네비에서는 "트래킹"이 활성 상태로 보이게 한다.
+const TAB_GROUP = { feed: 'tracking', diaper: 'tracking', sleep: 'tracking' };
+
 export default function NavBar() {
   const { activeTab, goTab } = useApp();
+  const effectiveTab = TAB_GROUP[activeTab] || activeTab;
 
   return (
     <nav className="bnav">
@@ -51,8 +42,8 @@ export default function NavBar() {
         <button
           key={tab.id}
           id={`nav-${tab.id}`}
-          className={`nb${activeTab === tab.id ? ' active' : ''}`}
-          style={activeTab === tab.id ? { color: TAB_ACTIVE_COLOR[tab.id] } : {}}
+          className={`nb${effectiveTab === tab.id ? ' active' : ''}`}
+          style={effectiveTab === tab.id ? { color: TAB_ACTIVE_COLOR[tab.id] } : {}}
           onClick={() => goTab(tab.id, tab.id === 'home' ? 'back' : 'forward')}
         >
           {tab.icon}

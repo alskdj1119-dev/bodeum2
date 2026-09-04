@@ -73,7 +73,7 @@ function pickEncouragePhrase() {
 
 export default function HomePanel() {
   const {
-    db, baby, babies, setOpenModal, setEditId, setEditType, goTab, setHealthInitTab,
+    db, baby, babies, setOpenModal, setEditId, setEditType, goTab,
     feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep,
     notifPermission, requestNotifPermission,
     filterByActiveBaby, activeBabyId, switchBaby,
@@ -196,9 +196,9 @@ export default function HomePanel() {
   const diaperTier = elapsedTier(lastDiaper ? lastDiaper.time : null);
 
   // 체중 카드 클릭 → 건강 > 체중 탭
-  function openHealthWeight() {
-    setHealthInitTab('weight');
-    goTab('health');
+  // 2단계부터 체중은 '성장' 탭으로 이동
+  function openGrowth() {
+    goTab('growth');
   }
 
   // Recent timeline
@@ -366,7 +366,7 @@ export default function HomePanel() {
 
       {/* 체중 — 클릭 시 건강 > 체중 탭 */}
       <div className="sgrid" style={{ gridTemplateColumns:'1fr', marginBottom:'16px' }}>
-        <div className="sc" onClick={openHealthWeight}>
+        <div className="sc" onClick={openGrowth}>
           <div className="sr"><div className="slbl">체중</div><div className="sico w"><svg viewBox="0 0 24 24" style={{ width:'17px', height:'17px', fill:'none', stroke:'var(--cw)', strokeWidth:'1.8', strokeLinecap:'round', strokeLinejoin:'round' }}><path d="M12 3a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4z"/><path d="M4 7h16l-2 14H6L4 7z"/></svg></div></div>
           <div className="sval" style={{ fontSize:'26px', whiteSpace:'nowrap' }}>{latestW ? latestW.kg.toFixed(2) + ' kg' : '—'}</div>
           <div className="ssub">

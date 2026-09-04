@@ -1,8 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import { fmtFull, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
-import WeightValueChart from '../charts/WeightValueChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
 const VACCINES = [
@@ -36,21 +35,12 @@ const STATUS_OPTS = [
 // ──────────────────────────── 메인 컴포넌트 ────────────────────────────
 export default function HealthPanel() {
   const {
-    db, dispatch, saveDB, setOpenModal, setEditId, setEditType, activeTab, healthInitTab, setHealthInitTab,
+    db, dispatch, saveDB, setOpenModal, setEditId, setEditType,
     baby, vaccineStatus, saveVaccineStatus, showToast, filterByActiveBaby,
   } = useApp();
   const temps = filterByActiveBaby(db.temps || []);
-  const weights = filterByActiveBaby(db.weights || []);
 
-  const [tab, setTab] = useState('weight'); // 'temp' | 'weight' | 'vaccine'
-
-  // 홈에서 체중 카드 클릭 시 체중 탭으로 자동 이동
-  useEffect(() => {
-    if (activeTab === 'health' && healthInitTab) {
-      setTab(healthInitTab);
-      setHealthInitTab(null);
-    }
-  }, [activeTab, healthInitTab]);
+  const [tab, setTab] = useState('temp'); // 'temp' | 'vaccine' — 체중은 2단계부터 '성장' 탭으로 이동
 
   // 체온 데이터
   const tempsSorted = [...temps].sort((a,b) => new Date(b.time) - new Date(a.time));
@@ -59,10 +49,6 @@ export default function HealthPanel() {
     t.temp >= 37.5 && (Date.now() - new Date(t.time).getTime()) <= 86400000
   );
   const latestTemp = tempsSorted[0];
-
-  // 체중 데이터
-  const weightSorted = [...weights].sort((a,b) => new Date(b.time) - new Date(a.time));
-  const weightGrouped = groupByDay(weightSorted, w => w.time);
 
   // 예방접종 — 생년월일은 항상 "한국 날짜"로 해석해 만 며칠인지 계산 (기기 시간대 무관).
   const age = baby.birthDate
@@ -78,9 +64,6 @@ export default function HealthPanel() {
   function openTempEdit(t) { setEditId(t.id); setEditType('temps'); setOpenModal('temp'); }
   function openTempNew() { setEditId(null); setEditType(null); setOpenModal('temp'); }
 
-  function openWeightEdit(w) { setEditId(w.id); setEditType('weights'); setOpenModal('weight'); }
-  function openWeightNew() { setEditId(null); setEditType(null); setOpenModal('weight'); }
-
   // 수유/기저귀/수면과 동일하게 휴지통을 거치도록 통일 (기존엔 여기만 영구 삭제였음)
   async function delTemp(id) {
     const item = (db.temps || []).find(x => x.id === id);
@@ -91,17 +74,6 @@ export default function HealthPanel() {
     dispatch({ type: 'SET_TEMPS', payload: newTemps });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, temps: newTemps, trash: newTrash });
-    showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
-  }
-  async function delWeight(id) {
-    const item = (db.weights || []).find(x => x.id === id);
-    if (!item) return;
-    const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'weights' };
-    const newW = (db.weights || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
-    dispatch({ type: 'SET_WEIGHTS', payload: newW });
-    dispatch({ type: 'SET_TRASH', payload: newTrash });
-    await saveDB({ ...db, weights: newW, trash: newTrash });
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
   }
 
@@ -126,7 +98,6 @@ export default function HealthPanel() {
   }
 
   const TABS = [
-    { id: 'weight',  label: '체중' },
     { id: 'temp',    label: '체온' },
     { id: 'vaccine', label: '예방접종' },
   ];
@@ -140,12 +111,6 @@ export default function HealthPanel() {
           <button className="addbtn" onClick={openTempNew}>
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             체온 추가
-          </button>
-        )}
-        {tab === 'weight' && (
-          <button className="addbtn" onClick={openWeightNew}>
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            체중 추가
           </button>
         )}
       </div>
@@ -210,40 +175,6 @@ export default function HealthPanel() {
                     </div>
                   );
                 })}
-              </div>
-            ))
-          )}
-        </>
-      )}
-
-      {/* ─── 체중 탭 ─── */}
-      {tab === 'weight' && (
-        <>
-          {weights.length >= 2 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 4 }}>일별 체중 추이</div>
-              <WeightValueChart weights={weights} />
-            </div>
-          )}
-
-          {weightSorted.length === 0 ? (
-            <div className="empty"><div className="empty-ico">⚖️</div><div className="empty-lbl">체중 기록이 없어요</div></div>
-          ) : (
-            weightGrouped.map(([day, items]) => (
-              <div key={day} className="daygrp">
-                <div className="daylbl">{day}</div>
-                {items.map(w => (
-                  <div key={w.id} className="ec" onClick={() => openWeightEdit(w)}>
-                    <div className="edot w"></div>
-                    <div className="emain">
-                      <div className="epri">{w.kg.toFixed(3)} kg</div>
-                    </div>
-                    <div className="etime">{fmtFull(w.time)}</div>
-                    <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 체중 기록을 삭제하시겠어요?')) delWeight(w.id); }}>
-                      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
-                ))}
               </div>
             ))
           )}

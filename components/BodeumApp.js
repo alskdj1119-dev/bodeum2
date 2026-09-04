@@ -22,6 +22,8 @@ import TrashPanel from './panels/TrashPanel';
 import NotifHistoryPanel from './panels/NotifHistoryPanel';
 import StatsPanel from './panels/StatsPanel';
 import HealthPanel from './panels/HealthPanel';
+import TrackingPanel from './panels/TrackingPanel';
+import GrowthPanel from './panels/GrowthPanel';
 import FeedModal from './modals/FeedModal';
 import FeedSideChoiceModal from './modals/FeedSideChoiceModal';
 import DiaperModal from './modals/DiaperModal';
@@ -32,12 +34,14 @@ import TempModal from './modals/TempModal';
 import ActiveTimerEditModal from './modals/ActiveTimerEditModal';
 import OrientationGuard from './OrientationGuard';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
+const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'stats', 'settings'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
-  feed: 'home', diaper: 'home', sleep: 'home',
+  feed: 'tracking', diaper: 'tracking', sleep: 'tracking',
+  stats: 'settings',
+  settings: 'home',
   changelog: 'settings', requests: 'settings', trash: 'settings',
   babyInfo: 'settings', notifSettings: 'settings', familyCode: 'settings',
   feedSettings: 'settings',
@@ -210,9 +214,11 @@ export default function BodeumApp() {
 
       <div className="content">
         <div className="panel" ref={panelRef('home')}><HomePanel /></div>
+        <div className="panel" ref={panelRef('tracking')}><TrackingPanel /></div>
         <div className="panel" ref={panelRef('feed')}><FeedPanel /></div>
         <div className="panel" ref={panelRef('diaper')}><DiaperPanel /></div>
         <div className="panel" ref={panelRef('sleep')}><SleepPanel /></div>
+        <div className="panel" ref={panelRef('growth')}><GrowthPanel /></div>
         <div className="panel" ref={panelRef('settings')}><SettingsPanel /></div>
         <div className="panel" ref={panelRef('babyInfo')}><BabyInfoPanel /></div>
         <div className="panel" ref={panelRef('feedSettings')}><FeedSettingsPanel /></div>
