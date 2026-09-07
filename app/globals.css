@@ -300,7 +300,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .spulse{width:10px;height:10px;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 @keyframes dim-blink{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7)}}
-.blink-live{animation:dim-blink .9s ease-in-out infinite}
+.blink-live{animation:dim-blink 1.8s ease-in-out infinite}
 .sliveinf{flex:1}.slivelbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .slivetimer{font-size:26px;font-family:var(--font-display);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}
 .sstop{color:#fff;border:none;border-radius:var(--r-btn);padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
@@ -308,6 +308,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 /* ── LIVE BANNER (얇은 요약 버전, 홈 최상단용) ── */
 .slive-mini{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-btn);padding:8px 10px 8px 14px;display:flex;align-items:center;gap:8px;transition:opacity .3s, transform .3s cubic-bezier(.4,0,.2,1);box-shadow:var(--sh-sm)}
 .slive-mini.banner-in{animation:banner-in .3s cubic-bezier(.32,1,.32,1) both}
+.slive-mini.banner-in.blink-live{animation:banner-in .3s cubic-bezier(.32,1,.32,1) both, dim-blink 1.8s ease-in-out infinite}
 .slive-mini-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
 .slive-mini-lbl{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
 .slive-mini-timer{flex:1;font-size:14px;font-family:var(--font-display);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
