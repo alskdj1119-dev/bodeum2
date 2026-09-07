@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { nowISO, toLocal, fromLocal, DIAPER_COLOR_LABEL, DIAPER_CONSISTENCY_LABEL } from '../../lib/helpers';
@@ -101,7 +102,7 @@ export default function DiaperModal() {
 
   const showColor = type === 'soiled' || type === 'both';
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cd)', opacity: 0.6 }} />
@@ -179,6 +180,7 @@ export default function DiaperModal() {
           <button className="bpri" style={{ background: 'var(--cd)' }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

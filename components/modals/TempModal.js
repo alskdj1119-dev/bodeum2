@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
@@ -65,7 +66,7 @@ export default function TempModal() {
   const isFever = tempVal >= 37.5;
   const accentColor = isFever ? '#E05A4E' : 'var(--cw)';
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: accentColor, opacity: 0.6 }} />
@@ -127,6 +128,7 @@ export default function TempModal() {
           <button className="bpri" style={{ background: accentColor }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

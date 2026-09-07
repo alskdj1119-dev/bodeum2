@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import { kstDate } from '../../lib/helpers';
@@ -63,7 +64,7 @@ export default function ToothDetailModal() {
 
   const sortedRecords = [...info.records].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
-  return (
+  return createPortal(
     <div className="mbg open" onClick={close}>
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cv)', opacity: 0.6 }} />
@@ -132,6 +133,7 @@ export default function ToothDetailModal() {
           >치아 기록 전체 삭제</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

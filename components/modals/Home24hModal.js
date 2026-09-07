@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import {
   durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, KST_OFFSET_MS, useNowTick,
@@ -196,11 +197,12 @@ function SleepDetail({ records, onEdit, periodLabel }) {
 // ─── 메인 모달 ───
 // initialDate("YYYY-MM-DD", KST 기준)가 주어지면 그 날짜의 "당일" 모드로 열리고,
 // 없으면 "직전 24시간" 모드로 열린다. 안에서 두 모드를 토글로 바꿀 수 있다.
-export default function Home24hModal({ type, initialDate, onClose }) {
+export default function Home24hModal({ type, initialDate, initialMode, onClose }) {
   const { db, setOpenModal, setEditId, setEditType } = useApp();
   const { feeds, diapers, sleeps } = db;
+  const dayOnly = !!initialDate; // 요일 스트립에서 특정 날짜를 눌러 열린 경우 — "당일" 고정, 토글 불필요
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState(initialDate ? 'day' : 'recent24h');
+  const [mode, setMode] = useState(dayOnly ? 'day' : (initialMode || 'recent24h'));
   const [selectedDate, setSelectedDate] = useState(() => initialDate || kstDate(Date.now()).toISOString().slice(0, 10));
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
@@ -258,7 +260,7 @@ export default function Home24hModal({ type, initialDate, onClose }) {
     handleClose();
   }
 
-  return (
+  return createPortal(
     <div
       className={`mbg${open ? ' open' : ''}`}
       style={{ display: 'flex' }}
@@ -290,33 +292,25 @@ export default function Home24hModal({ type, initialDate, onClose }) {
           </button>
         </div>
 
-        {/* 직전 24시간 / 당일 토글 */}
-        <div style={{ display: 'flex', gap: 6, padding: '12px 20px 0' }}>
-          <button
-            onClick={() => setMode('recent24h')}
-            style={{
-              flex: 1, padding: '8px 10px', borderRadius: 100, border: 'none', cursor: 'pointer',
-              fontSize: 12.5, fontWeight: 600, fontFamily: 'var(--sans)',
-              color: mode === 'recent24h' ? '#fff' : 'var(--muted)',
-              background: mode === 'recent24h' ? colors[type] : 'var(--surf2)',
-              boxShadow: mode === 'recent24h' ? 'var(--sh-sm)' : 'var(--sh-inset)',
-            }}
-          >
-            직전 24시간
-          </button>
-          <button
-            onClick={() => { setSelectedDate(kstDate(Date.now()).toISOString().slice(0, 10)); setMode('day'); }}
-            style={{
-              flex: 1, padding: '8px 10px', borderRadius: 100, border: 'none', cursor: 'pointer',
-              fontSize: 12.5, fontWeight: 600, fontFamily: 'var(--sans)',
-              color: mode === 'day' ? '#fff' : 'var(--muted)',
-              background: mode === 'day' ? colors[type] : 'var(--surf2)',
-              boxShadow: mode === 'day' ? 'var(--sh-sm)' : 'var(--sh-inset)',
-            }}
-          >
-            당일{mode === 'day' ? ` · ${dm}월 ${dd}일` : ''}
-          </button>
-        </div>
+        {/* 직전 24시간 / 당일 토글 — 요일 날짜를 눌러 "당일" 고정으로 연 경우는 불필요하므로 숨김 */}
+        {!dayOnly && (
+          <div className="modetoggle" style={{ padding: '12px 20px 0' }}>
+            <button
+              className={`modetoggle-btn${mode === 'recent24h' ? ' on' : ''}`}
+              onClick={() => setMode('recent24h')}
+              style={mode === 'recent24h' ? { background: colors[type], borderColor: colors[type] } : undefined}
+            >
+              직전 24시간
+            </button>
+            <button
+              className={`modetoggle-btn${mode === 'day' ? ' on' : ''}`}
+              onClick={() => { setSelectedDate(kstDate(Date.now()).toISOString().slice(0, 10)); setMode('day'); }}
+              style={mode === 'day' ? { background: colors[type], borderColor: colors[type] } : undefined}
+            >
+              당일{mode === 'day' ? ` · ${dm}월 ${dd}일` : ''}
+            </button>
+          </div>
+        )}
 
         {/* 내용 스크롤 영역 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' }}>
@@ -325,6 +319,7 @@ export default function Home24hModal({ type, initialDate, onClose }) {
           {type === 'sleep' && <SleepDetail records={sleepRecords} onEdit={editSleep} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} />}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

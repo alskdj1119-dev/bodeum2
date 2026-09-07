@@ -90,6 +90,8 @@ export default function HomePanel() {
 
   // "오늘 N건 기록했어요" 배너 — 평소엔 접혀 있다가 탭하면 직전 24시간 상세가 펼쳐짐
   const [summaryOpen, setSummaryOpen] = useState(false);
+  // 배너 안 3개 카드(수유/기저귀/수면)를 "직전 24시간" 기준으로 볼지 "당일" 기준으로 볼지
+  const [sumMode, setSumMode] = useState('recent24h');
 
   // 우측 상단 "+" 버튼 — 탭하면 수유/기저귀/수면 선택 메뉴가 펼쳐짐
   const [quickOpen, setQuickOpen] = useState(false);
@@ -166,8 +168,9 @@ export default function HomePanel() {
   // 직전 24시간 상세 모달 — detail24Date가 있으면 그 날짜의 "당일" 모드로 열림
   const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
   const [detail24Date, setDetail24Date] = useState(null); // "YYYY-MM-DD"(KST) | null
+  const [detail24Mode, setDetail24Mode] = useState('recent24h'); // 배너 아코디언에서 연 경우, 그때 선택돼 있던 모드 그대로 전달
 
-  // 요일 스트립에서 기록 있는 날짜를 탭하면 그 날짜의 "당일" 상세를 봄
+  // 요일 스트립에서 기록 있는 날짜를 탭하면 그 날짜의 "당일" 상세를 봄 (직전 24시간 토글은 불필요하므로 숨김)
   function openDayDetail(dateStr) {
     setDetail24Date(dateStr);
     setDetail24('feed');
@@ -223,6 +226,23 @@ export default function HomePanel() {
   const todaySleepCount = sleeps.filter(s => s.end && new Date(s.start).getTime() >= todayStartMs).length;
   const todayCount = todayFeedCount + todayDiaperCount + todaySleepCount;
   const todayDateStr = `${nowKst.getUTCMonth() + 1}월 ${nowKst.getUTCDate()}일(${['일','월','화','수','목','금','토'][nowKst.getUTCDay()]})`;
+
+  // 배너 안 3개 카드용 "당일"(달력상 오늘) 기준 데이터 — sumMode === 'day'일 때 24시간 롤링 대신 이걸 사용
+  const feedToday = feeds.filter(f => new Date(f.start || f.time).getTime() >= todayStartMs);
+  const diaperToday = diapers.filter(d => new Date(d.time).getTime() >= todayStartMs);
+  const sleepToday = sleeps.filter(s => s.end && new Date(s.start).getTime() >= todayStartMs);
+  const sleepMsToday = sleepToday.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
+  const diaperWetToday = diaperToday.filter(d => d.type === 'wet' || d.type === 'both').length;
+  const diaperSoiledToday = diaperToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
+  const feedMlToday = feedToday.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
+
+  const sumFeedList = sumMode === 'day' ? feedToday : feed24;
+  const sumDiaperList = sumMode === 'day' ? diaperToday : diaper24;
+  const sumSleepList = sumMode === 'day' ? sleepToday : sleep24;
+  const sumFeedMl = sumMode === 'day' ? feedMlToday : feedMl;
+  const sumSleepMs = sumMode === 'day' ? sleepMsToday : sleepMs;
+  const sumDiaperWet = sumMode === 'day' ? diaperWetToday : diaperWet24;
+  const sumDiaperSoiled = sumMode === 'day' ? diaperSoiledToday : diaperSoiled24;
 
   // 이번 주(일~토) 요일 스트립 — 각 요일에 기록이 있는지(점 표시), 오늘 요일(밑줄 표시)
   const weekStartMs = todayStartMs - nowKst.getUTCDay() * 86400000;
@@ -440,7 +460,7 @@ export default function HomePanel() {
       {(activeFeed || activeSleep) && (
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
           {activeFeed && (
-            <div className="slive-mini banner-in" style={{ cursor:'pointer' }}
+            <div className="slive-mini banner-in timer-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cf) 22%, var(--surf))' }}
               onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
               <span className="slive-mini-lbl">수유 중</span>
@@ -449,7 +469,7 @@ export default function HomePanel() {
             </div>
           )}
           {activeSleep && (
-            <div className="slive-mini banner-in" style={{ cursor:'pointer' }}
+            <div className="slive-mini banner-in timer-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cs) 22%, var(--surf))' }}
               onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
               <span className="slive-mini-lbl">수면 중</span>
@@ -470,21 +490,33 @@ export default function HomePanel() {
         {summaryOpen && (
           <>
             <div className="sumdiv"></div>
+            <div className="modetoggle" style={{ marginBottom: 12 }} onClick={ev => ev.stopPropagation()}>
+              <button
+                className={`modetoggle-btn${sumMode === 'recent24h' ? ' on' : ''}`}
+                onClick={() => setSumMode('recent24h')}
+                style={sumMode === 'recent24h' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+              >직전 24시간</button>
+              <button
+                className={`modetoggle-btn${sumMode === 'day' ? ' on' : ''}`}
+                onClick={() => setSumMode('day')}
+                style={sumMode === 'day' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+              >당일</button>
+            </div>
             <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)' }}>
-              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24('feed'); }}>
+              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode(sumMode); setDetail24('feed'); }}>
                 <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
-                <div className="sval" style={{ fontSize:'15px' }}>{feedMl > 0 ? `총 ${feedMl}ml` : `${feed24.length}회`}</div>
-                <div className="ssub">{feed24.length > 0 ? `${feed24.length}회 수유` : '기록 없음'}</div>
+                <div className="sval" style={{ fontSize:'15px' }}>{sumFeedMl > 0 ? `총 ${sumFeedMl}ml` : `${sumFeedList.length}회`}</div>
+                <div className="ssub">{sumFeedList.length > 0 ? `${sumFeedList.length}회 수유` : '기록 없음'}</div>
               </div>
-              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24('diaper'); }}>
+              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode(sumMode); setDetail24('diaper'); }}>
                 <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
-                <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{diaper24.length}회</div>
-                <div className="ssub">소변 {diaperWet24} &middot; 대변 {diaperSoiled24}</div>
+                <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{sumDiaperList.length}회</div>
+                <div className="ssub">소변 {sumDiaperWet} &middot; 대변 {sumDiaperSoiled}</div>
               </div>
-              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24('sleep'); }}>
+              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode(sumMode); setDetail24('sleep'); }}>
                 <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
-                <div className="sval" style={{ fontSize:'15px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
-                <div className="ssub">{sleep24.length}회</div>
+                <div className="sval" style={{ fontSize:'15px' }}>{sumSleepMs > 0 ? durStr(sumSleepMs) : '0분'}</div>
+                <div className="ssub">{sumSleepList.length}회</div>
               </div>
             </div>
           </>
@@ -565,6 +597,7 @@ export default function HomePanel() {
         <Home24hModal
           type={detail24}
           initialDate={detail24Date}
+          initialMode={detail24Mode}
           onClose={() => { setDetail24(null); setDetail24Date(null); }}
         />
       )}

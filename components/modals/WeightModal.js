@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 import { nowISO, toLocal } from '../../lib/helpers';
@@ -92,7 +93,7 @@ export default function WeightModal() {
     close();
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" />
@@ -122,6 +123,7 @@ export default function WeightModal() {
           <button className="bpri" onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

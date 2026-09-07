@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { toLocal, fromLocal, directFeedMlFromMs } from '../../lib/helpers';
@@ -188,7 +189,7 @@ export default function FeedModal() {
     }
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         {/* Colored handle bar reflects feed type */}
@@ -325,6 +326,7 @@ export default function FeedModal() {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

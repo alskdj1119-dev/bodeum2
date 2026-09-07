@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useApp } from '../../lib/store';
 
 // 직수(직접 수유) 타이머를 종료했을 때 뜨는 확인 모달 — 보통 한 번에 양쪽 가슴을 다 쓰기 때문에,
@@ -6,7 +7,7 @@ import { useApp } from '../../lib/store';
 export default function FeedSideChoiceModal() {
   const { finishFeedSideChoice, continueOtherSideFeed } = useApp();
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cs)', opacity: 0.7 }} />
@@ -21,6 +22,7 @@ export default function FeedSideChoiceModal() {
           <button className="bpri" style={{ background: 'var(--cs)' }} onClick={continueOtherSideFeed}>이어서 하기</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

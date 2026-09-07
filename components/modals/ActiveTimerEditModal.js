@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { toLocal, fromLocal } from '../../lib/helpers';
@@ -63,7 +64,7 @@ export default function ActiveTimerEditModal() {
 
   const accent = isFeed ? 'var(--cf)' : 'var(--cs)';
 
-  return (
+  return createPortal(
     <div className="mbg open" onClick={close}>
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: accent, opacity: 0.7 }} />
@@ -100,6 +101,7 @@ export default function ActiveTimerEditModal() {
           <button className="bpri" style={{ background: accent }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { nowISO, toLocal, fromLocal, SOLID_REACTION_LABEL } from '../../lib/helpers';
@@ -85,7 +86,7 @@ export default function SolidModal() {
     close();
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cn)', opacity: 0.6 }} />
@@ -139,6 +140,7 @@ export default function SolidModal() {
           <button className="bpri" style={{ background: 'var(--cn)' }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

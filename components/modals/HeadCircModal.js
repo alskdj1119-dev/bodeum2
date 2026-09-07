@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
@@ -49,7 +50,7 @@ export default function HeadCircModal() {
     close();
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cv)', opacity: 0.6 }} />
@@ -79,6 +80,7 @@ export default function HeadCircModal() {
           <button className="bpri" style={{ background: 'var(--cv)' }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
