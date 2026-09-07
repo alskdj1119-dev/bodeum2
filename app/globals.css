@@ -1,11 +1,3 @@
-@font-face{
-  font-family:'OngeulipGimduo';
-  src:url('/fonts/OngeulipGimduo.ttf') format('truetype');
-  font-weight:400;
-  font-style:normal;
-  font-display:swap;
-}
-
 /* ── THEME ───────────────────────────────────────────────── */
 /* main(운영) 색상으로 복원 — 뉴모피즘 UI(그림자/도형)는 그대로 유지, 색상 값만 원래 크림+보라 팔레트로 되돌림.
    --nm-dark/--nm-light(그림자 톤)와 --cn/--cv/--cy(이유식/병원방문/증상 — main에는 없던 카테고리)는
@@ -25,8 +17,8 @@
   --sh-inset: inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);
   --sh-sm: 6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);
   --r:20px;--r-btn:100px;--r-input:16px;
-  --serif:'OngeulipGimduo','Pretendard',system-ui,sans-serif;--sans:'OngeulipGimduo','Pretendard',system-ui,sans-serif;
-  --font-display:'OngeulipGimduo','Pretendard',system-ui,sans-serif;
+  --serif:'Pretendard',system-ui,sans-serif;--sans:'Pretendard',system-ui,sans-serif;
+  --font-display:'Pretendard',system-ui,sans-serif;
   --up:#2F6FED;--down:#E5484D;
   --warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);
 }
@@ -68,6 +60,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
 
 /* ── 앱 전체 텍스트 선택/길게 눌렀을 때 뜨는 iOS 콜아웃(복사하기/찾아보기 등) 방지 ──
    앱처럼 동작해야 하는 화면이라 대부분의 텍스트는 선택할 필요가 없다.
