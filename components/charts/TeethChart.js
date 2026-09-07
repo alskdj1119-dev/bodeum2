@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { fmtFull } from '../../lib/helpers';
 
 // 유치(젖니) 20개 — 정중선에서 바깥쪽 순서로 이름 붙임 (임상 표기 대신 보호자가 이해하기 쉬운 이름 사용)
 const TOOTH_NAMES = ['중절치', '측절치', '견치', '제1유구치', '제2유구치'];
@@ -24,8 +25,8 @@ export const ALL_TEETH = [...UPPER_TEETH, ...LOWER_TEETH];
 // 기존에 문자열로 저장된 값도 그대로 읽을 수 있도록 여기서 정규화한다.
 export function normalizeToothInfo(v) {
   if (!v) return null;
-  if (typeof v === 'string') return { date: v, records: [] };
-  return { date: v.date || '', records: v.records || [] };
+  if (typeof v === 'string') return { date: v, records: [], updatedAt: null };
+  return { date: v.date || '', records: v.records || [], updatedAt: v.updatedAt || null };
 }
 
 const W = 320;
@@ -45,7 +46,7 @@ function archPoints(baselineY, amplitude, curveDown) {
 // 탭하면 오늘 날짜로 "났음" 표시, 다시 탭하면 취소한다.
 // 아래 목록의 각 치아 행을 탭하면 onOpenDetail(toothId)로 상세(추가 기록) 화면을 연다.
 // teethStatus: { [toothId]: 'YYYY-MM-DD' | { date, records } } / onToggle(toothId)
-export default function TeethChart({ teethStatus, onToggle, onDateChange, onOpenDetail }) {
+export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
   const [selected, setSelected] = useState(null);
   const upperPts = archPoints(55, 28, false);
   const lowerPts = archPoints(105, 28, true);
@@ -80,7 +81,7 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange, onOpen
         치아 기록 · 총 {eruptedCount} / 20개
       </div>
       <div className="chart-wrap">
-        <svg viewBox={`0 0 ${W} 140`} width="100%" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox={`0 0 ${W} 150`} width="100%" xmlns="http://www.w3.org/2000/svg">
           <line x1="20" y1="80" x2={W - 20} y2="80" stroke="var(--muted)" strokeOpacity="0.25" strokeDasharray="3 4" />
           {UPPER_TEETH.map((t, i) => <ToothDot key={t.id} tooth={t} pt={upperPts[i]} />)}
           {LOWER_TEETH.map((t, i) => <ToothDot key={t.id} tooth={t} pt={lowerPts[i]} />)}
@@ -101,10 +102,7 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange, onOpen
                   <div className="esec" style={{ fontSize: 11 }}>추가 기록 {info.records.length}건</div>
                 )}
               </div>
-              <input type="date" className="finp" value={info.date}
-                onClick={e => e.stopPropagation()}
-                onChange={e => onDateChange(t.id, e.target.value)}
-                style={{ width: 'auto', padding: '4px 8px', fontSize: 12 }} />
+              <div className="etime">{fmtFull(info.updatedAt || info.date)}</div>
               <button className="edel" onClick={e => { e.stopPropagation(); onToggle(t.id); }}>
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>

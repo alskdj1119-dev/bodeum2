@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import { fmtFull, elapsedStr, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 import TeethChart from '../charts/TeethChart';
-import { normalizeToothInfo } from '../charts/TeethChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
 const VACCINES = [
@@ -112,12 +111,8 @@ export default function HealthPanel() {
   function toggleTooth(toothId) {
     const cur = { ...teethStatus };
     if (cur[toothId]) delete cur[toothId];
-    else cur[toothId] = { date: kstDate(Date.now()).toISOString().slice(0, 10), records: [] };
+    else cur[toothId] = { date: kstDate(Date.now()).toISOString().slice(0, 10), records: [], updatedAt: new Date().toISOString() };
     saveTeethStatus(cur);
-  }
-  function setToothDate(toothId, date) {
-    const info = normalizeToothInfo(teethStatus[toothId]) || { date: '', records: [] };
-    saveTeethStatus({ ...teethStatus, [toothId]: { date, records: info.records } });
   }
   function openToothDetail(toothId) {
     setEditId(toothId);
@@ -396,7 +391,7 @@ export default function HealthPanel() {
 
       {/* ─── 치아 탭 ─── */}
       {tab === 'teeth' && (
-        <TeethChart teethStatus={teethStatus} onToggle={toggleTooth} onDateChange={setToothDate} onOpenDetail={openToothDetail} />
+        <TeethChart teethStatus={teethStatus} onToggle={toggleTooth} onOpenDetail={openToothDetail} />
       )}
     </>
   );

@@ -34,7 +34,7 @@ export default function ToothDetailModal() {
   function close() { setOpenModal(null); setEditId(null); }
 
   function persist(records, nextDate) {
-    saveTeethStatus({ ...teethStatus, [toothId]: { date: nextDate != null ? nextDate : date, records } });
+    saveTeethStatus({ ...teethStatus, [toothId]: { date: nextDate != null ? nextDate : date, records, updatedAt: new Date().toISOString() } });
   }
 
   function saveDate() {
