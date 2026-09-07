@@ -310,7 +310,11 @@ export default function HomePanel() {
   function tierCardStyle(tier) {
     if (!tier) return undefined;
     const t = ELAPSED_TIER_STYLE[tier];
-    return { background: t.bg, borderColor: t.border };
+    return {
+      background: t.bg, borderColor: t.border,
+      '--blink-base': t.bg,
+      '--blink-light': `color-mix(in srgb, ${t.border} 45%, white)`,
+    };
   }
   function tierIcoStyle(tier) {
     if (!tier) return undefined;
@@ -478,7 +482,7 @@ export default function HomePanel() {
       {(activeFeed || activeSleep) && (
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
           {activeFeed && (
-            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cf) 22%, var(--surf))', animationDelay: feedTimerBlinkDelay }}
+            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', '--blink-base':'color-mix(in srgb, var(--cf) 22%, var(--surf))', '--blink-light':'color-mix(in srgb, var(--cf) 40%, white)', animationDelay: feedTimerBlinkDelay }}
               onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
               <span className="slive-mini-lbl">수유 중</span>
@@ -487,7 +491,7 @@ export default function HomePanel() {
             </div>
           )}
           {activeSleep && (
-            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cs) 22%, var(--surf))', animationDelay: sleepTimerBlinkDelay }}
+            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', '--blink-base':'color-mix(in srgb, var(--cs) 22%, var(--surf))', '--blink-light':'color-mix(in srgb, var(--cs) 40%, white)', animationDelay: sleepTimerBlinkDelay }}
               onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
               <span className="slive-mini-lbl">수면 중</span>
