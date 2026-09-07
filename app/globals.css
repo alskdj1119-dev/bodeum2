@@ -208,6 +208,61 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .tldot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
 .tldot.f{background:var(--cf)}.tldot.d{background:var(--cd)}.tldot.s{background:var(--cs)}.tldot.w{background:var(--cw)}
 .tlinf{flex:1}.tltype{font-size:13px;font-weight:500;color:var(--ink)}.tldet{font-size:12px;color:var(--muted);margin-top:1px}
+
+/* ── HOME: 요일 스트립 ── */
+.weekstrip{display:flex;justify-content:space-between;margin-bottom:16px}
+.wday{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:600;flex:1}
+.wday .wdot{width:4px;height:4px;border-radius:50%;background:var(--nm-dark)}
+.wday.has .wdot{background:var(--sage);opacity:.6}
+.wday.today{color:var(--ink)}
+.wday.today .wbar{width:100%;height:2.5px;border-radius:2px;background:var(--sage);max-width:22px}
+.wday .wbar{width:100%;height:2.5px;border-radius:2px;background:transparent;max-width:22px}
+
+/* ── HOME: 우측 상단 "+" 빠른 기록 버튼 ── */
+.qplus{position:relative;flex-shrink:0;width:42px;height:42px;border-radius:50%;background:var(--surf);border:none;color:var(--sage);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1)}
+.qplus:active{transform:scale(.9)}
+.qplus svg{width:18px;height:18px;transition:transform .2s}
+.qplus.open svg{transform:rotate(45deg)}
+.qmenu{position:absolute;top:50px;right:0;width:132px;z-index:20;background:var(--surf);border-radius:16px;padding:6px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:2px;animation:qdrop .2s cubic-bezier(.2,.8,.3,1.3);transform-origin:top right}
+@keyframes qdrop{from{opacity:0;transform:scale(.85) translateY(-6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.qmenu button{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:11px;border:none;background:none;color:var(--ink);font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:transparent}
+.qmenu button:active{opacity:.6}
+.qmenu .mico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qmenu .mico svg{width:13px;height:13px}
+.qmenu .mico.f{background:var(--fw)}.qmenu .mico.f svg{stroke:var(--cf)}
+.qmenu .mico.d{background:var(--dw)}.qmenu .mico.d svg{stroke:var(--cd)}
+.qmenu .mico.s{background:var(--sw)}.qmenu .mico.s svg{stroke:var(--cs)}
+
+/* ── HOME: "직전"+"직전 24시간" 통합 요약 카드 ── */
+.sumcard{background:var(--surf);border-radius:18px;padding:14px 15px 13px;margin-bottom:16px;box-shadow:var(--sh)}
+.sumhead{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.sumhead svg{width:16px;height:16px;color:var(--sage);flex-shrink:0}
+.sumhead .txt{flex:1;font-size:12.5px;font-weight:600;color:var(--ink)}
+.sumhead .txt b{color:var(--sage)}
+.sumdiv{height:1px;background:var(--nm-dark);margin-bottom:12px}
+.sumgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.sumitem{display:flex;flex-direction:column;gap:6px;padding:0 6px;position:relative;min-width:0;cursor:pointer}
+.sumitem+.sumitem::before{content:'';position:absolute;left:0;top:2px;bottom:2px;width:1px;background:var(--nm-dark)}
+.sumitem .sr{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:0}
+
+/* ── HOME: "최근 기록" 스와이프 카드 ── */
+.rcards{display:flex;flex-direction:column;gap:10px}
+.rswipe{position:relative;overflow:hidden;border-radius:16px}
+.rcard{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surf);box-shadow:var(--sh-sm);cursor:pointer;transition:transform .18s ease;-webkit-tap-highlight-color:transparent}
+.rcard.swiped{transform:scale(.84);transform-origin:left center;box-shadow:var(--sh-inset)}
+.rico{width:36px;height:36px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.rico svg{width:17px;height:17px}
+.rico.f{background:var(--fw);color:var(--cf)}
+.rico.d{background:var(--dw);color:var(--cd)}
+.rico.s{background:var(--sw);color:var(--cs)}
+.rbody{flex:1;min-width:0}
+.rti{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rsub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rval{flex-shrink:0;text-align:right}
+.rvaltime{font-size:12.5px;font-weight:700;color:var(--sage);display:inline-block;border-bottom:2px solid var(--sage);padding-bottom:2px;white-space:nowrap}
+.rvalago{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}
+.rtrash{position:absolute;top:0;right:0;bottom:0;width:58px;border-radius:0 16px 16px 0;background:var(--alert);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rtrash svg{width:17px;height:17px}
 .tltime{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .eago{font-size:11px;color:var(--muted)}
 
