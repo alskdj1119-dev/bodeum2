@@ -140,7 +140,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 /* Setup 카드 안의 입력창만 살짝 더 크고 둥글게 — 다른 화면이 쓰는 전역 .fld/.flbl/.finp에는 영향 없도록 .setup-card 안으로 범위를 좁힘 */
 .setup-card .fld{margin-bottom:16px}
 .setup-card .flbl{font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-bottom:8px;padding-left:2px}
-.setup-card .finp{padding:15px 16px;background:var(--surf2);border:1.5px solid transparent;border-radius:16px;font-size:15px;text-transform:uppercase;letter-spacing:.08em}
+.setup-card .finp{padding:15px 16px;background:var(--surf2);border:1.5px solid transparent;border-radius:16px;font-size:15px;text-transform:uppercase;letter-spacing:.08em;box-shadow:var(--sh-inset)}
 .setup-card .finp::placeholder{color:var(--muted);letter-spacing:0;text-transform:none}
 .setup-card .finp:focus{background:var(--surf);border-color:var(--sage);box-shadow:0 0 0 4px var(--s-wash)}
 
@@ -211,7 +211,9 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── HOME: 요일 스트립 ── */
 .weekstrip{display:flex;justify-content:space-between;margin-bottom:16px}
-.wday{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:600;flex:1}
+.wday{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);font-weight:600;flex:1}
+.wday .wdate{font-size:8.5px;font-weight:600;color:var(--muted);opacity:.55;letter-spacing:-.02em}
+.wday.today .wdate{opacity:.75}
 .wday .wdot{width:4px;height:4px;border-radius:50%;background:var(--nm-dark)}
 .wday.has .wdot{background:var(--sage);opacity:.6}
 .wday.today{color:var(--ink)}
@@ -237,6 +239,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .sumcard{background:var(--surf);border-radius:18px;padding:14px 15px 13px;margin-bottom:16px;box-shadow:var(--sh)}
 .sumhead{display:flex;align-items:center;gap:9px;margin-bottom:12px}
 .sumhead svg{width:16px;height:16px;color:var(--sage);flex-shrink:0}
+.sumhead .sumchev{color:var(--muted);transition:transform .2s ease}
+.sumcard{cursor:pointer}
 .sumhead .txt{flex:1;font-size:12.5px;font-weight:600;color:var(--ink)}
 .sumhead .txt b{color:var(--sage)}
 .sumdiv{height:1px;background:var(--nm-dark);margin-bottom:12px}
@@ -247,9 +251,9 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── HOME: "최근 기록" 스와이프 카드 ── */
 .rcards{display:flex;flex-direction:column;gap:10px}
-.rswipe{position:relative;overflow:hidden;border-radius:16px}
-.rcard{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surf);box-shadow:var(--sh-sm);cursor:pointer;transition:transform .18s ease;-webkit-tap-highlight-color:transparent}
-.rcard.swiped{transform:scale(.84);transform-origin:left center;box-shadow:var(--sh-inset)}
+.rswipe{position:relative;overflow:hidden;border-radius:18px}
+.rcard{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--surf);box-shadow:var(--sh);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;-webkit-tap-highlight-color:transparent}
+.rcard.swiped{transform-origin:left center;box-shadow:var(--sh-inset)}
 .rico{width:36px;height:36px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .rico svg{width:17px;height:17px}
 .rico.f{background:var(--fw);color:var(--cf)}
@@ -261,7 +265,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .rval{flex-shrink:0;text-align:right}
 .rvaltime{font-size:12.5px;font-weight:700;color:var(--sage);display:inline-block;border-bottom:2px solid var(--sage);padding-bottom:2px;white-space:nowrap}
 .rvalago{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}
-.rtrash{position:absolute;top:0;right:0;bottom:0;width:58px;border-radius:0 16px 16px 0;background:var(--alert);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rtrash{position:absolute;top:0;right:0;bottom:0;width:58px;border-radius:0 18px 18px 0;background:var(--alert);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .rtrash svg{width:17px;height:17px}
 .tltime{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .eago{font-size:11px;color:var(--muted)}
@@ -294,7 +298,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .sstop{color:#fff;border:none;border-radius:var(--r-btn);padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 
 /* ── LIVE BANNER (얇은 요약 버전, 홈 최상단용) ── */
-.slive-mini{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-btn);padding:8px 10px 8px 14px;display:flex;align-items:center;gap:8px;transition:opacity .3s, transform .3s cubic-bezier(.4,0,.2,1)}
+.slive-mini{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-btn);padding:8px 10px 8px 14px;display:flex;align-items:center;gap:8px;transition:opacity .3s, transform .3s cubic-bezier(.4,0,.2,1);box-shadow:var(--sh-sm)}
 .slive-mini.banner-in{animation:banner-in .3s cubic-bezier(.32,1,.32,1) both}
 .slive-mini-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
 .slive-mini-lbl{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}

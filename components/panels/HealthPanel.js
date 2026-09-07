@@ -278,6 +278,7 @@ export default function HealthPanel() {
                   marginBottom: 8,
                   overflow: 'hidden',
                   opacity: (status === 'before' && isPastPeriod) ? 0.5 : 1,
+                  boxShadow: 'var(--sh-sm)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px 6px' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: dotColor }} />

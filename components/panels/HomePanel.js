@@ -8,6 +8,9 @@ import {
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
 
+// 최근 기록 스와이프 삭제 — 쓰레기통 폭(px). CSS .rtrash의 width와 반드시 같아야 한다.
+const TRASH_W = 58;
+
 // "직전" 카드는 가로 폭이 좁아 "23시간 59분 전"처럼 긴 경과시간이 잘릴 수 있음.
 // 카드 안에서 항상 안 잘리도록: 끝의 " 전"을 생략(라벨이 이미 "직전"이라 의미는 충분히 전달됨) + 폰트 축소.
 function agoShort(iso) {
@@ -85,6 +88,9 @@ export default function HomePanel() {
   // "직전"/"최근 기록"의 경과시간 텍스트가 시간이 지나도 갱신되도록 주기적으로 리렌더링
   useNowTick();
 
+  // "오늘 N건 기록했어요" 배너 — 평소엔 접혀 있다가 탭하면 직전 24시간 상세가 펼쳐짐
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
   // 우측 상단 "+" 버튼 — 탭하면 수유/기저귀/수면 선택 메뉴가 펼쳐짐
   const [quickOpen, setQuickOpen] = useState(false);
   function openQuick(modal) {
@@ -92,22 +98,51 @@ export default function HomePanel() {
     setEditId(null); setEditType(null); setOpenModal(modal);
   }
 
-  // "최근 기록" 카드 — 왼쪽 기준으로 살짝 축소되며 오른쪽에 쓰레기통이 나타나는 스와이프 삭제
+  // "최근 기록" 카드 — 왼쪽 기준으로 살짝 축소되며 오른쪽에 쓰레기통이 나타나는 스와이프 삭제.
+  // 가로로 움직인 양(dx)이 세로로 움직인 양(dy)보다 클 때만 스와이프로 인정해서,
+  // 목록을 위아래로 스크롤할 때는 쓰레기통이 뜨지 않도록 한다.
   const [swipedKey, setSwipedKey] = useState(null);
+  const [swipeScale, setSwipeScale] = useState(0.84);
   const touchStartXRef = useRef(null);
+  const touchStartYRef = useRef(null);
   const touchKeyRef = useRef(null);
+  const touchAxisRef = useRef(null); // 'x' | 'y' | null — 방향이 정해지기 전엔 null
+  const touchWidthRef = useRef(0);
   function handleCardTouchStart(key, e) {
-    e.stopPropagation();
-    touchStartXRef.current = e.touches[0].clientX;
+    const t = e.touches[0];
+    touchStartXRef.current = t.clientX;
+    touchStartYRef.current = t.clientY;
     touchKeyRef.current = key;
+    touchAxisRef.current = null;
+    touchWidthRef.current = e.currentTarget.getBoundingClientRect().width;
+  }
+  function handleCardTouchMove(key, e) {
+    if (touchKeyRef.current !== key || touchStartXRef.current == null) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartXRef.current;
+    const dy = t.clientY - touchStartYRef.current;
+    if (touchAxisRef.current == null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      touchAxisRef.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+    if (touchAxisRef.current === 'x') e.stopPropagation();
   }
   function handleCardTouchEnd(key, e) {
-    e.stopPropagation();
     if (touchStartXRef.current == null || touchKeyRef.current !== key) return;
     const dx = e.changedTouches[0].clientX - touchStartXRef.current;
+    const isHorizontal = touchAxisRef.current === 'x';
+    const width = touchWidthRef.current;
     touchStartXRef.current = null;
-    if (dx < -24) setSwipedKey(key);
-    else if (dx > 24) setSwipedKey(prev => (prev === key ? null : prev));
+    touchStartYRef.current = null;
+    touchAxisRef.current = null;
+    if (!isHorizontal) return; // 세로 스크롤이었으면 스와이프로 취급하지 않음
+    e.stopPropagation();
+    if (dx < -24) {
+      // 쓰레기통 폭(TRASH_W)만큼만 정확히 줄어들도록, 카드 실제 폭을 기준으로 축소 비율 계산
+      setSwipeScale(width > 0 ? Math.max(0.7, (width - TRASH_W) / width) : 0.84);
+      setSwipedKey(key);
+    } else if (dx > 24) {
+      setSwipedKey(prev => (prev === key ? null : prev));
+    }
   }
 
   // 진행 중인 타이머 (홈 최상단 요약 배너용)
@@ -178,7 +213,8 @@ export default function HomePanel() {
       feeds.some(f => { const t = new Date(f.start || f.time).getTime(); return t >= dayStartMs && t < dayEndMs; }) ||
       diapers.some(d => { const t = new Date(d.time).getTime(); return t >= dayStartMs && t < dayEndMs; }) ||
       sleeps.some(s => { const t = new Date(s.start).getTime(); return t >= dayStartMs && t < dayEndMs; });
-    return { label, has, today: dayStartMs === todayStartMs };
+    const dateNum = kstDate(dayStartMs).getUTCDate();
+    return { label, has, today: dayStartMs === todayStartMs, dateLabel: (dateNum < 10 ? '0' + dateNum : '' + dateNum) + '일' };
   });
 
   // 직전 카드 클릭 → 수정 팝업
@@ -208,6 +244,11 @@ export default function HomePanel() {
     warn:    { border: 'var(--warn)',   bg: 'var(--warn-wash)' },
     alert:   { border: 'var(--alert)',  bg: 'var(--alert-wash)' },
   };
+  function tierCardStyle(tier) {
+    if (!tier) return undefined;
+    const t = ELAPSED_TIER_STYLE[tier];
+    return { background: t.bg, borderColor: t.border };
+  }
   function tierIcoStyle(tier) {
     if (!tier) return undefined;
     return { background: ELAPSED_TIER_STYLE[tier].bg };
@@ -327,7 +368,8 @@ export default function HomePanel() {
       <div className="weekstrip">
         {weekDays.map((d, i) => (
           <div key={i} className={`wday${d.has ? ' has' : ''}${d.today ? ' today' : ''}`}>
-            <span>{d.label}</span>
+            <span className="wlbl">{d.label}</span>
+            <span className="wdate">{d.dateLabel}</span>
             <span className="wdot"></span>
             <span className="wbar"></span>
           </div>
@@ -389,29 +431,63 @@ export default function HomePanel() {
         </div>
       )}
 
-      {/* 오늘 요약 — "직전"과 "직전 24시간"을 카드 하나로 통합. 각 항목을 탭하면 24시간 상세 모달 */}
-      <div className="sumcard">
+      {/* 오늘 요약 배너 — 평소엔 접혀 있다가 탭하면 "직전 24시간" 상세가 펼쳐짐 */}
+      <div className="sumcard" onClick={() => setSummaryOpen(v => !v)}>
         <div className="sumhead">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
           <div className="txt">{todayDateStr} &middot; 오늘 <b>{todayCount}건</b> 기록했어요</div>
+          <svg className="sumchev" style={{ transform: summaryOpen ? 'rotate(90deg)' : 'none' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
-        <div className="sumdiv"></div>
-        <div className="sumgrid">
-          <div className="sumitem" onClick={() => setDetail24('feed')}>
-            <div className="sr"><span className="slbl">수유</span><div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
-            <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
-            <div className="ssub">{feedMl > 0 ? `오늘 ${feed24.length}회 · ${feedMl}ml` : `오늘 ${feed24.length}회`}</div>
+        {summaryOpen && (
+          <>
+            <div className="sumdiv"></div>
+            <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)' }}>
+              <div className="sc" style={{ boxShadow:'none', padding:0 }} onClick={ev => { ev.stopPropagation(); setDetail24('feed'); }}>
+                <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
+                <div className="sval" style={{ fontSize:'15px' }}>{feedMl > 0 ? `총 ${feedMl}ml` : `${feed24.length}회`}</div>
+                <div className="ssub">{feed24.length > 0 ? `${feed24.length}회 수유` : '기록 없음'}</div>
+              </div>
+              <div className="sc" style={{ boxShadow:'none', padding:0 }} onClick={ev => { ev.stopPropagation(); setDetail24('diaper'); }}>
+                <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
+                <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{diaper24.length}회</div>
+                <div className="ssub">소변 {diaperWet24} &middot; 대변 {diaperSoiled24}</div>
+              </div>
+              <div className="sc" style={{ boxShadow:'none', padding:0 }} onClick={ev => { ev.stopPropagation(); setDetail24('sleep'); }}>
+                <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
+                <div className="sval" style={{ fontSize:'15px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
+                <div className="ssub">{sleep24.length}회</div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* 직전 — 클릭 시 수정 팝업 */}
+      <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
+      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
+        <div className="sc" onClick={() => openEditFeed(lastFeed)} style={tierCardStyle(feedTier)}>
+          <div className="sr">
+            <div className="slbl">수유</div>
+            <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
-          <div className="sumitem" onClick={() => setDetail24('diaper')}>
-            <div className="sr"><span className="slbl">기저귀</span><div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
-            <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(diaperTier) }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
-            <div className="ssub">오늘 {diaper24.length}회 (소변{diaperWet24}&middot;대변{diaperSoiled24})</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
+          <div className="ssub">{lastFeed ? fmtFull(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
+        </div>
+        <div className="sc" onClick={() => openEditDiaper(lastDiaper)} style={tierCardStyle(diaperTier)}>
+          <div className="sr">
+            <div className="slbl">기저귀</div>
+            <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
           </div>
-          <div className="sumitem" onClick={() => setDetail24('sleep')}>
-            <div className="sr"><span className="slbl">수면</span><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
-            <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastSleep ? agoShort(lastSleep.start) : '—'}</div>
-            <div className="ssub">{sleepMs > 0 ? `오늘 ${durStr(sleepMs)}` : '오늘 0분'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(diaperTier) }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
+          <div className="ssub">{lastDiaper ? fmtFull(lastDiaper.time) : '기록 없음'}</div>
+        </div>
+        <div className="sc" onClick={() => openEditSleep(lastSleep)}>
+          <div className="sr">
+            <div className="slbl">수면</div>
+            <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           </div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastSleep ? agoShort(lastSleep.start) : '—'}</div>
+          <div className="ssub">{lastSleep ? durStr(new Date(lastSleep.end) - new Date(lastSleep.start)) : '기록 없음'}</div>
         </div>
       </div>
 
@@ -430,9 +506,13 @@ export default function HomePanel() {
                 </div>
                 <div
                   className={`rcard${swipedKey === key ? ' swiped' : ''}`}
-                  style={{ animationDelay: `${i * 40}ms` }}
+                  style={{
+                    animationDelay: `${i * 40}ms`,
+                    transform: swipedKey === key ? `scale(${swipeScale})` : undefined,
+                  }}
                   onClick={() => handleRecentClick(e, key)}
                   onTouchStart={ev => handleCardTouchStart(key, ev)}
+                  onTouchMove={ev => handleCardTouchMove(key, ev)}
                   onTouchEnd={ev => handleCardTouchEnd(key, ev)}
                 >
                   <div className={`rico ${e.t}`}>{recentIcon(e.t)}</div>
