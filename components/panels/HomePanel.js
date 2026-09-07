@@ -460,7 +460,7 @@ export default function HomePanel() {
       {(activeFeed || activeSleep) && (
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
           {activeFeed && (
-            <div className="slive-mini banner-in timer-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cf) 22%, var(--surf))' }}
+            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cf) 22%, var(--surf))' }}
               onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
               <span className="slive-mini-lbl">수유 중</span>
@@ -469,7 +469,7 @@ export default function HomePanel() {
             </div>
           )}
           {activeSleep && (
-            <div className="slive-mini banner-in timer-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cs) 22%, var(--surf))' }}
+            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cs) 22%, var(--surf))' }}
               onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
               <span className="slive-mini-lbl">수면 중</span>
@@ -526,7 +526,7 @@ export default function HomePanel() {
       {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
       <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
-        <div className="sc" onClick={() => openEditFeed(lastFeed)} style={tierCardStyle(feedTier)}>
+        <div className={`sc${feedTier ? ' blink-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={tierCardStyle(feedTier)}>
           <div className="sr">
             <div className="slbl">수유</div>
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
@@ -534,7 +534,7 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
           <div className="ssub">{lastFeed ? fmtFull(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
         </div>
-        <div className="sc" onClick={() => openEditDiaper(lastDiaper)} style={tierCardStyle(diaperTier)}>
+        <div className={`sc${diaperTier ? ' blink-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={tierCardStyle(diaperTier)}>
           <div className="sr">
             <div className="slbl">기저귀</div>
             <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>

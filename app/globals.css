@@ -299,8 +299,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 @keyframes banner-in{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:none}}
 .spulse{width:10px;height:10px;border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-@keyframes dim-blink{0%,100%{filter:brightness(1)}50%{filter:brightness(.88)}}
-.timer-live{animation:dim-blink 1.8s ease-in-out infinite}
+@keyframes dim-blink{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7)}}
+.blink-live{animation:dim-blink .9s ease-in-out infinite}
 .sliveinf{flex:1}.slivelbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .slivetimer{font-size:26px;font-family:var(--font-display);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}
 .sstop{color:#fff;border:none;border-radius:var(--r-btn);padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
