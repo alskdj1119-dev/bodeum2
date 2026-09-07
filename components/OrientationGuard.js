@@ -19,19 +19,26 @@ export default function OrientationGuard() {
     // "마우스 없이 터치가 주 조작 방식인 기기"인지(coarse pointer, hover 없음)를 함께 확인한다.
     const touchMq = window.matchMedia('(hover: none) and (pointer: coarse)');
     const orientationMq = window.matchMedia('(orientation: landscape)');
-    const update = () => setIsLandscape(touchMq.matches && orientationMq.matches);
+    // 아이패드 등 태블릿은 가로 모드로도 쓸 수 있게 허용한다.
+    // 화면의 짧은 쪽 길이가 600px 이상이면 태블릿으로 간주 — 아이폰은 가로로 돌려도
+    // 짧은 쪽(높이)이 430px 안팎이라 걸러지고, 아이패드는 어느 방향이든 짧은 쪽이
+    // 744px 이상이라 태블릿으로 인식된다.
+    const tabletMq = window.matchMedia('(min-width: 600px) and (min-height: 600px)');
+    const update = () => setIsLandscape(touchMq.matches && orientationMq.matches && !tabletMq.matches);
     update();
     touchMq.addEventListener('change', update);
     orientationMq.addEventListener('change', update);
+    tabletMq.addEventListener('change', update);
 
-    // 지원하는 환경(주로 안드로이드)에서는 세로 고정도 시도 — 실패해도 조용히 무시
-    if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.lock) {
+    // 지원하는 환경(주로 안드로이드)에서는 세로 고정도 시도 — 태블릿은 제외, 실패해도 조용히 무시
+    if (!tabletMq.matches && typeof screen !== 'undefined' && screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('portrait').catch(() => {});
     }
 
     return () => {
       touchMq.removeEventListener('change', update);
       orientationMq.removeEventListener('change', update);
+      tabletMq.removeEventListener('change', update);
     };
   }, []);
 
