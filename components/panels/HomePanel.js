@@ -11,6 +11,18 @@ import Home24hModal from '../modals/Home24hModal';
 // 최근 기록 스와이프 삭제 — 쓰레기통 폭(px). CSS .rtrash의 width와 반드시 같아야 한다.
 const TRASH_W = 58;
 
+// 타이머 배너와 "직전" 카드의 디밍 블링크(.blink-live, 주기 1.8s)가 서로 다른 시점에 마운트돼도
+// 항상 같은 박자로 깜빡이도록 — 각 요소가 마운트되는 순간의 실제 시각(Date.now())을 기준으로
+// 음수 animation-delay를 계산해서 모두 같은 벽시계 위상에 맞춘다.
+const BLINK_PERIOD_MS = 1800;
+function useBlinkDelay() {
+  const [delay, setDelay] = useState('0ms');
+  useEffect(() => {
+    setDelay(`${-(Date.now() % BLINK_PERIOD_MS)}ms`);
+  }, []);
+  return delay;
+}
+
 // "직전" 카드는 가로 폭이 좁아 "23시간 59분 전"처럼 긴 경과시간이 잘릴 수 있음.
 // 카드 안에서 항상 안 잘리도록: 끝의 " 전"을 생략(라벨이 이미 "직전"이라 의미는 충분히 전달됨) + 폰트 축소.
 function agoShort(iso) {
@@ -87,6 +99,12 @@ export default function HomePanel() {
 
   // "직전"/"최근 기록"의 경과시간 텍스트가 시간이 지나도 갱신되도록 주기적으로 리렌더링
   useNowTick();
+
+  // 블링크 동기화용 delay — 각 대상별로 자신이 마운트된 시점 기준으로 계산됨
+  const feedTimerBlinkDelay = useBlinkDelay();
+  const sleepTimerBlinkDelay = useBlinkDelay();
+  const feedTierBlinkDelay = useBlinkDelay();
+  const diaperTierBlinkDelay = useBlinkDelay();
 
   // "오늘 N건 기록했어요" 배너 — 평소엔 접혀 있다가 탭하면 직전 24시간 상세가 펼쳐짐
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -460,7 +478,7 @@ export default function HomePanel() {
       {(activeFeed || activeSleep) && (
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
           {activeFeed && (
-            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cf) 22%, var(--surf))' }}
+            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cf) 22%, var(--surf))', animationDelay: feedTimerBlinkDelay }}
               onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
               <span className="slive-mini-lbl">수유 중</span>
@@ -469,7 +487,7 @@ export default function HomePanel() {
             </div>
           )}
           {activeSleep && (
-            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cs) 22%, var(--surf))' }}
+            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', background:'color-mix(in srgb, var(--cs) 22%, var(--surf))', animationDelay: sleepTimerBlinkDelay }}
               onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
               <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
               <span className="slive-mini-lbl">수면 중</span>
@@ -526,7 +544,7 @@ export default function HomePanel() {
       {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
       <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
-        <div className={`sc${feedTier ? ' blink-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={tierCardStyle(feedTier)}>
+        <div className={`sc${feedTier ? ' blink-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : tierCardStyle(feedTier)}>
           <div className="sr">
             <div className="slbl">수유</div>
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
@@ -534,7 +552,7 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
           <div className="ssub">{lastFeed ? fmtFull(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
         </div>
-        <div className={`sc${diaperTier ? ' blink-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={tierCardStyle(diaperTier)}>
+        <div className={`sc${diaperTier ? ' blink-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : tierCardStyle(diaperTier)}>
           <div className="sr">
             <div className="slbl">기저귀</div>
             <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
