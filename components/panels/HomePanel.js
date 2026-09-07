@@ -99,30 +99,44 @@ export default function HomePanel() {
   }
 
   // "최근 기록" 카드 — 왼쪽 기준으로 살짝 축소되며 오른쪽에 쓰레기통이 나타나는 스와이프 삭제.
-  // 가로로 움직인 양(dx)이 세로로 움직인 양(dy)보다 클 때만 스와이프로 인정해서,
-  // 목록을 위아래로 스크롤할 때는 쓰레기통이 뜨지 않도록 한다.
+  // 누르고 일정 시간(LONG_PRESS_MS) 이상 유지한 뒤 가로로 움직였을 때만 스와이프로 인정한다.
+  // 그 전에(짧게 누르자마자) 조금이라도 움직이면 — 위아래든 대각선이든 — 스크롤로 확정하고
+  // 스와이프는 이번 터치 동안 다시 활성화되지 않는다.
+  const LONG_PRESS_MS = 180;
   const [swipedKey, setSwipedKey] = useState(null);
   const [swipeScale, setSwipeScale] = useState(0.84);
   const touchStartXRef = useRef(null);
   const touchStartYRef = useRef(null);
+  const touchStartTimeRef = useRef(0);
   const touchKeyRef = useRef(null);
-  const touchAxisRef = useRef(null); // 'x' | 'y' | null — 방향이 정해지기 전엔 null
+  const touchAxisRef = useRef(null); // 'x' | 'y' | null — 'y'가 되면 이번 터치 동안 스와이프 불가(스크롤 확정)
   const touchWidthRef = useRef(0);
   function handleCardTouchStart(key, e) {
     const t = e.touches[0];
     touchStartXRef.current = t.clientX;
     touchStartYRef.current = t.clientY;
+    touchStartTimeRef.current = Date.now();
     touchKeyRef.current = key;
     touchAxisRef.current = null;
     touchWidthRef.current = e.currentTarget.getBoundingClientRect().width;
   }
   function handleCardTouchMove(key, e) {
     if (touchKeyRef.current !== key || touchStartXRef.current == null) return;
+    if (touchAxisRef.current === 'y') return; // 이미 스크롤로 확정됨
     const t = e.touches[0];
     const dx = t.clientX - touchStartXRef.current;
     const dy = t.clientY - touchStartYRef.current;
-    if (touchAxisRef.current == null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
-      touchAxisRef.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    const moved = Math.abs(dx) > 8 || Math.abs(dy) > 8;
+    if (!moved) return;
+    const heldLongEnough = (Date.now() - touchStartTimeRef.current) >= LONG_PRESS_MS;
+    if (!heldLongEnough) {
+      // 롱프레스 시간이 되기 전에 움직였다면 방향과 무관하게 스크롤로 확정
+      touchAxisRef.current = 'y';
+      return;
+    }
+    if (touchAxisRef.current == null) {
+      // 충분히 누른 뒤 처음 움직인 방향 — 가로 성분이 세로보다 뚜렷하게 클 때만 스와이프로 인정
+      touchAxisRef.current = Math.abs(dx) > Math.abs(dy) * 1.5 ? 'x' : 'y';
     }
     if (touchAxisRef.current === 'x') e.stopPropagation();
   }
@@ -134,7 +148,7 @@ export default function HomePanel() {
     touchStartXRef.current = null;
     touchStartYRef.current = null;
     touchAxisRef.current = null;
-    if (!isHorizontal) return; // 세로 스크롤이었으면 스와이프로 취급하지 않음
+    if (!isHorizontal) return; // 스크롤이었으면 스와이프로 취급하지 않음
     e.stopPropagation();
     if (dx < -24) {
       // 쓰레기통 폭(TRASH_W)만큼만 정확히 줄어들도록, 카드 실제 폭을 기준으로 축소 비율 계산
@@ -149,8 +163,15 @@ export default function HomePanel() {
   const activeFeed = feeds.find(f => f.start && !f.end);
   const activeSleep = sleeps.find(s => s.start && !s.end);
 
-  // 직전 24시간 상세 모달
+  // 직전 24시간 상세 모달 — detail24Date가 있으면 그 날짜의 "당일" 모드로 열림
   const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
+  const [detail24Date, setDetail24Date] = useState(null); // "YYYY-MM-DD"(KST) | null
+
+  // 요일 스트립에서 기록 있는 날짜를 탭하면 그 날짜의 "당일" 상세를 봄
+  function openDayDetail(dateStr) {
+    setDetail24Date(dateStr);
+    setDetail24('feed');
+  }
 
   // 홈 상단 응원 문구 — 앱을 처음 열 때 랜덤으로 고르고, 이후 탭을 오가는 동안에는 유지하되,
   // 앱이 백그라운드로 내려갔다가 다시 화면에 보이게 될 때(visibilitychange)마다 새로 랜덤으로 뽑는다.
@@ -214,7 +235,11 @@ export default function HomePanel() {
       diapers.some(d => { const t = new Date(d.time).getTime(); return t >= dayStartMs && t < dayEndMs; }) ||
       sleeps.some(s => { const t = new Date(s.start).getTime(); return t >= dayStartMs && t < dayEndMs; });
     const dateNum = kstDate(dayStartMs).getUTCDate();
-    return { label, has, today: dayStartMs === todayStartMs, dateLabel: (dateNum < 10 ? '0' + dateNum : '' + dateNum) + '일' };
+    return {
+      label, has, today: dayStartMs === todayStartMs,
+      dateLabel: (dateNum < 10 ? '0' + dateNum : '' + dateNum) + '일',
+      dateStr: kstDate(dayStartMs).toISOString().slice(0, 10),
+    };
   });
 
   // 직전 카드 클릭 → 수정 팝업
@@ -367,7 +392,11 @@ export default function HomePanel() {
       {/* 요일 스트립 — 이번 주 기록 있는 날엔 점, 오늘 요일엔 포인트색 밑줄 */}
       <div className="weekstrip">
         {weekDays.map((d, i) => (
-          <div key={i} className={`wday${d.has ? ' has' : ''}${d.today ? ' today' : ''}`}>
+          <div
+            key={i}
+            className={`wday${d.has ? ' has' : ''}${d.today ? ' today' : ''}${d.has ? ' clickable' : ''}`}
+            onClick={d.has ? () => openDayDetail(d.dateStr) : undefined}
+          >
             <span className="wlbl">{d.label}</span>
             <span className="wdate">{d.dateLabel}</span>
             <span className="wdot"></span>
@@ -432,7 +461,7 @@ export default function HomePanel() {
       )}
 
       {/* 오늘 요약 배너 — 평소엔 접혀 있다가 탭하면 "직전 24시간" 상세가 펼쳐짐 */}
-      <div className="sumcard" onClick={() => setSummaryOpen(v => !v)}>
+      <div className={`sumcard${summaryOpen ? ' open' : ''}`} onClick={() => setSummaryOpen(v => !v)}>
         <div className="sumhead">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
           <div className="txt">{todayDateStr} &middot; 오늘 <b>{todayCount}건</b> 기록했어요</div>
@@ -442,17 +471,17 @@ export default function HomePanel() {
           <>
             <div className="sumdiv"></div>
             <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)' }}>
-              <div className="sc" style={{ boxShadow:'none', padding:0 }} onClick={ev => { ev.stopPropagation(); setDetail24('feed'); }}>
+              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24('feed'); }}>
                 <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
                 <div className="sval" style={{ fontSize:'15px' }}>{feedMl > 0 ? `총 ${feedMl}ml` : `${feed24.length}회`}</div>
                 <div className="ssub">{feed24.length > 0 ? `${feed24.length}회 수유` : '기록 없음'}</div>
               </div>
-              <div className="sc" style={{ boxShadow:'none', padding:0 }} onClick={ev => { ev.stopPropagation(); setDetail24('diaper'); }}>
+              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24('diaper'); }}>
                 <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
                 <div className="sval" style={{ fontSize:'15px', whiteSpace:'nowrap' }}>{diaper24.length}회</div>
                 <div className="ssub">소변 {diaperWet24} &middot; 대변 {diaperSoiled24}</div>
               </div>
-              <div className="sc" style={{ boxShadow:'none', padding:0 }} onClick={ev => { ev.stopPropagation(); setDetail24('sleep'); }}>
+              <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24('sleep'); }}>
                 <div className="sr"><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
                 <div className="sval" style={{ fontSize:'15px' }}>{sleepMs > 0 ? durStr(sleepMs) : '0분'}</div>
                 <div className="ssub">{sleep24.length}회</div>
@@ -533,7 +562,11 @@ export default function HomePanel() {
 
       {/* 직전 24시간 상세 모달 */}
       {detail24 && (
-        <Home24hModal type={detail24} onClose={() => setDetail24(null)} />
+        <Home24hModal
+          type={detail24}
+          initialDate={detail24Date}
+          onClose={() => { setDetail24(null); setDetail24Date(null); }}
+        />
       )}
     </>
   );

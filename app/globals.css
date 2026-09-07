@@ -217,6 +217,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .wday .wdot{width:4px;height:4px;border-radius:50%;background:var(--nm-dark)}
 .wday.has .wdot{background:var(--sage);opacity:.6}
 .wday.today{color:var(--ink)}
+.wday.clickable{cursor:pointer}
+.wday.clickable:active{opacity:.6}
 .wday.today .wbar{width:100%;height:2.5px;border-radius:2px;background:var(--sage);max-width:22px}
 .wday .wbar{width:100%;height:2.5px;border-radius:2px;background:transparent;max-width:22px}
 
@@ -237,7 +239,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── HOME: "직전"+"직전 24시간" 통합 요약 카드 ── */
 .sumcard{background:var(--surf);border-radius:18px;padding:14px 15px 13px;margin-bottom:16px;box-shadow:var(--sh)}
-.sumhead{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.sumhead{display:flex;align-items:center;gap:9px;margin-bottom:0}
+.sumcard.open .sumhead{margin-bottom:12px}
 .sumhead svg{width:16px;height:16px;color:var(--sage);flex-shrink:0}
 .sumhead .sumchev{color:var(--muted);transition:transform .2s ease}
 .sumcard{cursor:pointer}
@@ -251,8 +254,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── HOME: "최근 기록" 스와이프 카드 ── */
 .rcards{display:flex;flex-direction:column;gap:10px}
-.rswipe{position:relative;overflow:hidden;border-radius:18px}
-.rcard{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--surf);box-shadow:var(--sh);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;-webkit-tap-highlight-color:transparent}
+.rswipe{position:relative;border-radius:16px}
+.rcard{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;border:1px solid var(--bdr);background:var(--surf);box-shadow:var(--sh);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;-webkit-tap-highlight-color:transparent}
 .rcard.swiped{transform-origin:left center;box-shadow:var(--sh-inset)}
 .rico{width:36px;height:36px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .rico svg{width:17px;height:17px}
@@ -265,7 +268,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .rval{flex-shrink:0;text-align:right}
 .rvaltime{font-size:12.5px;font-weight:700;color:var(--sage);display:inline-block;border-bottom:2px solid var(--sage);padding-bottom:2px;white-space:nowrap}
 .rvalago{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}
-.rtrash{position:absolute;top:0;right:0;bottom:0;width:58px;border-radius:0 18px 18px 0;background:var(--alert);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rtrash{position:absolute;top:0;right:0;bottom:0;width:58px;border-radius:0 16px 16px 0;background:var(--alert);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .rtrash svg{width:17px;height:17px}
 .tltime{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .eago{font-size:11px;color:var(--muted)}
