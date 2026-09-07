@@ -4,7 +4,7 @@
    main에 대응 값이 없어 이 크림 팔레트에 어울리도록 새로 골랐다. */
 :root {
   --bg:#F7F2E9;--surf:#F7F2E9;--surf2:#F7F2E9;--ink:#2E2A22;--muted:#9C9284;
-  --nm-dark:#E4DCC9;--nm-light:#FFFFFF;--nm-blur:26px;--nm-dist:14px;
+  --nm-dark:#E4DCC9;--nm-light:#FFFFFF;--nm-blur:7px;--nm-dist:3px;
   --cw:#5E9E8D;--ww:rgba(94,158,141,.12);
   --sage:#7660A2;--s-wash:#EDE7F6;
   --cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;
@@ -40,7 +40,7 @@
   --warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);
 }}
 :root[data-theme="dark"]{--bg:#18150F;--surf:#18150F;--surf2:#18150F;--ink:#EDE8E1;--muted:#8A8278;--nm-dark:#0F0C08;--nm-light:#2C271F;--nm-blur:20px;--nm-dist:18px;--cw:#7FAF91;--ww:rgba(127,175,145,.13);--sage:#7FAF91;--s-wash:rgba(127,175,145,.13);--cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;--fw:rgba(127,175,145,.13);--dw:rgba(196,154,107,.12);--sw:rgba(120,153,184,.12);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);--cn:#D4A468;--nw:rgba(212,164,104,.16);--cv:#6FA8A8;--vw:rgba(111,168,168,.16);--cy:#D08A85;--yw:rgba(208,138,133,.16);--bdr:rgba(0,0,0,0);--sh: var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset: inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm: 4px 4px 8px var(--nm-dark), -4px -4px 8px var(--nm-light);--r-btn:100px;--r-input:16px;--up:#5B93F5;--down:#FF6B6F;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}
-:root[data-theme="light"]{--bg:#F7F2E9;--surf:#F7F2E9;--surf2:#F7F2E9;--ink:#2E2A22;--muted:#9C9284;--nm-dark:#E4DCC9;--nm-light:#FFFFFF;--nm-blur:26px;--nm-dist:14px;--cw:#5E9E8D;--ww:rgba(94,158,141,.12);--sage:#7660A2;--s-wash:#EDE7F6;--cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;--fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--cn:#C08A3D;--nw:rgba(192,138,61,.13);--cv:#4A8C99;--vw:rgba(74,140,153,.12);--cy:#B5615C;--yw:rgba(181,97,92,.12);--bdr:rgba(0,0,0,0);--sh: var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset: inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm: 6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);--r-btn:100px;--r-input:16px;--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);}
+:root[data-theme="light"]{--bg:#F7F2E9;--surf:#F7F2E9;--surf2:#F7F2E9;--ink:#2E2A22;--muted:#9C9284;--nm-dark:#E4DCC9;--nm-light:#FFFFFF;--nm-blur:7px;--nm-dist:3px;--cw:#5E9E8D;--ww:rgba(94,158,141,.12);--sage:#7660A2;--s-wash:#EDE7F6;--cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;--fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--cn:#C08A3D;--nw:rgba(192,138,61,.13);--cv:#4A8C99;--vw:rgba(74,140,153,.12);--cy:#B5615C;--yw:rgba(181,97,92,.12);--bdr:rgba(0,0,0,0);--sh: var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset: inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm: 6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);--r-btn:100px;--r-input:16px;--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);}
 
 /* ── 아이 성별별 강조색 자동 전환 ─────────────────────────────
    수유/기저귀/수면처럼 "종류"를 구분해야 하는 색(--cf/--cd/--cs/--cw)은 그대로 두고,
@@ -160,7 +160,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .sbtn.on{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:600}
 
 /* ── CARDS ── */
-.sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 13px;box-shadow:var(--sh);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;min-width:0;overflow:hidden}
+.sc{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:10px 11px;box-shadow:var(--sh);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;min-width:0;overflow:hidden}
 .sc:active{transform:scale(.97)}
 /* .sc와 시각적으로 동일하지만, 그 자체는 클릭해서 어딘가로 이동하지 않는 "정적" 그룹 박스용.
    .sc를 그대로 쓰면 안에 있는 버튼을 누를 때 :active 눌림 효과가 조상인 이 박스까지 전파되어
@@ -192,7 +192,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .sgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:16px}
 .sr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
 .slbl{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.sico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--sh-inset)}
+.sico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--sh-inset)}
 .sico svg{width:17px;height:17px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sico.f{background:var(--fw)}.sico.f svg{stroke:var(--cf)}
 .sico.d{background:var(--dw)}.sico.d svg{stroke:var(--cd)}
