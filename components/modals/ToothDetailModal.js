@@ -70,6 +70,7 @@ export default function ToothDetailModal() {
         <div className="mhandle" style={{ background: 'var(--cv)', opacity: 0.6 }} />
         <div className="mtitle" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--cv)', display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ fontWeight: 700, color: 'var(--cv)' }}>{tooth.num}</span>
           {tooth.label}
         </div>
         <div className="mbody">

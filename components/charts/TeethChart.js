@@ -5,7 +5,13 @@ import { fmtFull } from '../../lib/helpers';
 // 유치(젖니) 20개 — 정중선에서 바깥쪽 순서로 이름 붙임 (임상 표기 대신 보호자가 이해하기 쉬운 이름 사용)
 const TOOTH_NAMES = ['중절치', '측절치', '견치', '제1유구치', '제2유구치'];
 
-function buildArch(arch) {
+// 소아치과에서 흔히 쓰는 유치 표기법(Universal 방식, A~T) — 상악 오른쪽 어금니(A)에서 시작해
+// 상악을 가로질러 상악 왼쪽 어금니(J)까지, 이어서 하악 왼쪽 어금니(K)부터 하악 오른쪽 어금니(T)까지
+// 시계 방향으로 한 바퀴 도는 순서. 그림과 목록에 같은 번호를 표시해 서로 매칭하기 쉽게 한다.
+const UPPER_LETTERS = ['J', 'I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A']; // 화면 왼쪽→오른쪽
+const LOWER_LETTERS = ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T']; // 화면 왼쪽→오른쪽
+
+function buildArch(arch, letters) {
   // 왼쪽 바깥→정중선, 정중선→오른쪽 바깥 순서로 10개 배열 (화면에 보이는 좌우 기준)
   const left = [...TOOTH_NAMES].reverse().map((name, i) => ({
     id: `${arch}_L${4 - i}`, label: `${arch === 'upper' ? '상악' : '하악'} 왼쪽 ${name}`,
@@ -13,11 +19,11 @@ function buildArch(arch) {
   const right = TOOTH_NAMES.map((name, i) => ({
     id: `${arch}_R${i}`, label: `${arch === 'upper' ? '상악' : '하악'} 오른쪽 ${name}`,
   }));
-  return [...left, ...right];
+  return [...left, ...right].map((t, i) => ({ ...t, num: letters[i] }));
 }
 
-const UPPER_TEETH = buildArch('upper');
-const LOWER_TEETH = buildArch('lower');
+const UPPER_TEETH = buildArch('upper', UPPER_LETTERS);
+const LOWER_TEETH = buildArch('lower', LOWER_LETTERS);
 export const ALL_TEETH = [...UPPER_TEETH, ...LOWER_TEETH];
 
 // teethStatus의 각 값은 예전엔 문자열('YYYY-MM-DD', 난 날짜만) 이었는데,
@@ -65,7 +71,10 @@ export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
       >
         <circle cx={pt.x} cy={pt.y} r="12" fill={erupted ? 'var(--cv)' : 'var(--surf)'}
           stroke={isSelected ? 'var(--cv)' : 'var(--muted)'} strokeWidth={isSelected ? 2.5 : 1.5} strokeOpacity={isSelected ? 1 : 0.5} />
-        {erupted && <circle cx={pt.x} cy={pt.y} r="4" fill="var(--surf)" opacity="0.9" />}
+        <text x={pt.x} y={pt.y} textAnchor="middle" dominantBaseline="central"
+          fontSize="10" fontWeight="700" fill={erupted ? 'var(--surf)' : 'var(--muted)'}>
+          {tooth.num}
+        </text>
       </g>
     );
   }
@@ -97,7 +106,7 @@ export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
             <div key={t.id} className="ec" style={{ padding: '8px 12px', cursor: 'pointer' }} onClick={() => onOpenDetail(t.id)}>
               <div className="edot v" />
               <div className="emain">
-                <div className="epri" style={{ fontSize: 13 }}>{t.label}</div>
+                <div className="epri" style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--cv)', marginRight: 5 }}>{t.num}</span>{t.label}</div>
                 {info.records.length > 0 && (
                   <div className="esec" style={{ fontSize: 11 }}>추가 기록 {info.records.length}건</div>
                 )}

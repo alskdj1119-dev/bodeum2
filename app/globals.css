@@ -215,12 +215,12 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── HOME: 요일 스트립 ── */
 .weekstrip{display:flex;justify-content:space-between;margin-bottom:16px}
-.wday{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);font-weight:600;flex:1}
+.wday{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);font-weight:600;flex:1;border:1px solid transparent;border-radius:12px;padding:4px 2px 6px;margin:0 3px;background:transparent;box-shadow:none}
 .wday .wdate{font-size:8.5px;font-weight:600;color:var(--muted);opacity:.55;letter-spacing:-.02em}
 .wday.today .wdate{opacity:.75}
 .wday .wdot{width:4px;height:4px;border-radius:50%;background:var(--nm-dark)}
 .wday.has .wdot{background:var(--sage);opacity:.6}
-.wday.today{color:var(--ink);border:1px solid var(--bdr);border-radius:12px;padding:4px 2px 6px;margin:0 3px;background:var(--surf);box-shadow:var(--sh)}
+.wday.today{color:var(--ink);border-color:var(--bdr);background:var(--surf);box-shadow:var(--sh)}
 .wday.clickable{cursor:pointer}
 .wday.clickable:active{opacity:.6}
 .wday.today .wbar{width:100%;height:2.5px;border-radius:2px;background:var(--sage);max-width:22px}
