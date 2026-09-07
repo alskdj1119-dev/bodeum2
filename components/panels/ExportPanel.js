@@ -15,27 +15,25 @@ const VACCINE_NAME = {
   hib1: 'Hib 1차', pcv1: '폐렴구균 1차', rota1: '로타바이러스 1차', hepb3: 'B형간염 3차', dtap3: 'DTaP 3차',
   hib3: 'Hib 3차', pcv3: '폐렴구균 3차', hepa1: 'A형간염 1차', mmr1: 'MMR 1차', var: '수두', je1: '일본뇌염 1차',
 };
+const VACCINE_STATUS_LABEL = { done: '접종완료', skip: '미접종', before: '접종이전' };
 
 const FORMAT_OPTS = [
-  { code: 'both', label: 'JSON + CSV' },
-  { code: 'json', label: 'JSON만' },
-  { code: 'csv',  label: 'CSV만' },
+  { code: 'both',  label: 'JSON + 엑셀' },
+  { code: 'json',  label: 'JSON만' },
+  { code: 'excel', label: '엑셀만' },
 ];
 
-function fmtDT(iso) {
-  if (!iso) return '';
+function splitDT(iso) {
+  if (!iso) return { date: '', time: '' };
   const d = kstDate(new Date(iso).getTime());
-  return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`;
-}
-
-function csvCell(v) {
-  const s = String(v ?? '');
-  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-  return s;
+  return {
+    date: `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())}`,
+    time: `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`,
+  };
 }
 
 function download(filename, content, mime) {
-  const blob = new Blob([content], { type: mime });
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -46,91 +44,96 @@ function download(filename, content, mime) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-function feedDetail(f) {
-  const base = FEED_TYPE_LABEL[f.type] || '수유';
-  const sub = f.subtype ? FEED_SUBTYPE_LABEL[f.subtype] : '';
-  const label = sub ? `${base} · ${sub}` : base;
+// ── 카테고리별 상세 컬럼으로 나눈 행(row) 빌더들 (엑셀 시트용) ──
+function feedRow(f) {
+  const { date, time } = splitDT(f.start || f.time);
   const amt = feedAmountMl(f);
-  const amtStr = f.consumedAmount != null && amt != null ? `준비 ${amt}ml / 섭취 ${f.consumedAmount}ml`
-    : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
-    : amt ? `${amt}ml` : '';
   let durMs = null;
   if (f.sideTimes) durMs = Object.values(f.sideTimes).reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
   else if (f.start && f.end) durMs = new Date(f.end) - new Date(f.start);
-  const dur = durMs ? durStr(durMs) : '';
-  const side = f.side ? FEED_SIDE_LABEL[f.side] : '';
-  return [label, amtStr, dur, side, f.note || ''].filter(Boolean).join(' · ');
+  return {
+    날짜: date, 시간: time,
+    종류: FEED_TYPE_LABEL[f.type] || f.type || '',
+    세부: f.subtype ? (FEED_SUBTYPE_LABEL[f.subtype] || '') : '',
+    방향: f.side ? (FEED_SIDE_LABEL[f.side] || '') : '',
+    '준비량(ml)': amt ?? '',
+    '섭취량(ml)': f.consumedAmount ?? '',
+    수유시간: durMs ? durStr(durMs) : '',
+    메모: f.note || '',
+  };
 }
 
-function diaperDetail(d) {
-  const base = DIAPER_TYPE_LABEL[d.type] || d.type;
-  const color = d.color ? DIAPER_COLOR_LABEL[d.color] : '';
-  const cons = d.consistency ? DIAPER_CONSISTENCY_LABEL[d.consistency] : '';
-  const rash = d.rash ? '기저귀 발진' : '';
-  return [base, color, cons, rash, d.note || ''].filter(Boolean).join(' · ');
+function diaperRow(d) {
+  const { date, time } = splitDT(d.time);
+  return {
+    날짜: date, 시간: time,
+    구분: DIAPER_TYPE_LABEL[d.type] || d.type || '',
+    색상: d.color ? (DIAPER_COLOR_LABEL[d.color] || '') : '',
+    상태: d.consistency ? (DIAPER_CONSISTENCY_LABEL[d.consistency] || '') : '',
+    발진: d.rash ? 'Y' : '',
+    메모: d.note || '',
+  };
 }
 
-function sleepDetail(s) {
-  const place = s.place ? SLEEP_PLACE_LABEL[s.place] : '';
+function sleepRow(s) {
+  const start = splitDT(s.start);
+  const end = splitDT(s.end);
   const dur = (s.start && s.end) ? durStr(new Date(s.end) - new Date(s.start)) : '진행 중';
-  return ['수면', place, dur, s.note || ''].filter(Boolean).join(' · ');
+  return {
+    날짜: start.date, 시작시간: start.time, 종료시간: s.end ? end.time : '',
+    장소: s.place ? (SLEEP_PLACE_LABEL[s.place] || '') : '',
+    수면시간: dur,
+    메모: s.note || '',
+  };
 }
 
-function tempDetail(t) {
-  const method = t.method ? TEMP_METHOD_LABEL[t.method] : '';
-  return [`체온 ${t.temp}℃`, method, t.note || ''].filter(Boolean).join(' · ');
+function weightRow(w) { const { date, time } = splitDT(w.time); return { 날짜: date, 시간: time, '체중(kg)': w.kg ?? '' }; }
+function heightRow(h) { const { date, time } = splitDT(h.time); return { 날짜: date, 시간: time, '키(cm)': h.cm ?? '' }; }
+function headCircRow(c) { const { date, time } = splitDT(c.time); return { 날짜: date, 시간: time, '머리둘레(cm)': c.cm ?? '' }; }
+
+function tempRow(t) {
+  const { date, time } = splitDT(t.time);
+  return { 날짜: date, 시간: time, '체온(℃)': t.temp ?? '', 측정부위: t.method ? (TEMP_METHOD_LABEL[t.method] || '') : '', 메모: t.note || '' };
 }
 
-function solidDetail(s) {
-  const reaction = s.reaction ? SOLID_REACTION_LABEL[s.reaction] : '';
-  const amt = s.amount != null ? `${s.amount}g` : '';
-  return [s.food, amt, reaction, s.note || ''].filter(Boolean).join(' · ');
+function solidRow(s) {
+  const { date, time } = splitDT(s.time);
+  return { 날짜: date, 시간: time, 음식: s.food || '', '양(g)': s.amount ?? '', 반응: s.reaction ? (SOLID_REACTION_LABEL[s.reaction] || '') : '', 메모: s.note || '' };
 }
 
-function visitDetail(v) {
-  const followUp = v.followUpDate ? `다음 방문 ${v.followUpDate}` : '';
-  return [v.hospital, v.reason, v.diagnosis, v.prescription, followUp, v.note].filter(Boolean).join(' · ');
+function visitRow(v) {
+  const { date, time } = splitDT(v.time);
+  return { 날짜: date, 시간: time, 병원명: v.hospital || '', 방문사유: v.reason || '', 진단: v.diagnosis || '', 처방: v.prescription || '', 다음방문일: v.followUpDate || '', 메모: v.note || '' };
 }
 
-function symptomDetail(s) {
-  const med = s.medicine ? `${s.medicine}${s.dose ? ' ' + s.dose : ''}` : '';
-  return [s.symptom, med, s.resolved ? '호전됨' : '진행 중', s.note].filter(Boolean).join(' · ');
+function symptomRow(s) {
+  const { date, time } = splitDT(s.time);
+  return { 날짜: date, 시간: time, 증상: s.symptom || '', 약물: s.medicine || '', 용량: s.dose || '', 호전여부: s.resolved ? '호전됨' : '진행 중', 메모: s.note || '' };
 }
 
-// 모든 기록 카테고리를 "날짜 · 카테고리 · 내용" 한 줄짜리 표로 합친다 (CSV용).
-function buildRows(data, teethStatus, vaccineStatus) {
+function buildTeethRows(teethStatus) {
   const rows = [];
-  (data.feeds || []).forEach(f => rows.push({ date: fmtDT(f.start || f.time), category: '수유', detail: feedDetail(f) }));
-  (data.diapers || []).forEach(d => rows.push({ date: fmtDT(d.time), category: '기저귀', detail: diaperDetail(d) }));
-  (data.sleeps || []).forEach(s => rows.push({ date: fmtDT(s.start), category: '수면', detail: sleepDetail(s) }));
-  (data.weights || []).forEach(w => rows.push({ date: fmtDT(w.time), category: '체중', detail: `${w.kg}kg` }));
-  (data.heights || []).forEach(h => rows.push({ date: fmtDT(h.time), category: '키', detail: `${h.cm}cm` }));
-  (data.headCircs || []).forEach(c => rows.push({ date: fmtDT(c.time), category: '머리둘레', detail: `${c.cm}cm` }));
-  (data.temps || []).forEach(t => rows.push({ date: fmtDT(t.time), category: '체온', detail: tempDetail(t) }));
-  (data.solids || []).forEach(s => rows.push({ date: fmtDT(s.time), category: '이유식', detail: solidDetail(s) }));
-  (data.visits || []).forEach(v => rows.push({ date: fmtDT(v.time), category: '병원방문', detail: visitDetail(v) }));
-  (data.symptoms || []).forEach(s => rows.push({ date: fmtDT(s.time), category: '증상·투약', detail: symptomDetail(s) }));
-
-  Object.entries(teethStatus || {}).forEach(([id, v]) => {
-    const info = normalizeToothInfo(v);
+  ALL_TEETH.forEach(t => {
+    const info = normalizeToothInfo(teethStatus?.[t.id]);
     if (!info) return;
-    const tooth = ALL_TEETH.find(t => t.id === id);
-    const label = tooth?.label || id;
-    rows.push({ date: info.date, category: '치아', detail: `${label} 남` });
-    (info.records || []).forEach(r => rows.push({
-      date: r.date, category: '치아',
-      detail: `${label} · ${RECORD_TYPE_LABEL[r.type] || r.type}${r.memo ? ' · ' + r.memo : ''}`,
-    }));
+    rows.push({ 치아: t.label, 난날짜: info.date, 기록종류: '남', 기록날짜: info.date, 메모: '' });
+    [...info.records].sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach(r => {
+      rows.push({ 치아: t.label, 난날짜: info.date, 기록종류: RECORD_TYPE_LABEL[r.type] || r.type, 기록날짜: r.date, 메모: r.memo || '' });
+    });
   });
+  return rows;
+}
 
+function buildVaccineRows(vaccineStatus) {
+  const rows = [];
   Object.entries(vaccineStatus || {}).forEach(([code, v]) => {
     const info = typeof v === 'string' ? { status: v, doneDate: '' } : (v || {});
-    if (info.status === 'done' && info.doneDate) {
-      rows.push({ date: info.doneDate, category: '예방접종', detail: `${VACCINE_NAME[code] || code} 접종완료` });
-    }
+    rows.push({
+      백신명: VACCINE_NAME[code] || code,
+      상태: VACCINE_STATUS_LABEL[info.status] || '접종이전',
+      접종완료일: info.doneDate || '',
+    });
   });
-
-  rows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   return rows;
 }
 
@@ -163,15 +166,32 @@ export default function ExportPanel() {
     download(fileName('json'), JSON.stringify(payload, null, 2), 'application/json');
   }
 
-  function exportCSV(data) {
-    const rows = buildRows(data, teethStatus, vaccineStatus);
-    const lines = [['날짜', '카테고리', '내용'].join(',')]
-      .concat(rows.map(r => [csvCell(r.date), csvCell(r.category), csvCell(r.detail)].join(',')));
-    // 엑셀에서 한글이 깨지지 않도록 UTF-8 BOM을 붙인다.
-    download(fileName('csv'), '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+  // 카테고리별로 시트를 나눈 엑셀(.xlsx) 파일 생성. 라이브러리는 다운로드 시점에만 불러와
+  // (동적 import) 이 화면을 쓰지 않는 사람의 초기 로딩 용량에는 영향이 없게 한다.
+  async function exportExcel(data) {
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+    const addSheet = (name, rows) => {
+      const sheet = rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([['기록 없음']]);
+      XLSX.utils.book_append_sheet(wb, sheet, name);
+    };
+    addSheet('수유', data.feeds.map(feedRow));
+    addSheet('기저귀', data.diapers.map(diaperRow));
+    addSheet('수면', data.sleeps.map(sleepRow));
+    addSheet('체중', data.weights.map(weightRow));
+    addSheet('키', data.heights.map(heightRow));
+    addSheet('머리둘레', data.headCircs.map(headCircRow));
+    addSheet('체온', data.temps.map(tempRow));
+    addSheet('이유식', data.solids.map(solidRow));
+    addSheet('병원방문', data.visits.map(visitRow));
+    addSheet('증상투약', data.symptoms.map(symptomRow));
+    addSheet('치아', buildTeethRows(teethStatus));
+    addSheet('예방접종', buildVaccineRows(vaccineStatus));
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    download(fileName('xlsx'), new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   }
 
-  function handleDownload() {
+  async function handleDownload() {
     const data = buildDataset();
     const total = CATEGORIES.reduce((acc, k) => acc + data[k].length, 0)
       + Object.keys(teethStatus || {}).length + Object.keys(vaccineStatus || {}).length;
@@ -180,7 +200,7 @@ export default function ExportPanel() {
       return;
     }
     if (format === 'json' || format === 'both') exportJSON(data);
-    if (format === 'csv' || format === 'both') exportCSV(data);
+    if (format === 'excel' || format === 'both') await exportExcel(data);
     showToast('다운로드가 시작됐어요');
   }
 
@@ -212,7 +232,7 @@ export default function ExportPanel() {
 
         <div style={{ fontSize: 11, color: 'var(--muted)', margin: '10px 0 16px', lineHeight: 1.6 }}>
           <b>JSON</b> — 모든 원본 데이터를 그대로 담은 백업 파일, AI 분석에 붙여넣기 좋아요.<br/>
-          <b>CSV</b> — 날짜순으로 한 줄씩 정리한 표, 엑셀/구글시트로 열어 병원에 보여드리기 좋아요.
+          <b>엑셀</b> — 카테고리별로 시트가 나뉘고, 입력값도 세부 항목별 열로 정리돼요. 병원 진료 때 보여드리기 좋아요.
         </div>
 
         <button className="bpri" style={{ width: '100%' }} onClick={handleDownload}>
