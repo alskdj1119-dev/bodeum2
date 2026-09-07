@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import { fmtFull, elapsedStr, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 import TeethChart from '../charts/TeethChart';
+import { normalizeToothInfo } from '../charts/TeethChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
 const VACCINES = [
@@ -111,11 +112,16 @@ export default function HealthPanel() {
   function toggleTooth(toothId) {
     const cur = { ...teethStatus };
     if (cur[toothId]) delete cur[toothId];
-    else cur[toothId] = kstDate(Date.now()).toISOString().slice(0, 10);
+    else cur[toothId] = { date: kstDate(Date.now()).toISOString().slice(0, 10), records: [] };
     saveTeethStatus(cur);
   }
   function setToothDate(toothId, date) {
-    saveTeethStatus({ ...teethStatus, [toothId]: date });
+    const info = normalizeToothInfo(teethStatus[toothId]) || { date: '', records: [] };
+    saveTeethStatus({ ...teethStatus, [toothId]: { date, records: info.records } });
+  }
+  function openToothDetail(toothId) {
+    setEditId(toothId);
+    setOpenModal('toothDetail');
   }
 
   // vaccineStatus[code]는 예전엔 문자열('before'|'done'|'skip')만 저장했는데,
@@ -389,7 +395,7 @@ export default function HealthPanel() {
 
       {/* ─── 치아 탭 ─── */}
       {tab === 'teeth' && (
-        <TeethChart teethStatus={teethStatus} onToggle={toggleTooth} onDateChange={setToothDate} />
+        <TeethChart teethStatus={teethStatus} onToggle={toggleTooth} onDateChange={setToothDate} onOpenDetail={openToothDetail} />
       )}
     </>
   );

@@ -25,6 +25,7 @@ import HealthPanel from './panels/HealthPanel';
 import TrackingPanel from './panels/TrackingPanel';
 import GrowthPanel from './panels/GrowthPanel';
 import SolidPanel from './panels/SolidPanel';
+import ExportPanel from './panels/ExportPanel';
 import FeedModal from './modals/FeedModal';
 import FeedSideChoiceModal from './modals/FeedSideChoiceModal';
 import DiaperModal from './modals/DiaperModal';
@@ -38,10 +39,11 @@ import VisitModal from './modals/VisitModal';
 import SymptomModal from './modals/SymptomModal';
 import HeightModal from './modals/HeightModal';
 import HeadCircModal from './modals/HeadCircModal';
+import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
 
-const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings'];
+const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
@@ -52,6 +54,7 @@ const BACK_TARGET = {
   babyInfo: 'settings', notifSettings: 'settings', familyCode: 'settings',
   feedSettings: 'settings',
   cardColorSettings: 'settings',
+  export: 'settings',
   recalcFeeds: 'feedSettings',
   notifHistory: 'home',
 };
@@ -231,6 +234,7 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('feedSettings')}><FeedSettingsPanel /></div>
         <div className="panel" ref={panelRef('recalcFeeds')}><RecalcFeedsPanel /></div>
         <div className="panel" ref={panelRef('cardColorSettings')}><CardColorSettingsPanel /></div>
+        <div className="panel" ref={panelRef('export')}><ExportPanel /></div>
         <div className="panel" ref={panelRef('familyCode')}><FamilyCodePanel /></div>
         <div className="panel" ref={panelRef('notifSettings')}><NotifSettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
@@ -252,6 +256,7 @@ export default function BodeumApp() {
       {openModal === 'symptom' && <SymptomModal />}
       {openModal === 'height' && <HeightModal />}
       {openModal === 'headCirc' && <HeadCircModal />}
+      {openModal === 'toothDetail' && <ToothDetailModal />}
       {openModal === 'weight' && <WeightModal />}
       {openModal === 'consumed' && <ConsumedModal />}
       {openModal === 'temp' && <TempModal />}

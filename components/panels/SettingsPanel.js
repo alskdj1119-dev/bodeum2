@@ -87,6 +87,19 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
 
+      <button className="settmenu" onClick={() => goTab('export', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">기록 내보내기</div>
+          <div className="settmenu-sub">전체 기록을 JSON·CSV 파일로 다운로드</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+
       <p className="seclbl" style={{ margin: '18px 0 10px' }}>기타</p>
 
       <button className="settmenu" onClick={() => goTab('changelog', 'forward')}>

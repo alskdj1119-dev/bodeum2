@@ -19,6 +19,15 @@ const UPPER_TEETH = buildArch('upper');
 const LOWER_TEETH = buildArch('lower');
 export const ALL_TEETH = [...UPPER_TEETH, ...LOWER_TEETH];
 
+// teethStatus의 각 값은 예전엔 문자열('YYYY-MM-DD', 난 날짜만) 이었는데,
+// 치료·특이사항·발치 같은 추가 기록도 남길 수 있도록 { date, records: [...] } 객체로 확장했다.
+// 기존에 문자열로 저장된 값도 그대로 읽을 수 있도록 여기서 정규화한다.
+export function normalizeToothInfo(v) {
+  if (!v) return null;
+  if (typeof v === 'string') return { date: v, records: [] };
+  return { date: v.date || '', records: v.records || [] };
+}
+
 const W = 320;
 
 function archPoints(baselineY, amplitude, curveDown) {
@@ -34,8 +43,9 @@ function archPoints(baselineY, amplitude, curveDown) {
 
 // 치아 기록 다이어그램 — 위/아래 잇몸 아치 모양으로 20개 유치를 배치하고,
 // 탭하면 오늘 날짜로 "났음" 표시, 다시 탭하면 취소한다.
-// teethStatus: { [toothId]: 'YYYY-MM-DD' } / onToggle(toothId)
-export default function TeethChart({ teethStatus, onToggle, onDateChange }) {
+// 아래 목록의 각 치아 행을 탭하면 onOpenDetail(toothId)로 상세(추가 기록) 화면을 연다.
+// teethStatus: { [toothId]: 'YYYY-MM-DD' | { date, records } } / onToggle(toothId)
+export default function TeethChart({ teethStatus, onToggle, onDateChange, onOpenDetail }) {
   const [selected, setSelected] = useState(null);
   const upperPts = archPoints(55, 28, false);
   const lowerPts = archPoints(105, 28, true);
@@ -43,8 +53,8 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange }) {
   const eruptedCount = Object.keys(teethStatus || {}).length;
 
   function ToothDot({ tooth, pt }) {
-    const date = teethStatus?.[tooth.id];
-    const erupted = !!date;
+    const info = normalizeToothInfo(teethStatus?.[tooth.id]);
+    const erupted = !!info;
     const isSelected = selected === tooth.id;
     return (
       <g
@@ -59,9 +69,10 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange }) {
     );
   }
 
-  const erupted = ALL_TEETH.filter(t => teethStatus?.[t.id]).sort((a, b) =>
-    (teethStatus[a.id] || '').localeCompare(teethStatus[b.id] || '')
-  );
+  const erupted = ALL_TEETH
+    .map(t => ({ t, info: normalizeToothInfo(teethStatus?.[t.id]) }))
+    .filter(x => x.info)
+    .sort((a, b) => (a.info.date || '').localeCompare(b.info.date || ''));
 
   return (
     <div>
@@ -81,16 +92,20 @@ export default function TeethChart({ teethStatus, onToggle, onDateChange }) {
 
       {erupted.length > 0 && (
         <div style={{ marginTop: 10 }}>
-          {erupted.map(t => (
-            <div key={t.id} className="ec" style={{ padding: '8px 12px' }}>
+          {erupted.map(({ t, info }) => (
+            <div key={t.id} className="ec" style={{ padding: '8px 12px', cursor: 'pointer' }} onClick={() => onOpenDetail(t.id)}>
               <div className="edot v" />
               <div className="emain">
                 <div className="epri" style={{ fontSize: 13 }}>{t.label}</div>
+                {info.records.length > 0 && (
+                  <div className="esec" style={{ fontSize: 11 }}>추가 기록 {info.records.length}건</div>
+                )}
               </div>
-              <input type="date" className="finp" value={teethStatus[t.id]}
+              <input type="date" className="finp" value={info.date}
+                onClick={e => e.stopPropagation()}
                 onChange={e => onDateChange(t.id, e.target.value)}
                 style={{ width: 'auto', padding: '4px 8px', fontSize: 12 }} />
-              <button className="edel" onClick={() => onToggle(t.id)}>
+              <button className="edel" onClick={e => { e.stopPropagation(); onToggle(t.id); }}>
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
