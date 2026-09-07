@@ -19,7 +19,7 @@ function StatBar({ value, max, color }) {
 
 function StatCard({ label, value, sub, color }) {
   return (
-    <div style={{ flex: 1, background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', minWidth: 0, boxShadow: 'var(--sh-sm)' }}>
+    <div style={{ flex: 1, background: 'var(--surf2)', border: '1.5px solid var(--btn-bdr)', borderRadius: 14, padding: '12px 14px', minWidth: 0, boxShadow: 'var(--sh-sm)' }}>
       <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{sub}</div>}
@@ -51,7 +51,7 @@ function FeedDetail({ records, onEdit }) {
 
       {/* 시간대별 분포 */}
       {count > 0 && (
-        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
+        <div style={{ background: 'var(--surf2)', border: '1.5px solid var(--btn-bdr)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수유</div>
           <HourBarChart buckets={hourBuckets} color="var(--cf)" formatTip={(h, v) => `${h}시대: ${v}회`} />
         </div>
@@ -109,7 +109,7 @@ function DiaperDetail({ records, onEdit, periodLabel }) {
 
       {/* 분류 바 */}
       {total > 0 && (
-        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
+        <div style={{ background: 'var(--surf2)', border: '1.5px solid var(--btn-bdr)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>유형별 비율</div>
           {[{ label: '소변', count: wet, color: 'var(--cf)' }, { label: '대변', count: soiled, color: 'var(--cd)' }, { label: '소변+대변', count: both, color: 'var(--cs)' }].map(item => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -170,7 +170,7 @@ function SleepDetail({ records, onEdit, periodLabel }) {
       </div>
 
       {count > 0 && (
-        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
+        <div style={{ background: 'var(--surf2)', border: '1.5px solid var(--btn-bdr)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수면</div>
           <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />
         </div>

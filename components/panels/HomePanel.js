@@ -394,12 +394,6 @@ export default function HomePanel() {
           {encouragePhrase}
         </h1>
         <div style={{ display:'flex', alignItems:'flex-start', gap:'10px', flexShrink:0 }}>
-          {dayCount !== null && (
-            <div style={{ textAlign:'right', fontSize:'11px', color:'var(--muted)', lineHeight:'1.5', paddingTop:'2px' }}>
-              <strong style={{ fontSize:'15px', color:'var(--sage)' }}>{baby.name || '아이'}이와</strong><br/>
-              만난지 <strong style={{ color:'var(--sage)' }}>{dayCount}일차</strong>
-            </div>
-          )}
           <div style={{ position:'relative' }}>
             <button
               className={`qplus${quickOpen ? ' open' : ''}`}
@@ -447,19 +441,20 @@ export default function HomePanel() {
         ))}
       </div>
 
-      {/* 아이가 2명 이상 등록돼 있을 때만 보이는 전환 칩 — 1명뿐이면 화면을 복잡하게 하지 않도록 숨김 */}
-      {babies.length > 1 && (
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 2 }}>
+      {/* 아이 전환 칩 — 아이가 1명뿐이어도 칩 1개는 항상 보이고, 그 옆(맨 오른쪽)에 "만난지 N일차"가 붙는다 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 2 }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: '1 1 auto', minWidth: 0 }}>
           {babies.map(b => {
             const on = b.id === activeBabyId;
             const icon = b.gender === 'boy' ? '👦' : b.gender === 'girl' ? '👧' : '🧒';
             return (
               <button key={b.id} onClick={() => switchBaby(b.id)} style={{
                 flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
-                padding: '7px 14px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                padding: '7px 14px', borderRadius: 999, cursor: 'pointer',
                 fontSize: 13, fontWeight: on ? 700 : 500,
                 color: on ? '#fff' : 'var(--ink)',
                 background: on ? 'var(--sage)' : 'var(--surf)',
+                border: on ? '1.5px solid var(--sage)' : '1.5px solid var(--btn-bdr)',
                 boxShadow: on ? 'var(--sh-sm)' : 'var(--sh-inset)',
               }}>
                 <span>{icon}</span>{b.name || '아이'}
@@ -467,7 +462,13 @@ export default function HomePanel() {
             );
           })}
         </div>
-      )}
+        {dayCount !== null && (
+          <div style={{ flexShrink: 0, marginLeft: 'auto', textAlign: 'right', fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
+            <strong style={{ fontSize: '15px', color: 'var(--sage)' }}>{baby.name || '아이'}이와</strong><br/>
+            만난지 <strong style={{ color: 'var(--sage)' }}>{dayCount}일차</strong>
+          </div>
+        )}
+      </div>
 
       {/* 알림 권한 아직 결정 안 됨 → 눈에 띄게 한 번 안내 */}
       {notifPermission === 'default' && (
