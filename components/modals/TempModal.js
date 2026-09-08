@@ -1,6 +1,8 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
 
 const METHOD_OPTIONS = [
@@ -13,7 +15,7 @@ const METHOD_OPTIONS = [
 export default function TempModal() {
   const {
     db, dispatch, saveDB, showToast,
-    setOpenModal, editId, setEditId, setEditType, uid,
+    setOpenModal, editId, setEditId, setEditType, uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -52,7 +54,7 @@ export default function TempModal() {
       if (idx < 0) return;
       newTemps[idx] = { ...newTemps[idx], time: fromLocal(time), temp, method, note: note || undefined };
     } else {
-      newTemps.unshift({ id: uid(), time: fromLocal(time), temp, method, note: note || undefined });
+      newTemps.unshift({ id: uid(), babyId: activeBabyId || undefined, time: fromLocal(time), temp, method, note: note || undefined });
     }
     const newDB = { ...db, temps: newTemps };
     dispatch({ type: 'SET_TEMPS', payload: newTemps });
@@ -65,7 +67,7 @@ export default function TempModal() {
   const isFever = tempVal >= 37.5;
   const accentColor = isFever ? '#E05A4E' : 'var(--cw)';
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: accentColor, opacity: 0.6 }} />
@@ -113,7 +115,7 @@ export default function TempModal() {
           {/* Time */}
           <div className="fld">
             <div className="flbl">시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
 
           {/* Note */}
@@ -127,6 +129,7 @@ export default function TempModal() {
           <button className="bpri" style={{ background: accentColor }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

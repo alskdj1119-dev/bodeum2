@@ -22,6 +22,10 @@ import TrashPanel from './panels/TrashPanel';
 import NotifHistoryPanel from './panels/NotifHistoryPanel';
 import StatsPanel from './panels/StatsPanel';
 import HealthPanel from './panels/HealthPanel';
+import TrackingPanel from './panels/TrackingPanel';
+import GrowthPanel from './panels/GrowthPanel';
+import SolidPanel from './panels/SolidPanel';
+import ExportPanel from './panels/ExportPanel';
 import FeedModal from './modals/FeedModal';
 import FeedSideChoiceModal from './modals/FeedSideChoiceModal';
 import DiaperModal from './modals/DiaperModal';
@@ -30,18 +34,27 @@ import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
 import ActiveTimerEditModal from './modals/ActiveTimerEditModal';
+import SolidModal from './modals/SolidModal';
+import VisitModal from './modals/VisitModal';
+import SymptomModal from './modals/SymptomModal';
+import HeightModal from './modals/HeightModal';
+import HeadCircModal from './modals/HeadCircModal';
+import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
 
-const PANELS = ['home', 'feed', 'diaper', 'sleep', 'health', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings'];
+const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
-  feed: 'home', diaper: 'home', sleep: 'home',
+  feed: 'tracking', diaper: 'tracking', sleep: 'tracking', solid: 'tracking',
+  stats: 'settings',
+  settings: 'home',
   changelog: 'settings', requests: 'settings', trash: 'settings',
   babyInfo: 'settings', notifSettings: 'settings', familyCode: 'settings',
   feedSettings: 'settings',
   cardColorSettings: 'settings',
+  export: 'settings',
   recalcFeeds: 'feedSettings',
   notifHistory: 'home',
 };
@@ -53,6 +66,7 @@ export default function BodeumApp() {
     setFeedTimerMs,
     setSleepTimerMs,
     openModal,
+    filterByActiveBaby, activeBabyId,
   } = useApp();
 
   const panelRefs = useRef({});
@@ -67,9 +81,9 @@ export default function BodeumApp() {
     }
   }, []);
 
-  // Feed timer
+  // Feed timer — 지금 보고 있는 아이의 진행 중인 수유만 카운트한다.
   useEffect(() => {
-    const activeFeed = db.feeds.find(f => f.start && !f.end);
+    const activeFeed = filterByActiveBaby(db.feeds).find(f => f.start && !f.end);
     if (!activeFeed) { setFeedTimerMs(0); return; }
     const tick = () => {
       setFeedTimerMs(Date.now() - new Date(activeFeed.start).getTime());
@@ -77,11 +91,11 @@ export default function BodeumApp() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [db.feeds]);
+  }, [db.feeds, activeBabyId]);
 
-  // Sleep timer
+  // Sleep timer — 지금 보고 있는 아이의 진행 중인 수면만 카운트한다.
   useEffect(() => {
-    const activeSleep = db.sleeps.find(s => s.start && !s.end);
+    const activeSleep = filterByActiveBaby(db.sleeps).find(s => s.start && !s.end);
     if (!activeSleep) { setSleepTimerMs(0); return; }
     const tick = () => {
       setSleepTimerMs(Date.now() - new Date(activeSleep.start).getTime());
@@ -89,7 +103,7 @@ export default function BodeumApp() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [db.sleeps]);
+  }, [db.sleeps, activeBabyId]);
 
   // Panel slide animation
   useEffect(() => {
@@ -209,14 +223,18 @@ export default function BodeumApp() {
 
       <div className="content">
         <div className="panel" ref={panelRef('home')}><HomePanel /></div>
+        <div className="panel" ref={panelRef('tracking')}><TrackingPanel /></div>
         <div className="panel" ref={panelRef('feed')}><FeedPanel /></div>
         <div className="panel" ref={panelRef('diaper')}><DiaperPanel /></div>
         <div className="panel" ref={panelRef('sleep')}><SleepPanel /></div>
+        <div className="panel" ref={panelRef('solid')}><SolidPanel /></div>
+        <div className="panel" ref={panelRef('growth')}><GrowthPanel /></div>
         <div className="panel" ref={panelRef('settings')}><SettingsPanel /></div>
         <div className="panel" ref={panelRef('babyInfo')}><BabyInfoPanel /></div>
         <div className="panel" ref={panelRef('feedSettings')}><FeedSettingsPanel /></div>
         <div className="panel" ref={panelRef('recalcFeeds')}><RecalcFeedsPanel /></div>
         <div className="panel" ref={panelRef('cardColorSettings')}><CardColorSettingsPanel /></div>
+        <div className="panel" ref={panelRef('export')}><ExportPanel /></div>
         <div className="panel" ref={panelRef('familyCode')}><FamilyCodePanel /></div>
         <div className="panel" ref={panelRef('notifSettings')}><NotifSettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
@@ -233,6 +251,12 @@ export default function BodeumApp() {
       {openModal === 'feedSideChoice' && <FeedSideChoiceModal />}
       {openModal === 'diaper' && <DiaperModal />}
       {openModal === 'sleep' && <SleepModal />}
+      {openModal === 'solid' && <SolidModal />}
+      {openModal === 'visit' && <VisitModal />}
+      {openModal === 'symptom' && <SymptomModal />}
+      {openModal === 'height' && <HeightModal />}
+      {openModal === 'headCirc' && <HeadCircModal />}
+      {openModal === 'toothDetail' && <ToothDetailModal />}
       {openModal === 'weight' && <WeightModal />}
       {openModal === 'consumed' && <ConsumedModal />}
       {openModal === 'temp' && <TempModal />}

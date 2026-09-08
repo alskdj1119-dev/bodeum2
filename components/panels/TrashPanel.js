@@ -3,6 +3,7 @@ import { useApp } from '../../lib/store';
 import {
   fmtFull, elapsedStr, durStr, fmt, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, DIAPER_TYPE_LABEL as TD,
+  SOLID_REACTION_LABEL as TSR,
 } from '../../lib/helpers';
 
 const TYPE_LABEL = {
@@ -11,6 +12,11 @@ const TYPE_LABEL = {
   sleeps: '수면',
   weights: '체중',
   temps: '체온',
+  solids: '이유식',
+  visits: '병원기록',
+  symptoms: '증상·투약',
+  heights: '키',
+  headCircs: '머리둘레',
 };
 const TYPE_DOT = {
   feeds: 'f',
@@ -18,6 +24,11 @@ const TYPE_DOT = {
   sleeps: 's',
   weights: 'w',
   temps: 'w',
+  solids: 'n',
+  visits: 'v',
+  symptoms: 'y',
+  heights: 'w',
+  headCircs: 'v',
 };
 function itemSummary(item) {
   const t = item._type;
@@ -41,6 +52,22 @@ function itemSummary(item) {
   }
   if (t === 'temps') {
     return `체온 ${item.temp != null ? item.temp.toFixed(1) + '°C' : '—'} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'solids') {
+    const reaction = item.reaction ? ` · ${TSR[item.reaction] || ''}` : '';
+    return `${item.food || '이유식'}${reaction} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'visits') {
+    return `${item.hospital || '병원 방문'}${item.reason ? ' · ' + item.reason : ''} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'symptoms') {
+    return `${item.symptom || '증상'}${item.medicine ? ' · ' + item.medicine : ''} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'heights') {
+    return `키 ${item.cm != null ? item.cm.toFixed(1) + 'cm' : '—'} — ${fmtFull(item.time)}`;
+  }
+  if (t === 'headCircs') {
+    return `머리둘레 ${item.cm != null ? item.cm.toFixed(1) + 'cm' : '—'} — ${fmtFull(item.time)}`;
   }
   return '기록';
 }
@@ -66,6 +93,11 @@ export default function TrashPanel() {
       case 'sleeps':  dispatch({ type: 'SET_SLEEPS',  payload: restored }); break;
       case 'weights': dispatch({ type: 'SET_WEIGHTS', payload: restored }); break;
       case 'temps':   dispatch({ type: 'SET_TEMPS',   payload: restored }); break;
+      case 'solids':  dispatch({ type: 'SET_SOLIDS',  payload: restored }); break;
+      case 'visits':  dispatch({ type: 'SET_VISITS',  payload: restored }); break;
+      case 'symptoms': dispatch({ type: 'SET_SYMPTOMS', payload: restored }); break;
+      case 'heights':  dispatch({ type: 'SET_HEIGHTS',  payload: restored }); break;
+      case 'headCircs': dispatch({ type: 'SET_HEAD_CIRCS', payload: restored }); break;
     }
     await saveDB(newDB);
     showToast('복원됐어요 ✓');

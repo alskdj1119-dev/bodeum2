@@ -2,12 +2,12 @@
 import { useApp } from '../../lib/store';
 import {
   fmtFull, elapsedStr, groupByDay, useNowTick,
-  DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC,
+  DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC, DIAPER_CONSISTENCY_LABEL as TCS,
 } from '../../lib/helpers';
 
 export default function DiaperPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast } = useApp();
-  const { diapers } = db;
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, filterByActiveBaby } = useApp();
+  const diapers = filterByActiveBaby(db.diapers);
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const sorted = [...diapers].sort((a,b) => new Date(b.time) - new Date(a.time));
@@ -32,10 +32,10 @@ export default function DiaperPanel() {
   }
 
   function delDiaper(id) {
-    const item = diapers.find(x => x.id === id);
+    const item = db.diapers.find(x => x.id === id);
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'diapers' };
-    const newDiapers = diapers.filter(x => x.id !== id);
+    const newDiapers = db.diapers.filter(x => x.id !== id);
     const newTrash = [trashItem, ...(db.trash || [])];
     const newDB = { ...db, diapers: newDiapers, trash: newTrash };
     dispatch({ type: 'SET_DIAPERS', payload: newDiapers });
@@ -62,7 +62,12 @@ export default function DiaperPanel() {
           <div key={day} className="daygrp">
             <div className="daylbl">{day}</div>
             {items.map(d => {
-              const sub = [d.color ? TC[d.color] : '', d.note || ''].filter(Boolean).join(' · ');
+              const sub = [
+                d.color ? TC[d.color] : '',
+                d.consistency ? TCS[d.consistency] : '',
+                d.rash ? '발진' : '',
+                d.note || '',
+              ].filter(Boolean).join(' · ');
               const dc = diaperColor(d.type);
               return (
                 <div key={d.id} className="ec" onClick={() => openEdit(d)} style={{ background: dc.bg }}>

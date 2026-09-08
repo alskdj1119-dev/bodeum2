@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>직전 카드 다이얼 시안</title>
+<style>
+  :root{
+    --bg:#18150F;--surf:#221E17;--surf2:#2C271F;--ink:#EDE8E1;--muted:#8A8278;
+    --cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;
+    --cd-wet:#D9BB55;--warn:#E2A23D;--alert:#FF6B6F;
+    --bdr:rgba(237,232,225,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Pretendard',-apple-system,'Malgun Gothic',system-ui,sans-serif}
+  body{background:var(--bg);color:var(--ink);padding:28px 20px 60px;}
+  h1{font-size:16px;font-weight:700;margin-bottom:4px;}
+  .note{font-size:12px;color:var(--muted);margin-bottom:22px;line-height:1.6;}
+  .row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px;max-width:460px;}
+  .cap{font-size:11px;color:var(--muted);margin:22px 0 8px;font-weight:600;letter-spacing:.02em;}
+  .card{
+    background:var(--surf);border:1px solid var(--bdr);border-radius:18px;
+    padding:12px 10px 14px;box-shadow:0 1px 4px rgba(0,0,0,.3);
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .lbl{align-self:flex-start;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em;margin-bottom:2px;}
+  .dial{width:120px;height:120px;margin:2px 0 2px;}
+  .center-time{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:-74px;}
+  .sub-time{font-size:11px;color:var(--muted);margin-top:2px;margin-bottom:8px;}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);margin-top:8px;max-width:460px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+</style>
+</head>
+<body>
+  <h1>직전 카드 — 원형 다이얼 시안</h1>
+  <p class="note">
+    화면 캡처가 아니라 실제 숫자가 초 단위로 살아 움직이는 미리보기예요 (1시간 미만은 MM:SS, 1시간 이상은 HH:MM로 자동 전환).<br>
+    바깥 눈금 20칸 = 60분 ÷ 3분. 바늘이 한 바퀴(60분) 돌 때마다 다시 처음부터 채워지고, 가운데 큰 숫자는 계속 누적돼요.<br>
+    색상은 기존 4단계 조건(1시간 미만 기본 / 1~2시간 노랑 / 2~3시간 주황 / 3시간↑ 빨강) 그대로, 수면 카드는 색 변화 없이 고유색만 사용.
+  </p>
+
+  <p class="cap">실제 데이터 예시 (직전 섹션 재현)</p>
+  <div class="row" id="rowReal"></div>
+
+  <p class="cap">단계별 색상 예시 (수유 카드 기준)</p>
+  <div class="row" id="rowTiers"></div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--ink)"></span>기본(1시간 미만)</span>
+    <span><span class="dot" style="background:var(--cd-wet)"></span>1~2시간 (연한 노랑)</span>
+    <span><span class="dot" style="background:var(--warn)"></span>2~3시간 (주황)</span>
+    <span><span class="dot" style="background:var(--alert)"></span>3시간 이상 (빨강)</span>
+  </div>
+
+<script>
+function polar(cx, cy, r, angleDeg){
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+// 270도 아크(위쪽 90도 지점을 비움), 20칸 눈금
+function buildDial(svg, progress /*0~1*/, color){
+  const cx=60, cy=60, rOuter=54, rInner=46;
+  const startAngle = -225, sweep = 270; // 7시 방향에서 시작해 시계방향으로 270도
+  const ticks = 20;
+  let html = '';
+  for (let i=0;i<=ticks;i++){
+    const t = i/ticks;
+    const ang = startAngle + sweep*t;
+    const [x1,y1] = polar(cx,cy,rOuter,ang);
+    const [x2,y2] = polar(cx,cy,rInner,ang);
+    const on = t <= progress;
+    html += `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${on?color:'rgba(237,232,225,.14)'}" stroke-width="${on?2.6:2}" stroke-linecap="round"/>`;
+  }
+  // 진행 위치 포인트(도어락 시안의 붉은 포인터 역할)
+  const pAng = startAngle + sweep*progress;
+  const [px,py] = polar(cx,cy,(rOuter+rInner)/2, pAng);
+  html += `<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="4" fill="${color}"/>`;
+  svg.innerHTML = html;
+}
+
+function fmtElapsed(totalSec){
+  const h = Math.floor(totalSec/3600);
+  const m = Math.floor((totalSec%3600)/60);
+  const s = totalSec%60;
+  if (h >= 1) return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function tierColor(totalSec, tieredOn){
+  if (!tieredOn) return 'var(--cs)';
+  const hrs = totalSec/3600;
+  if (hrs>=3) return 'var(--alert)';
+  if (hrs>=2) return 'var(--warn)';
+  if (hrs>=1) return 'var(--cd-wet)';
+  return 'var(--ink)';
+}
+
+function makeCard(container, label, baseSec, lastClock, tieredOn, forcedColor){
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  wrap.innerHTML = `
+    <div class="lbl">${label}</div>
+    <svg class="dial" viewBox="0 0 120 120"></svg>
+    <div class="center-time">00:00</div>
+    <div class="sub-time">${lastClock}</div>
+  `;
+  container.appendChild(wrap);
+  const svg = wrap.querySelector('svg');
+  const timeEl = wrap.querySelector('.center-time');
+  const start = Date.now() - baseSec*1000;
+  function tick(){
+    const elapsed = Math.floor((Date.now()-start)/1000);
+    const lap = elapsed % 3600; // 60분 기준 한 바퀴
+    const progress = lap/3600;
+    const color = forcedColor || tierColor(elapsed, tieredOn);
+    const resolvedColor = getComputedStyle(document.documentElement).getPropertyValue(color.replace('var(','').replace(')','').trim()) || null;
+    // CSS var 그대로 넘겨도 stroke 속성엔 적용 안되니 실제 hex로 치환
+    const cssVal = color.startsWith('var(') ? getComputedStyle(document.documentElement).getPropertyValue(color.slice(4,-1)).trim() : color;
+    buildDial(svg, progress, cssVal);
+    timeEl.style.color = cssVal;
+    timeEl.textContent = fmtElapsed(elapsed);
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+const rowReal = document.getElementById('rowReal');
+makeCard(rowReal, '수유', 2*3600+54*60, '14:18', true);
+makeCard(rowReal, '기저귀', 2*3600+33*60, '14:40', true);
+makeCard(rowReal, '수면', 14*3600+46*60, '45분 24초', false);
+
+const rowTiers = document.getElementById('rowTiers');
+makeCard(rowTiers, '수유 (35분)', 35*60, '방금 전', true);
+makeCard(rowTiers, '수유 (1시간20분)', 3600+20*60, '1시간 20분 전', true);
+makeCard(rowTiers, '수유 (3시간10분)', 3*3600+10*60, '3시간 10분 전', true);
+</script>
+</body>
+</html>

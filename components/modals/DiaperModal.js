@@ -1,7 +1,9 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
+import DateTimePicker from '../DateTimePicker';
+import { nowISO, toLocal, fromLocal, DIAPER_COLOR_LABEL, DIAPER_CONSISTENCY_LABEL } from '../../lib/helpers';
 
 const DTYPE_OPTIONS = [
   { code: 'wet',    label: '소변' },
@@ -9,10 +11,16 @@ const DTYPE_OPTIONS = [
   { code: 'both',   label: '소변+대변' },
 ];
 const COLOR_OPTIONS = [
-  { code: '',        label: '없음' },
-  { code: 'yellow',  label: '노란색' },
-  { code: 'green',   label: '녹색' },
-  { code: 'other',   label: '기타' },
+  { code: '', label: '없음' },
+  ...Object.entries(DIAPER_COLOR_LABEL).map(([code, label]) => ({ code, label })),
+];
+const CONSISTENCY_OPTIONS = [
+  { code: '', label: '없음' },
+  ...Object.entries(DIAPER_CONSISTENCY_LABEL).map(([code, label]) => ({ code, label })),
+];
+const RASH_OPTIONS = [
+  { code: '',    label: '없음' },
+  { code: 'yes', label: '발진 있음' },
 ];
 const AUTHOR_OPTIONS = [
   { code: '', label: '—' },
@@ -26,7 +34,7 @@ export default function DiaperModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid,
+    uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -35,6 +43,8 @@ export default function DiaperModal() {
   const [time, setTime] = useState(nowISO());
   const [type, setType] = useState('wet');
   const [color, setColor] = useState('');
+  const [consistency, setConsistency] = useState('');
+  const [rash, setRash] = useState('');
   const [note, setNote] = useState('');
   const [author, setAuthor] = useState('');
 
@@ -43,12 +53,16 @@ export default function DiaperModal() {
       setTime(existing.time ? toLocal(existing.time) : nowISO());
       setType(existing.type || 'wet');
       setColor(existing.color || '');
+      setConsistency(existing.consistency || '');
+      setRash(existing.rash ? 'yes' : '');
       setNote(existing.note || '');
       setAuthor(existing.author || '');
     } else {
       setTime(nowISO());
       setType('wet');
       setColor('');
+      setConsistency('');
+      setRash('');
       setNote('');
       setAuthor('');
     }
@@ -65,13 +79,17 @@ export default function DiaperModal() {
         ...newDiapers[idx],
         time: fromLocal(time), type,
         color: color || undefined,
+        consistency: consistency || undefined,
+        rash: rash === 'yes' || undefined,
         note: note || undefined,
         author: author || undefined,
       };
     } else {
       newDiapers.unshift({
-        id: uid(), time: fromLocal(time), type,
+        id: uid(), babyId: activeBabyId || undefined, time: fromLocal(time), type,
         color: color || undefined,
+        consistency: consistency || undefined,
+        rash: rash === 'yes' || undefined,
         note: note || undefined,
         author: author || undefined,
       });
@@ -85,7 +103,7 @@ export default function DiaperModal() {
 
   const showColor = type === 'soiled' || type === 'both';
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cd)', opacity: 0.6 }} />
@@ -96,7 +114,7 @@ export default function DiaperModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
 
           <div className="fld">
@@ -112,7 +130,7 @@ export default function DiaperModal() {
           {showColor && (
             <div className="fld">
               <div className="flbl">색상 (선택)</div>
-              <div className="seg">
+              <div className="seg" style={{ flexWrap: 'wrap' }}>
                 {COLOR_OPTIONS.map(opt => (
                   <button key={opt.code || 'none'} className={`sbtn${color === opt.code ? ' on' : ''}`}
                     onClick={() => setColor(opt.code)}>{opt.label}</button>
@@ -120,6 +138,28 @@ export default function DiaperModal() {
               </div>
             </div>
           )}
+
+          {showColor && (
+            <div className="fld">
+              <div className="flbl">되기 (선택)</div>
+              <div className="seg" style={{ flexWrap: 'wrap' }}>
+                {CONSISTENCY_OPTIONS.map(opt => (
+                  <button key={opt.code || 'none'} className={`sbtn${consistency === opt.code ? ' on' : ''}`}
+                    onClick={() => setConsistency(opt.code)}>{opt.label}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="fld">
+            <div className="flbl">피부 상태 (선택)</div>
+            <div className="seg">
+              {RASH_OPTIONS.map(opt => (
+                <button key={opt.code || 'none'} className={`sbtn${rash === opt.code ? ' on' : ''}`}
+                  onClick={() => setRash(opt.code)}>{opt.label}</button>
+              ))}
+            </div>
+          </div>
 
           <div className="fld">
             <div className="flbl">기록자</div>
@@ -141,6 +181,7 @@ export default function DiaperModal() {
           <button className="bpri" style={{ background: 'var(--cd)' }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

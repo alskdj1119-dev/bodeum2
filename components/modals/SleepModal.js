@@ -1,6 +1,8 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
 
 const PLACE_OPTIONS = [
@@ -20,7 +22,7 @@ export default function SleepModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid,
+    uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -73,6 +75,7 @@ export default function SleepModal() {
     } else {
       newSleeps.unshift({
         id: uid(),
+        babyId: activeBabyId || undefined,
         start: new Date().toISOString(),
         end: end ? fromLocal(end) : undefined,
         place,
@@ -87,7 +90,7 @@ export default function SleepModal() {
     close();
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" style={{ background: 'var(--cs)', opacity: 0.6 }} />
@@ -98,12 +101,12 @@ export default function SleepModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">시작 시간</div>
-            <input className="finp" type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+            <DateTimePicker value={start} onChange={setStart} />
           </div>
 
           <div className="fld">
             <div className="flbl">종료 시간 <span>(비워두면 타이머 시작)</span></div>
-            <input className="finp" type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
+            <DateTimePicker value={end} onChange={setEnd} />
           </div>
 
           <div className="fld">
@@ -138,6 +141,7 @@ export default function SleepModal() {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -94,8 +94,10 @@ function MiniBar({ label, value, max, color, unit = '' }) {
 }
 
 export default function StatsPanel() {
-  const { db } = useApp();
-  const { feeds, diapers, sleeps } = db;
+  const { db, filterByActiveBaby } = useApp();
+  const feeds = filterByActiveBaby(db.feeds);
+  const diapers = filterByActiveBaby(db.diapers);
+  const sleeps = filterByActiveBaby(db.sleeps);
 
   // ══ 수유 (오늘/어제/7일 — 당일 00:00~23:59 기준) ══
   const feedToday = feeds.filter(f => inDay(f.start || f.time, 0));

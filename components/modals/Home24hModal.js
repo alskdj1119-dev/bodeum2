@@ -1,7 +1,8 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, useNowTick,
+  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, kstMidnightMsFromDateStr, useNowTick,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
@@ -18,7 +19,7 @@ function StatBar({ value, max, color }) {
 
 function StatCard({ label, value, sub, color }) {
   return (
-    <div style={{ flex: 1, background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', minWidth: 0 }}>
+    <div style={{ flex: 1, background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', minWidth: 0, boxShadow: 'var(--sh-sm)' }}>
       <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{sub}</div>}
@@ -50,7 +51,7 @@ function FeedDetail({ records, onEdit }) {
 
       {/* 시간대별 분포 */}
       {count > 0 && (
-        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
+        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수유</div>
           <HourBarChart buckets={hourBuckets} color="var(--cf)" formatTip={(h, v) => `${h}시대: ${v}회`} />
         </div>
@@ -89,7 +90,7 @@ function FeedDetail({ records, onEdit }) {
 }
 
 // ─── 기저귀 상세 ───
-function DiaperDetail({ records, onEdit }) {
+function DiaperDetail({ records, onEdit, periodLabel }) {
   const wet = records.filter(d => d.type === 'wet').length;
   const soiled = records.filter(d => d.type === 'soiled').length;
   const both = records.filter(d => d.type === 'both').length;
@@ -101,14 +102,14 @@ function DiaperDetail({ records, onEdit }) {
   return (
     <>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <StatCard label="총 횟수" value={total + '회'} sub="직전 24시간" color="var(--cd)" />
+        <StatCard label="총 횟수" value={total + '회'} sub={periodLabel} color="var(--cd)" />
         <StatCard label="소변" value={wet + '회'} sub={both > 0 ? '혼합 ' + both + '회' : '소변 전용'} color="var(--cd)" />
         <StatCard label="대변" value={soiled + '회'} sub={total > 0 ? Math.round((soiled + both) / total * 100) + '%' : '—'} color="var(--cd)" />
       </div>
 
       {/* 분류 바 */}
       {total > 0 && (
-        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
+        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>유형별 비율</div>
           {[{ label: '소변', count: wet, color: 'var(--cf)' }, { label: '대변', count: soiled, color: 'var(--cd)' }, { label: '소변+대변', count: both, color: 'var(--cs)' }].map(item => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -145,7 +146,7 @@ function DiaperDetail({ records, onEdit }) {
 }
 
 // ─── 수면 상세 ───
-function SleepDetail({ records, onEdit }) {
+function SleepDetail({ records, onEdit, periodLabel }) {
   const totalMs = records.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
   const count = records.length;
   const avgMs = count > 0 ? Math.round(totalMs / count) : 0;
@@ -164,12 +165,12 @@ function SleepDetail({ records, onEdit }) {
     <>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <StatCard label="총 수면" value={totalMs > 0 ? durStr(totalMs) : '0분'} sub={count + '회 수면'} color="var(--cs)" />
-        <StatCard label="수면 횟수" value={count + '회'} sub="24시간" color="var(--cs)" />
+        <StatCard label="수면 횟수" value={count + '회'} sub={periodLabel} color="var(--cs)" />
         {avgMs > 0 && <StatCard label="평균 수면" value={durStr(avgMs)} sub="회당 평균" color="var(--cs)" />}
       </div>
 
       {count > 0 && (
-        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
+        <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수면</div>
           <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />
         </div>
@@ -194,10 +195,15 @@ function SleepDetail({ records, onEdit }) {
 }
 
 // ─── 메인 모달 ───
-export default function Home24hModal({ type, onClose }) {
+// initialDate("YYYY-MM-DD", KST 기준)가 주어지면 그 날짜의 "당일" 모드로 열리고,
+// 없으면 "직전 24시간" 모드로 열린다. 안에서 두 모드를 토글로 바꿀 수 있다.
+export default function Home24hModal({ type, initialDate, initialMode, onClose }) {
   const { db, setOpenModal, setEditId, setEditType } = useApp();
   const { feeds, diapers, sleeps } = db;
+  const dayOnly = !!initialDate; // 요일 스트립에서 특정 날짜를 눌러 열린 경우 — "당일" 고정, 토글 불필요
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState(dayOnly ? 'day' : (initialMode || 'recent24h'));
+  const [selectedDate, setSelectedDate] = useState(() => initialDate || kstDate(Date.now()).toISOString().slice(0, 10));
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   useEffect(() => {
@@ -212,6 +218,20 @@ export default function Home24hModal({ type, onClose }) {
   const feed24 = feeds.filter(f => (now - new Date(f.start || f.time).getTime()) <= h24);
   const diaper24 = diapers.filter(d => (now - new Date(d.time).getTime()) <= h24);
   const sleep24 = sleeps.filter(s => s.end && (now - new Date(s.start).getTime()) <= h24);
+
+  // "당일"(선택한 날짜 00:00~23:59, KST) 필터
+  const [, dm, dd] = selectedDate.split('-').map(Number);
+  const dayStartMs = kstMidnightMsFromDateStr(selectedDate);
+  const dayEndMs = dayStartMs + 24 * 60 * 60 * 1000;
+  const feedDay = feeds.filter(f => { const t = new Date(f.start || f.time).getTime(); return t >= dayStartMs && t < dayEndMs; });
+  const diaperDay = diapers.filter(d => { const t = new Date(d.time).getTime(); return t >= dayStartMs && t < dayEndMs; });
+  const sleepDay = sleeps.filter(s => s.end && (() => { const t = new Date(s.start).getTime(); return t >= dayStartMs && t < dayEndMs; })());
+
+  const feedRecords = mode === 'day' ? feedDay : feed24;
+  const diaperRecords = mode === 'day' ? diaperDay : diaper24;
+  const sleepRecords = mode === 'day' ? sleepDay : sleep24;
+
+  const dateLabelStr = `${dm}월 ${dd}일(${['일','월','화','수','목','금','토'][kstDate(dayStartMs).getUTCDay()]})`;
 
   const titles = { feed: '수유', diaper: '기저귀', sleep: '수면' };
   const colors = { feed: 'var(--cf)', diaper: 'var(--cd)', sleep: 'var(--cs)' };
@@ -240,7 +260,7 @@ export default function Home24hModal({ type, onClose }) {
     handleClose();
   }
 
-  return (
+  return createPortal(
     <div
       className={`mbg${open ? ' open' : ''}`}
       style={{ display: 'flex' }}
@@ -260,7 +280,7 @@ export default function Home24hModal({ type, onClose }) {
         <div className="mhandle" />
         <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px 14px', borderBottom: '1px solid var(--bdr)' }}>
           <div style={{ fontSize: 19, fontWeight: 700, fontFamily: 'var(--serif)', color: colors[type] }}>
-            직전 24시간 {titles[type]}
+            {mode === 'day' ? `${dateLabelStr} ${titles[type]}` : `직전 24시간 ${titles[type]}`}
           </div>
           <button
             onClick={handleClose}
@@ -272,13 +292,34 @@ export default function Home24hModal({ type, onClose }) {
           </button>
         </div>
 
+        {/* 직전 24시간 / 당일 토글 — 요일 날짜를 눌러 "당일" 고정으로 연 경우는 불필요하므로 숨김 */}
+        {!dayOnly && (
+          <div className="modetoggle" style={{ padding: '12px 20px 0' }}>
+            <button
+              className={`modetoggle-btn${mode === 'recent24h' ? ' on' : ''}`}
+              onClick={() => setMode('recent24h')}
+              style={mode === 'recent24h' ? { background: colors[type], borderColor: colors[type] } : undefined}
+            >
+              직전 24시간
+            </button>
+            <button
+              className={`modetoggle-btn${mode === 'day' ? ' on' : ''}`}
+              onClick={() => { setSelectedDate(kstDate(Date.now()).toISOString().slice(0, 10)); setMode('day'); }}
+              style={mode === 'day' ? { background: colors[type], borderColor: colors[type] } : undefined}
+            >
+              당일{mode === 'day' ? ` · ${dm}월 ${dd}일` : ''}
+            </button>
+          </div>
+        )}
+
         {/* 내용 스크롤 영역 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' }}>
-          {type === 'feed' && <FeedDetail records={feed24} onEdit={editFeed} />}
-          {type === 'diaper' && <DiaperDetail records={diaper24} onEdit={editDiaper} />}
-          {type === 'sleep' && <SleepDetail records={sleep24} onEdit={editSleep} />}
+          {type === 'feed' && <FeedDetail records={feedRecords} onEdit={editFeed} />}
+          {type === 'diaper' && <DiaperDetail records={diaperRecords} onEdit={editDiaper} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} />}
+          {type === 'sleep' && <SleepDetail records={sleepRecords} onEdit={editSleep} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} />}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

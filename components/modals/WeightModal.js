@@ -1,6 +1,8 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal } from '../../lib/helpers';
 
 // Single-digit scroll column
@@ -40,7 +42,7 @@ function WDial({ value, onChange, min = 0, max = 9 }) {
 export default function WeightModal() {
   const {
     db, dispatch, saveDB, showToast,
-    setOpenModal, editId, setEditId, setEditType, uid,
+    setOpenModal, editId, setEditId, setEditType, uid, activeBabyId,
   } = useApp();
 
   const isEdit = !!editId;
@@ -82,7 +84,7 @@ export default function WeightModal() {
       if (idx < 0) return;
       newWeights[idx] = { ...newWeights[idx], kg: parseFloat(kg), time: isoTime };
     } else {
-      newWeights.push({ id: uid(), kg: parseFloat(kg), time: isoTime });
+      newWeights.push({ id: uid(), babyId: activeBabyId || undefined, kg: parseFloat(kg), time: isoTime });
     }
     newWeights.sort((a, b) => new Date(a.time) - new Date(b.time));
     const newDB = { ...db, weights: newWeights };
@@ -92,7 +94,7 @@ export default function WeightModal() {
     close();
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle" />
@@ -114,7 +116,7 @@ export default function WeightModal() {
 
           <div className="fld" style={{ marginTop: 16 }}>
             <div className="flbl">날짜/시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
         </div>
         <div className="mfoot">
@@ -122,6 +124,7 @@ export default function WeightModal() {
           <button className="bpri" onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

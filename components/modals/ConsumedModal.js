@@ -1,4 +1,5 @@
 'use client';
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import { directFeedMl } from '../../lib/helpers';
@@ -47,7 +48,7 @@ export default function ConsumedModal() {
     close();
   }
 
-  return (
+  return createPortal(
     <div className="mbg open">
       <div className="msheet" onClick={e => e.stopPropagation()}>
         <div className="mhandle"></div>
@@ -73,6 +74,7 @@ export default function ConsumedModal() {
           <button className="bpri" style={{ width: '100%' }} onClick={save}>저장</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
