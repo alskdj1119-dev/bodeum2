@@ -86,6 +86,7 @@ function TimeColumn({ items, selected, onPick }) {
 export default function DateTimePicker({ value, onChange, mode = 'datetime', className = '', style }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
+  const popRef = useRef(null);
   const parsed = parseValue(value, mode);
   const [viewY, setViewY] = useState(parsed.y);
   const [viewMo, setViewMo] = useState(parsed.mo);
@@ -101,6 +102,16 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
     function onDocClick(e) { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); }
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
+  }, [open]);
+
+  // 팝업이 열릴 때, 팝업 전체가 보이도록 감싸는 스크롤 영역(바텀시트 .msheet)을 스크롤해준다.
+  // 그렇지 않으면 인풋이 화면 아래쪽에 있을 때 펼쳐진 달력이 시트 밖으로 잘려 보이는 문제가 있었음.
+  useEffect(() => {
+    if (!open || !popRef.current) return;
+    const t = setTimeout(() => {
+      popRef.current && popRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 0);
+    return () => clearTimeout(t);
   }, [open]);
 
   function commit(patch) {
@@ -155,7 +166,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
       </button>
 
       {open && (
-        <div className="dtp-pop">
+        <div className="dtp-pop" ref={popRef}>
           {showCalendar && (
             <div className="dtp-cal">
               <div className="dtp-cal-head">
