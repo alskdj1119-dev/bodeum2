@@ -86,7 +86,7 @@ function TimeColumn({ items, selected, onPick }) {
   );
 }
 
-export default function DateTimePicker({ value, onChange, mode = 'datetime', className = '', style }) {
+export default function DateTimePicker({ value, onChange, mode = 'datetime', className = '', style, maxDate }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const popRef = useRef(null);
@@ -162,6 +162,17 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
   const isToday = (d) => d != null && viewY === today.getFullYear() && viewMo === today.getMonth() && d === today.getDate();
   const isSelected = (d) => d != null && showCalendar && viewY === draft.y && viewMo === draft.mo && d === draft.d;
 
+  // maxDate("YYYY-MM-DD")가 주어지면 그 날짜 이후는 고를 수 없도록 막는다(예: 통계 기간
+  // 선택에서 오늘보다 미래 날짜를 못 고르게 하는 용도). 값이 없으면 기존과 동일하게 제한 없음.
+  const maxD = maxDate ? (() => { const [my, mm, md] = maxDate.split('-').map(Number); return { y: my, mo: mm - 1, d: md }; })() : null;
+  const isBlocked = (d) => {
+    if (!maxD || d == null) return false;
+    if (viewY !== maxD.y) return viewY > maxD.y;
+    if (viewMo !== maxD.mo) return viewMo > maxD.mo;
+    return d > maxD.d;
+  };
+  const nextMonthBlocked = !!maxD && (viewY > maxD.y || (viewY === maxD.y && viewMo >= maxD.mo));
+
   const hourItems = Array.from({ length: 24 }, (_, h) => {
     const ampm = h < 12 ? '오전' : '오후';
     const h12 = h % 12 === 0 ? 12 : h % 12;
@@ -189,22 +200,25 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
                   <button type="button" onClick={prevMonth} aria-label="이전 달">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
                   </button>
-                  <button type="button" onClick={nextMonth} aria-label="다음 달">
+                  <button type="button" onClick={nextMonth} aria-label="다음 달" disabled={nextMonthBlocked}>
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                   </button>
                 </div>
               </div>
               <div className="dtp-cal-wd">{WEEKDAYS.map(w => <span key={w}>{w}</span>)}</div>
               <div className="dtp-cal-grid">
-                {cells.map((d, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    disabled={d == null}
-                    className={`dtp-cal-cell${isToday(d) ? ' today' : ''}${isSelected(d) ? ' selected' : ''}`}
-                    onClick={() => d != null && pickDate(d)}
-                  >{d || ''}</button>
-                ))}
+                {cells.map((d, i) => {
+                  const blocked = isBlocked(d);
+                  return (
+                    <button
+                      type="button"
+                      key={i}
+                      disabled={d == null}
+                      className={`dtp-cal-cell${isToday(d) ? ' today' : ''}${isSelected(d) ? ' selected' : ''}${blocked ? ' blocked' : ''}`}
+                      onClick={() => { if (d != null && !blocked) pickDate(d); }}
+                    >{d || ''}</button>
+                  );
+                })}
               </div>
             </div>
           )}

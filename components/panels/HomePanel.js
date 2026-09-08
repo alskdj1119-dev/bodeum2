@@ -514,15 +514,15 @@ export default function HomePanel() {
             <div className="sumdiv"></div>
             <div className="modetoggle" style={{ marginBottom: 12 }} onClick={ev => ev.stopPropagation()}>
               <button
-                className={`modetoggle-btn${sumMode === 'recent24h' ? ' on' : ''}`}
-                onClick={() => setSumMode('recent24h')}
-                style={sumMode === 'recent24h' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
-              >직전 24시간</button>
-              <button
                 className={`modetoggle-btn${sumMode === 'day' ? ' on' : ''}`}
                 onClick={() => setSumMode('day')}
                 style={sumMode === 'day' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
               >당일</button>
+              <button
+                className={`modetoggle-btn${sumMode === 'recent24h' ? ' on' : ''}`}
+                onClick={() => setSumMode('recent24h')}
+                style={sumMode === 'recent24h' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+              >직전 24시간</button>
             </div>
             <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)' }}>
               <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode(sumMode); setDetail24('feed'); }}>

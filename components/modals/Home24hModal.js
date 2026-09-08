@@ -348,18 +348,18 @@ export default function Home24hModal({ type, initialDate, initialMode, records: 
         {!dayOnly && !isRangeMode && (
           <div className="modetoggle" style={{ padding: '12px 20px 0' }}>
             <button
-              className={`modetoggle-btn${mode === 'recent24h' ? ' on' : ''}`}
-              onClick={() => setMode('recent24h')}
-              style={mode === 'recent24h' ? { background: colors[type], borderColor: colors[type] } : undefined}
-            >
-              직전 24시간
-            </button>
-            <button
               className={`modetoggle-btn${mode === 'day' ? ' on' : ''}`}
               onClick={() => { setSelectedDate(kstDate(Date.now()).toISOString().slice(0, 10)); setMode('day'); }}
               style={mode === 'day' ? { background: colors[type], borderColor: colors[type] } : undefined}
             >
               당일{mode === 'day' ? ` · ${dm}월 ${dd}일` : ''}
+            </button>
+            <button
+              className={`modetoggle-btn${mode === 'recent24h' ? ' on' : ''}`}
+              onClick={() => setMode('recent24h')}
+              style={mode === 'recent24h' ? { background: colors[type], borderColor: colors[type] } : undefined}
+            >
+              직전 24시간
             </button>
           </div>
         )}

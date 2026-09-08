@@ -140,6 +140,12 @@ export default function StatsPanel() {
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
 
+  // 기간 선택 달력에서 오늘보다 미래 날짜는 고를 수 없도록 막는 기준값("YYYY-MM-DD")
+  const todayStr = (() => {
+    const d = kstDate(todayMs);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  })();
+
   let anchorMs = todayMs;
   let rangeDays = 7;
   let isCustom = false;
@@ -314,12 +320,28 @@ export default function StatsPanel() {
       </div>
       {useCustomRange && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-          <DateTimePicker mode="date" style={{ flex: 1 }} value={rangeStart} onChange={setRangeStart} />
+          <DateTimePicker mode="date" style={{ flex: 1 }} maxDate={todayStr} value={rangeStart} onChange={(v) => {
+            if (v && rangeEnd) {
+              const span = Math.round((kstMidnightMsFromDateStr(rangeEnd) - kstMidnightMsFromDateStr(v)) / 86400000) + 1;
+              if (span > MAX_RANGE_DAYS) {
+                showToast(`최대 ${MAX_RANGE_DAYS}일까지 선택할 수 있어요`);
+                return;
+              }
+            }
+            setRangeStart(v);
+          }} />
           <span style={{ color: 'var(--muted)', fontSize: 13 }}>~</span>
-          <DateTimePicker mode="date" style={{ flex: 1 }} value={rangeEnd} onChange={(v) => {
+          <DateTimePicker mode="date" style={{ flex: 1 }} maxDate={todayStr} value={rangeEnd} onChange={(v) => {
             if (v && rangeStart && v < rangeStart) {
               showToast('종료일이 시작일보다 빠를 수 없어요');
               return;
+            }
+            if (v && rangeStart) {
+              const span = Math.round((kstMidnightMsFromDateStr(v) - kstMidnightMsFromDateStr(rangeStart)) / 86400000) + 1;
+              if (span > MAX_RANGE_DAYS) {
+                showToast(`최대 ${MAX_RANGE_DAYS}일까지 선택할 수 있어요`);
+                return;
+              }
             }
             setRangeEnd(v);
           }} />
