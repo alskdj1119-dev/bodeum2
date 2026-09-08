@@ -2,7 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, KST_OFFSET_MS, useNowTick,
+  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, kstMidnightMsFromDateStr, useNowTick,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
@@ -220,8 +220,8 @@ export default function Home24hModal({ type, initialDate, initialMode, onClose }
   const sleep24 = sleeps.filter(s => s.end && (now - new Date(s.start).getTime()) <= h24);
 
   // "당일"(선택한 날짜 00:00~23:59, KST) 필터
-  const [dy, dm, dd] = selectedDate.split('-').map(Number);
-  const dayStartMs = Date.UTC(dy, dm - 1, dd, 0, 0) - KST_OFFSET_MS;
+  const [, dm, dd] = selectedDate.split('-').map(Number);
+  const dayStartMs = kstMidnightMsFromDateStr(selectedDate);
   const dayEndMs = dayStartMs + 24 * 60 * 60 * 1000;
   const feedDay = feeds.filter(f => { const t = new Date(f.start || f.time).getTime(); return t >= dayStartMs && t < dayEndMs; });
   const diaperDay = diapers.filter(d => { const t = new Date(d.time).getTime(); return t >= dayStartMs && t < dayEndMs; });

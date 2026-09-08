@@ -65,7 +65,7 @@ function RequestItem({ r, familyCode, showToast }) {
   }
 
   return (
-    <div style={{ padding:'12px 0', borderBottom:'1px solid var(--line)' }}>
+    <div style={{ padding:'12px 0', borderBottom:'1px solid var(--bdr)' }}>
       <div style={{ display:'flex', alignItems:'flex-start', gap:'10px' }}>
         <select
           value={r.status || '접수'}

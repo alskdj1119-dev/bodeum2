@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>보듬 — 뉴모피즘 1차 초안</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css');
+
+  :root{
+    --bg:#ECF0F3;
+    --sh-dark:#D1D9E6;
+    --sh-light:#FFFFFF;
+    --ink:#2C2F33;
+    --muted:#8A93A1;
+    --accent:#6C7A92;
+    --accent-ink:#3E4A5E;
+    --blur:30px;--dist:18px;
+  }
+  [data-theme="dark"]{
+    --bg:#292D32;
+    --sh-dark:#2A2D32;
+    --sh-light:#30343A;
+    --ink:#E7E9EC;
+    --muted:#8A929B;
+    --accent:#9AA7BD;
+    --accent-ink:#C7D0DE;
+    --blur:20px;--dist:18px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Pretendard',-apple-system,sans-serif}
+  body{
+    background:var(--bg);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;
+    gap:24px;padding:32px 16px;flex-wrap:wrap;transition:background .3s;
+  }
+
+  .phone{
+    width:360px;background:var(--bg);border-radius:32px;padding:22px 18px 28px;
+  }
+  .toolbar{width:360px;display:flex;justify-content:flex-end;margin-bottom:10px}
+  .toggle{
+    display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:100px;
+    background:var(--bg);box-shadow: var(--dist) var(--dist) var(--blur) var(--sh-dark), calc(var(--dist) * -1) calc(var(--dist) * -1) var(--blur) var(--sh-light);
+    cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);border:none;
+  }
+
+  /* ── neomorphic primitives ── */
+  .raised{
+    background:var(--bg);
+    box-shadow: var(--dist) var(--dist) var(--blur) var(--sh-dark), calc(var(--dist) * -1) calc(var(--dist) * -1) var(--blur) var(--sh-light);
+  }
+  .inset{
+    background:var(--bg);
+    box-shadow: inset var(--dist) var(--dist) var(--blur) var(--sh-dark), inset calc(var(--dist) * -1) calc(var(--dist) * -1) var(--blur) var(--sh-light);
+  }
+  .raised-sm{
+    background:var(--bg);
+    box-shadow: 6px 6px 12px var(--sh-dark), -6px -6px 12px var(--sh-light);
+  }
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{
+    width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;color:var(--accent-ink);font-size:15px;
+  }
+  .brand .name{font-size:18px;font-weight:800;color:var(--ink)}
+  .date{font-size:11.5px;color:var(--muted);font-weight:600}
+  .bell{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+
+  .greet{font-size:18px;font-weight:700;color:var(--ink);line-height:1.4;margin-bottom:18px}
+
+  .seclbl{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase}
+
+  .qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+  .qbtn{
+    border-radius:24px;padding:16px 6px;display:flex;flex-direction:column;align-items:center;gap:9px;
+    cursor:pointer;transition:box-shadow .15s, transform .08s;
+  }
+  .qbtn:active{
+    box-shadow: inset var(--dist) var(--dist) var(--blur) var(--sh-dark), inset calc(var(--dist) * -1) calc(var(--dist) * -1) var(--blur) var(--sh-light);
+    transform:scale(.98);
+  }
+  .qbtn .ico{width:44px;height:44px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+  .qbtn svg{width:22px;height:22px;stroke:var(--accent-ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .qbtn .lbl{font-size:12.5px;font-weight:700;color:var(--ink)}
+
+  .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+  .sc{border-radius:20px;padding:14px 12px}
+  .sc .sr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .sc .slbl{font-size:11.5px;color:var(--muted);font-weight:700}
+  .sc .sico{width:26px;height:26px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .sc .sico svg{width:13px;height:13px;stroke:var(--accent-ink);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .sc .sval{font-size:16px;font-weight:800;color:var(--ink)}
+  .sc .ssub{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+  .settmenu{
+    display:flex;align-items:center;gap:14px;border-radius:20px;padding:14px 16px;margin-bottom:12px;cursor:pointer;
+  }
+  .settmenu .mico{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .settmenu .mico svg{width:19px;height:19px;stroke:var(--accent-ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .settmenu .minf{flex:1}
+  .settmenu .mtitle{font-size:14.5px;font-weight:700;color:var(--ink)}
+  .settmenu .msub{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .settmenu .marr{color:var(--muted)}
+
+  .card-form{border-radius:26px;padding:22px 20px;margin-top:6px}
+  .fld{margin-bottom:16px}
+  .flbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+  .finp{
+    width:100%;border:none;border-radius:16px;padding:14px 16px;font-size:16px;color:var(--ink);
+    outline:none;font-family:'Pretendard',sans-serif;
+  }
+  .finp::placeholder{color:var(--muted)}
+  .btnrow{display:flex;gap:10px;margin-top:20px}
+  .bpri{
+    flex:1;border:none;border-radius:100px;padding:15px;font-size:15px;font-weight:700;color:var(--accent-ink);
+    cursor:pointer;font-family:'Pretendard',sans-serif;
+  }
+  .bcan{
+    flex:1;border:none;border-radius:100px;padding:15px;font-size:15px;font-weight:600;color:var(--muted);
+    cursor:pointer;font-family:'Pretendard',sans-serif;
+  }
+
+  .navbar{display:flex;justify-content:space-around;border-radius:24px;padding:10px 6px;margin-top:22px}
+  .navitem{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;border-radius:14px;cursor:pointer}
+  .navitem svg{width:19px;height:19px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .navitem.active svg{stroke:var(--accent-ink)}
+  .navitem .nlbl{font-size:9.5px;font-weight:600;color:var(--muted)}
+  .navitem.active .nlbl{color:var(--ink);font-weight:700}
+  .navitem.active{box-shadow: inset 4px 4px 8px var(--sh-dark), inset -4px -4px 8px var(--sh-light)}
+
+  .note{
+    width:340px;font-size:12.5px;color:var(--ink);line-height:1.7;padding:18px 20px;border-radius:20px;
+  }
+  .note b{display:block;margin-bottom:8px;font-size:13.5px}
+  .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+</style>
+</head>
+<body>
+
+<div>
+  <div class="toolbar">
+    <button class="toggle" id="themeToggle" onclick="toggleTheme()">🌙 다크모드 보기</button>
+  </div>
+
+  <div class="phone">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo raised-sm">보</div>
+        <span class="name">보듬</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="date">2026.9.4 (금)</span>
+        <div class="bell raised-sm">
+          <svg viewBox="0 0 24 24" style="stroke:var(--muted);fill:none;stroke-width:2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="greet">오늘도 정말<br>애썼네요, 수고 많았어요.</div>
+
+    <div class="seclbl">빠른 기록</div>
+    <div class="qgrid">
+      <div class="qbtn raised">
+        <div class="ico inset"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></div>
+        <div class="lbl">수유</div>
+      </div>
+      <div class="qbtn raised">
+        <div class="ico inset"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/></svg></div>
+        <div class="lbl">기저귀</div>
+      </div>
+      <div class="qbtn raised">
+        <div class="ico inset"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+        <div class="lbl">수면</div>
+      </div>
+    </div>
+
+    <div class="seclbl">직전</div>
+    <div class="sgrid">
+      <div class="sc raised">
+        <div class="sr"><span class="slbl">수유</span><span class="sico inset"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span></div>
+        <div class="sval">2:54</div>
+        <div class="ssub">07:27</div>
+      </div>
+      <div class="sc raised">
+        <div class="sr"><span class="slbl">기저귀</span><span class="sico inset"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/></svg></span></div>
+        <div class="sval">2:33</div>
+        <div class="ssub">08:26</div>
+      </div>
+      <div class="sc raised">
+        <div class="sr"><span class="slbl">수면</span><span class="sico inset"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></div>
+        <div class="sval">11:14</div>
+        <div class="ssub">3시간 1분</div>
+      </div>
+    </div>
+
+    <div class="seclbl">설정 (예시)</div>
+    <div class="settmenu raised">
+      <div class="mico inset"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+      <div class="minf">
+        <div class="mtitle">아이 정보</div>
+        <div class="msub">이름, 태명, 생년월일, 출생 체중</div>
+      </div>
+      <div class="marr">
+        <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--muted);fill:none;stroke-width:2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <div class="seclbl">입력 팝업 (예시)</div>
+    <div class="card-form raised">
+      <div class="fld">
+        <div class="flbl">체온 (°C)</div>
+        <input class="finp inset" placeholder="36.5">
+      </div>
+      <div class="btnrow">
+        <button class="bcan raised-sm">취소</button>
+        <button class="bpri raised-sm">저장</button>
+      </div>
+    </div>
+
+    <div class="navbar raised">
+      <div class="navitem active">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span class="nlbl">홈</span>
+      </div>
+      <div class="navitem">
+        <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>
+        <span class="nlbl">수유</span>
+      </div>
+      <div class="navitem">
+        <svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/></svg>
+        <span class="nlbl">기저귀</span>
+      </div>
+      <div class="navitem">
+        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span class="nlbl">수면</span>
+      </div>
+      <div class="navitem">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="nlbl">설정</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note raised" style="margin-top:16px">
+    <b>적용한 값 (첨부 스펙 그대로)</b>
+    라이트: bg <span class="swatch" style="background:#ECF0F3;border:1px solid #ccc"></span>#ECF0F3,
+    그림자1(어두운쪽) #D1D9E6 · blur 30 · 거리 18,
+    그림자2(밝은쪽) #FFFFFF · blur 30 · 거리 -18<br><br>
+    다크: bg <span class="swatch" style="background:#292D32"></span>#292D32,
+    그림자1 #2A2D32 · blur 20 · 거리 18,
+    그림자2 #30343A · blur 20 · 거리 -18<br><br>
+    카드/버튼/아이콘 배경은 모두 페이지 배경과 완전히 같은 색이고, 튀어나온 요소는 이중 그림자(raised), 눌리거나 입력창처럼 파묻힌 요소는 안쪽 그림자(inset)로 구분했어요. 폰트는 Pretendard 그대로예요.
+  </div>
+</div>
+
+<script>
+function toggleTheme(){
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  if(root.getAttribute('data-theme') === 'dark'){
+    root.removeAttribute('data-theme');
+    btn.textContent = '🌙 다크모드 보기';
+  } else {
+    root.setAttribute('data-theme','dark');
+    btn.textContent = '☀️ 라이트모드 보기';
+  }
+}
+</script>
+</body>
+</html>

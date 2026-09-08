@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
-  kstDate, KST_OFFSET_MS, useNowTick, elapsedTier,
+  kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -209,14 +209,13 @@ export default function HomePanel() {
 
   // 오늘 자정(KST) 기준 시각 — dayCount 계산과 "오늘 N건" 집계에 공통으로 사용
   const nowKst = kstDate(Date.now());
-  const todayStartMs = Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate(), 0, 0) - KST_OFFSET_MS;
+  const todayStartMs = kstMidnightMs(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate());
 
   // Day count
   let dayCount = null;
   if (baby.birthDate) {
     // 생년월일은 항상 "한국 날짜"로 해석 — 기기 시간대와 무관하게 동일한 만난지 일수가 나오도록.
-    const [by, bm, bd] = baby.birthDate.split('-').map(Number);
-    const birthMs = Date.UTC(by, bm - 1, bd, 0, 0) - KST_OFFSET_MS;
+    const birthMs = kstMidnightMsFromDateStr(baby.birthDate);
     const d = Math.floor((todayStartMs - birthMs) / 86400000) + 1;
     if (d >= 1) dayCount = d;
   }

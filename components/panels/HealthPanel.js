@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, elapsedStr, groupByDay, kstDate, KST_OFFSET_MS, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
+import { fmtFull, elapsedStr, groupByDay, kstDate, kstMidnightMsFromDateStr, kstTodayStartMs, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 import TeethChart from '../charts/TeethChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
@@ -55,13 +55,7 @@ export default function HealthPanel() {
 
   // 예방접종 — 생년월일은 항상 "한국 날짜"로 해석해 만 며칠인지 계산 (기기 시간대 무관).
   const age = baby.birthDate
-    ? (() => {
-        const [by, bm, bd] = baby.birthDate.split('-').map(Number);
-        const birthMs = Date.UTC(by, bm - 1, bd, 0, 0) - KST_OFFSET_MS;
-        const nowKst = kstDate(Date.now());
-        const todayMs = Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate(), 0, 0) - KST_OFFSET_MS;
-        return Math.floor((todayMs - birthMs) / 86400000);
-      })()
+    ? Math.floor((kstTodayStartMs() - kstMidnightMsFromDateStr(baby.birthDate)) / 86400000)
     : null;
 
   function openTempEdit(t) { setEditId(t.id); setEditType('temps'); setOpenModal('temp'); }
