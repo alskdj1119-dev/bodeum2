@@ -150,19 +150,9 @@ export default function TrashPanel() {
                   </div>
                 </div>
                 <button
+                  className="bcan-accent"
                   onClick={() => restore(item)}
-                  style={{
-                    flexShrink: 0,
-                    padding: '5px 10px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    border: '1.5px solid var(--sage)',
-                    background: 'transparent',
-                    color: 'var(--sage)',
-                    cursor: 'pointer',
-                    marginLeft: '8px',
-                  }}
+                  style={{ flexShrink: 0, padding: '5px 10px', fontSize: '12px', borderRadius: '8px', marginLeft: '8px' }}
                 >
                   복원
                 </button>

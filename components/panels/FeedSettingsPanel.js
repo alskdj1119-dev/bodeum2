@@ -70,19 +70,9 @@ export default function FeedSettingsPanel() {
       <button className="bpri" style={{ width: '100%' }} onClick={save}>저장</button>
 
       <button
+        className="bcan-accent"
         onClick={() => goTab('recalcFeeds', 'forward')}
-        style={{
-          width: '100%',
-          marginTop: 10,
-          padding: '12px',
-          fontSize: '14px',
-          fontWeight: 600,
-          borderRadius: '100px',
-          border: '1.5px solid var(--sage)',
-          background: 'transparent',
-          color: 'var(--sage)',
-          cursor: 'pointer',
-        }}
+        style={{ width: '100%', marginTop: 10, padding: '12px', fontSize: '14px' }}
       >
         기존 기록 다시 계산하기
       </button>
