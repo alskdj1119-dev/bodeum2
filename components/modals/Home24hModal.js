@@ -109,12 +109,17 @@ function FeedDetail({ records, onEdit, dayList }) {
     });
   }
 
-  // 일자별 버킷(횟수 + ml) — 기간이 하루를 넘을 때만 사용
+  // 일자별 버킷 — 분유/모유(직수+유축) 두 막대로 나란히 표시. 기간이 하루를 넘을 때만 사용.
   const dayBuckets = showDaily
-    ? bucketByDay(records, dayList, f => new Date(f.start || f.time).getTime(), dayRecs => ({
-        value: dayRecs.length,
-        ml: Math.round(dayRecs.reduce((a, f) => a + feedEffectiveMl(f), 0)),
-      }))
+    ? bucketByDay(records, dayList, f => new Date(f.start || f.time).getTime(), dayRecs => {
+        const bottleCount = dayRecs.filter(f => f.type === 'bottle').length;
+        const breastCount = dayRecs.filter(f => f.type !== 'bottle').length;
+        return {
+          value: bottleCount + breastCount,
+          bottleCount, breastCount,
+          series: [{ value: bottleCount, color: 'var(--cd)' }, { value: breastCount, color: 'var(--cs)' }],
+        };
+      })
     : null;
 
   return (
@@ -136,7 +141,7 @@ function FeedDetail({ records, onEdit, dayList }) {
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>{showDaily ? '일자별 수유' : '시간대별 수유'}</div>
           {showDaily
-            ? <DayBarChart days={dayBuckets} color="var(--cf)" formatTip={d => `${d.label}: ${d.value}회${d.ml > 0 ? ' · ' + d.ml + 'ml' : ''}`} />
+            ? <DayBarChart days={dayBuckets} color="var(--cf)" formatTip={d => `${d.label}: 분유 ${d.bottleCount}회 · 모유 ${d.breastCount}회`} legend={[{ label: '분유', color: 'var(--cd)' }, { label: '모유', color: 'var(--cs)' }]} />
             : <HourBarChart buckets={hourBuckets} color="var(--cf)" formatTip={(h, v) => `${h}시대: ${v}회`} />}
         </div>
       )}
@@ -186,8 +191,17 @@ function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
   if (!showDaily) {
     records.forEach(d => { hourBuckets[kstDate(new Date(d.time).getTime()).getUTCHours()]++; });
   }
+  // 일자별 버킷 — 소변/대변 두 막대로 나란히 표시(소변+대변 혼합 기록은 양쪽에 각각 포함).
   const dayBuckets = showDaily
-    ? bucketByDay(records, dayList, d => new Date(d.time).getTime(), dayRecs => ({ value: dayRecs.length }))
+    ? bucketByDay(records, dayList, d => new Date(d.time).getTime(), dayRecs => {
+        const wetCount = diaperWetCount(dayRecs);
+        const soiledCount = diaperSoiledCount(dayRecs);
+        return {
+          value: wetCount + soiledCount,
+          wetCount, soiledCount,
+          series: [{ value: wetCount, color: 'var(--cd-wet)' }, { value: soiledCount, color: 'var(--cd)' }],
+        };
+      })
     : null;
 
   return (
@@ -198,25 +212,13 @@ function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
         <StatCard label="대변" value={soiled + '회'} sub={dailyAvgStr(soiled, days)} color="var(--cd)" />
       </div>
 
-      {/* 유형별 비율 — 소변+대변(both) 기록은 소변·대변 양쪽 횟수에 각각 포함해서 계산 */}
+      {/* 시간대/일자 분포 — 소변+대변(both) 기록은 소변·대변 양쪽 횟수에 각각 포함해서 계산 */}
       {total > 0 && (
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
-          <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>유형별 비율</div>
-          {[{ label: '소변', count: wet, color: 'var(--cd-wet)' }, { label: '대변', count: soiled, color: 'var(--cd)' }].map(item => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <div style={{ fontSize: 11, color: 'var(--muted)', width: 60, flexShrink: 0 }}>{item.label}</div>
-              <StatBar value={item.count} max={total} color={item.color} />
-              <div style={{ fontSize: 11, fontWeight: 600, color: item.color, width: 24, textAlign: 'right' }}>{item.count}</div>
-            </div>
-          ))}
-
-          {/* 시간대/일자 분포 */}
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{showDaily ? '일자별' : '시간대별'}</div>
-            {showDaily
-              ? <DayBarChart days={dayBuckets} color="var(--cd)" height={44} formatTip={d => `${d.label}: ${d.value}회`} />
-              : <HourBarChart buckets={hourBuckets} color="var(--cd)" height={30} formatTip={(h, v) => `${h}시대: ${v}회`} />}
-          </div>
+          <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>{showDaily ? '일자별' : '시간대별'}</div>
+          {showDaily
+            ? <DayBarChart days={dayBuckets} color="var(--cd)" formatTip={d => `${d.label}: 소변 ${d.wetCount}회 · 대변 ${d.soiledCount}회`} legend={[{ label: '소변', color: 'var(--cd-wet)' }, { label: '대변', color: 'var(--cd)' }]} />
+            : <HourBarChart buckets={hourBuckets} color="var(--cd)" height={30} formatTip={(h, v) => `${h}시대: ${v}회`} />}
         </div>
       )}
 
@@ -271,7 +273,7 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
           value: Math.round((napHours + nightHours) * 10) / 10,
           count: dayRecs.length,
           napHours, nightHours,
-          segments: [{ value: napHours, color: 'var(--cs-day)' }, { value: nightHours, color: 'var(--cs-night)' }],
+          series: [{ value: napHours, color: 'var(--cs-day)' }, { value: nightHours, color: 'var(--cs-night)' }],
         };
       })
     : null;
@@ -288,18 +290,8 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>{showDaily ? '일자별 수면' : '시간대별 수면'}</div>
           {showDaily
-            ? <DayBarChart days={dayBuckets} color="var(--cs)" formatTip={d => `${d.label}: 낮잠 ${d.napHours}시간 · 밤잠 ${d.nightHours}시간 (${d.count}회)`} />
+            ? <DayBarChart days={dayBuckets} color="var(--cs)" formatTip={d => `${d.label}: 낮잠 ${d.napHours}시간 · 밤잠 ${d.nightHours}시간 (${d.count}회)`} legend={[{ label: '낮잠', color: 'var(--cs-day)' }, { label: '밤잠', color: 'var(--cs-night)' }]} />
             : <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />}
-          {showDaily && (
-            <div style={{ display: 'flex', gap: 14, marginTop: 8, justifyContent: 'center' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--muted)' }}>
-                <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--cs-day)', display: 'inline-block' }} />낮잠
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--muted)' }}>
-                <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--cs-night)', display: 'inline-block' }} />밤잠
-              </span>
-            </div>
-          )}
         </div>
       )}
 

@@ -9,16 +9,17 @@ const GAP = 6;
 // 막대 폭은 선택 기간(막대 개수)에 맞춰 카드 너비를 꽉 채우도록 자동 계산한다 — 기간이
 // 짧으면 막대가 넓어지고, 기간이 길어서 최소 폭(MIN_BAR_W) 밑으로 내려가면 그 폭으로
 // 고정한 채 가로 스크롤 + 오른쪽 화살표 인디케이터로 넘긴다.
-// days[i].segments가 주어지면(예: 수면의 낮잠/밤잠) 단일 막대 대신 위아래로 쌓은
-// 구간별 막대(스택형)로 그린다.
-export default function DayBarChart({ days, color, height = 64, formatTip, barWidth = 26 }) {
+// days[i].series가 주어지면(예: 수유의 분유/모유, 기저귀의 소변/대변, 수면의 낮잠/밤잠)
+// 하루 칸 안에 여러 막대를 나란히 배치해서 보여준다. legend를 주면 차트 아래에
+// 색상 범례를 함께 그린다.
+export default function DayBarChart({ days, color, height = 64, formatTip, barWidth = 26, legend }) {
   const scrollRef = useRef(null);
   const barRefs = useRef([]);
   const tooltipAnchorRef = useRef(null);
   const [active, setActive] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [barW, setBarW] = useState(barWidth);
-  const max = Math.max(...days.map(d => d.value), 1);
+  const max = Math.max(...days.flatMap(d => d.series ? d.series.map(s => s.value) : [d.value]), 1);
 
   function checkOverflow() {
     const el = scrollRef.current;
@@ -65,12 +66,14 @@ export default function DayBarChart({ days, color, height = 64, formatTip, barWi
             onClick={() => { tooltipAnchorRef.current = barRefs.current[i]; setActive(prev => (prev === i ? null : i)); }}
             style={{ flex: `0 0 ${barW}px`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}
           >
-            {d.segments ? (
-              <div style={{ width: '100%', display: 'flex', flexDirection: 'column-reverse', height: Math.max(3, (d.value / max) * (height - 18)) + 'px', borderRadius: '3px 3px 0 0', overflow: 'hidden' }}>
-                {d.segments.map((seg, si) => {
-                  const segPct = d.value > 0 ? (seg.value / d.value) * 100 : 0;
-                  return <div key={si} style={{ width: '100%', height: segPct + '%', background: seg.value > 0 ? seg.color : 'transparent' }} />;
-                })}
+            {d.series ? (
+              <div style={{ width: '100%', display: 'flex', alignItems: 'flex-end', gap: 2, height: '100%' }}>
+                {d.series.map((s, si) => (
+                  <div key={si} style={{
+                    flex: 1, minWidth: 0, background: s.value > 0 ? s.color : 'var(--bdr)', borderRadius: '2px 2px 0 0',
+                    height: Math.max(3, (s.value / max) * (height - 18)) + 'px', transition: 'height .4s', opacity: s.value > 0 ? 1 : 0.4,
+                  }} />
+                ))}
               </div>
             ) : (
               <div style={{
@@ -97,6 +100,15 @@ export default function DayBarChart({ days, color, height = 64, formatTip, barWi
         <ChartTooltip containerRef={tooltipAnchorRef} xPct={50} yPct={0}>
           {formatTip ? formatTip(days[active]) : `${days[active].label}: ${days[active].value}`}
         </ChartTooltip>
+      )}
+      {legend && legend.length > 0 && (
+        <div style={{ display: 'flex', gap: 14, marginTop: 8, justifyContent: 'center' }}>
+          {legend.map(item => (
+            <span key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--muted)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: item.color, display: 'inline-block' }} />{item.label}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   );
