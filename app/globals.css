@@ -154,27 +154,27 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .finp-white{background:#fff;color:#2C2438;border-color:rgba(44,36,54,.15)}
 
 /* ── DATETIMEPICKER (네이티브 date/time input 대체) ── */
-.dtp-wrap{position:relative;font-family:var(--sans)}
-.dtp-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--ink);cursor:pointer;font-family:var(--sans);-webkit-appearance:none;appearance:none}
+.dtp-wrap{position:relative;font-family:var(--sans) !important}
+.dtp-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--ink);cursor:pointer;font-family:var(--sans) !important;-webkit-appearance:none;appearance:none}
 .dtp-btn .dtp-placeholder{color:var(--muted)}
 .dtp-btn svg{flex-shrink:0;color:var(--muted)}
-.dtp-pop{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:50;background:var(--surf);border-radius:var(--r);box-shadow:var(--sh);padding:14px;font-family:var(--sans)}
+.dtp-pop{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:50;background:var(--surf);border-radius:var(--r);box-shadow:var(--sh);padding:14px;font-family:var(--sans) !important}
 .dtp-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.dtp-cal-title{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--ink)}
+.dtp-cal-title{font-family:var(--sans) !important;font-size:14px;font-weight:700;color:var(--ink)}
 .dtp-cal-nav{display:flex;gap:4px}
 .dtp-cal-nav button{width:26px;height:26px;border-radius:8px;border:none;background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--sh-inset);-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none}
-.dtp-cal-wd{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:var(--sans);font-size:11px;color:var(--muted);margin-bottom:4px}
+.dtp-cal-wd{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:var(--sans) !important;font-size:11px;color:var(--muted);margin-bottom:4px}
 .dtp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.dtp-cal-cell{aspect-ratio:1;border:none;background:none;border-radius:8px;font-family:var(--sans);font-size:13px;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none}
+.dtp-cal-cell{aspect-ratio:1;border:none;background:none;border-radius:8px;font-family:var(--sans) !important;font-size:13px;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none}
 .dtp-cal-cell:disabled{visibility:hidden;cursor:default}
 .dtp-cal-cell.today{color:var(--sage);font-weight:700}
 .dtp-cal-cell.selected{background:var(--sage);color:#fff;font-weight:700;box-shadow:var(--sh-sm)}
 .dtp-time{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)}
 .dtp-timecol{flex:1;height:132px;overflow-y:auto;scroll-snap-type:y proximity;-webkit-overflow-scrolling:touch}
-.dtp-timeitem{scroll-snap-align:center;text-align:center;padding:6px 0;font-family:var(--sans);font-size:14px;color:var(--muted);border-radius:8px;cursor:pointer;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
+.dtp-timeitem{scroll-snap-align:center;text-align:center;padding:6px 0;font-family:var(--sans) !important;font-size:14px;color:var(--muted);border-radius:8px;cursor:pointer;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
 .dtp-timeitem.on{background:var(--sage);color:#fff;font-weight:700;box-shadow:var(--sh-sm)}
 .dtp-foot{display:flex;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--bdr)}
-.dtp-foot button{flex:1;background:var(--bg);border:none;border-radius:var(--r-btn);font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 6px;box-shadow:var(--sh-inset);-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;transition:box-shadow .15s}
+.dtp-foot button{flex:1;background:var(--bg);border:none;border-radius:var(--r-btn);font-family:var(--sans) !important;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 6px;box-shadow:var(--sh-inset);-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;transition:box-shadow .15s}
 .dtp-foot button:active{box-shadow:var(--sh-sm)}
 .dtp-foot-today{color:var(--sage)}
 /* 아이정보 화면의 생년월일/출생시간(type=date, type=time)이 네이티브 캘린더/시계
