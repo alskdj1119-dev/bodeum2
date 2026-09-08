@@ -1,22 +1,20 @@
 'use client';
+import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { durStr, feedEffectiveMl, kstDate, KST_OFFSET_MS } from '../../lib/helpers';
+import DateTimePicker from '../DateTimePicker';
+import { durStr, feedEffectiveMl, kstDate, kstTodayStartMs, kstMidnightMsFromDateStr } from '../../lib/helpers';
 
 // ──────────── 날짜 범위 헬퍼 (한국 시간 00:00~23:59 기준) ────────────
-// 기기 시간대와 무관하게 항상 "한국 자정"을 기준으로 날짜 경계를 계산한다.
-function kstMidnightMs(offsetDays = 0) {
-  const nowKst = kstDate(Date.now());
-  return Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate() + offsetDays, 0, 0) - KST_OFFSET_MS;
-}
-
-function dayRange(offsetDays) {
-  const start = kstMidnightMs(offsetDays);
+// anchorMs("기준일 자정")로부터 offsetDays만큼 떨어진 하루의 범위를 계산한다.
+// 기본 모드에서는 anchorMs가 "오늘"이고, 기간 선택 모드에서는 선택한 기간의 마지막 날이 anchorMs가 된다.
+function dayRangeAt(anchorMs, offsetDays) {
+  const start = anchorMs + offsetDays * 86400000;
   return { start, end: start + 86400000 - 1 };
 }
 
-function inDay(isoTime, offsetDays) {
+function inDayAt(isoTime, anchorMs, offsetDays) {
   const t = new Date(isoTime).getTime();
-  const { start, end } = dayRange(offsetDays);
+  const { start, end } = dayRangeAt(anchorMs, offsetDays);
   return t >= start && t <= end;
 }
 
@@ -49,17 +47,21 @@ function fmtMin(m) {
   return h > 0 ? `${h}시간 ${mn}분` : `${mn}분`;
 }
 
-// 최근 7일 (오늘 포함 7일) — 각 날의 "한국 자정" ms 타임스탬프 배열
-function last7Days() {
+// 기준일(anchorMs)을 마지막 날로 하는 n일치 "한국 자정" ms 타임스탬프 배열
+function lastNDaysAt(anchorMs, n) {
   const days = [];
-  for (let i = 6; i >= 0; i--) {
-    days.push(kstMidnightMs(-i));
+  for (let i = n - 1; i >= 0; i--) {
+    days.push(anchorMs - i * 86400000);
   }
   return days;
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 function dayLabel(ms) { return DAY_LABELS[kstDate(ms).getUTCDay()]; }
+function dateLabel(ms) { const d = kstDate(ms); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; }
+
+// 기간 선택 시 하루 단위 막대가 너무 많아지지 않도록 최대 60일로 제한
+const MAX_RANGE_DAYS = 60;
 
 // ──────────── 막대 차트 (수유 전용 — 횟수 + ml 표시) ────────────
 function FeedBar({ label, count, ml, maxCount, color }) {
@@ -94,31 +96,57 @@ function MiniBar({ label, value, max, color, unit = '' }) {
 }
 
 export default function StatsPanel() {
-  const { db, filterByActiveBaby } = useApp();
+  const { db, filterByActiveBaby, showToast } = useApp();
   const feeds = filterByActiveBaby(db.feeds);
   const diapers = filterByActiveBaby(db.diapers);
   const sleeps = filterByActiveBaby(db.sleeps);
 
-  // ══ 수유 (오늘/어제/7일 — 당일 00:00~23:59 기준) ══
-  const feedToday = feeds.filter(f => inDay(f.start || f.time, 0));
-  const feedYest  = feeds.filter(f => inDay(f.start || f.time, -1));
+  // ══ 기간 선택 — 안 건드리면 지금까지와 완전히 동일한 "오늘 기준" 기본값 ══
+  const todayMs = kstTodayStartMs();
+  const [useCustomRange, setUseCustomRange] = useState(false);
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
 
-  // 7일 평균: 오늘 포함 최근 7일
-  const feed7d = feeds.filter(f => {
+  let anchorMs = todayMs;
+  let rangeDays = 7;
+  let isCustom = false;
+  if (useCustomRange && rangeStart && rangeEnd) {
+    const startMs = kstMidnightMsFromDateStr(rangeStart);
+    const endMs = kstMidnightMsFromDateStr(rangeEnd);
+    if (endMs >= startMs) {
+      anchorMs = endMs;
+      rangeDays = Math.min(MAX_RANGE_DAYS, Math.round((endMs - startMs) / 86400000) + 1);
+      isCustom = true;
+    }
+  }
+
+  const label0 = isCustom ? dateLabel(anchorMs) : '오늘';
+  const label1 = isCustom ? dateLabel(anchorMs - 86400000) : '어제';
+  const labelN = isCustom ? `${rangeDays}일 평균` : '7일 평균';
+  const recentTitle = isCustom ? `선택 기간(${rangeDays}일) 수유 횟수` : '최근 7일 수유 횟수';
+  const recentSleepTitle = isCustom ? `선택 기간(${rangeDays}일) 수면 시간` : '최근 7일 수면 시간';
+
+  // ══ 수유 (기준일/전날/기간 평균 — 기준일 00:00~23:59 기준) ══
+  const feedToday = feeds.filter(f => inDayAt(f.start || f.time, anchorMs, 0));
+  const feedYest  = feeds.filter(f => inDayAt(f.start || f.time, anchorMs, -1));
+
+  // 기간 평균: anchorMs를 마지막 날로 하는 rangeDays일
+  const feedRange = feeds.filter(f => {
     const t = new Date(f.start || f.time).getTime();
-    const { start } = dayRange(-6);
-    return t >= start;
+    const { start } = dayRangeAt(anchorMs, -(rangeDays - 1));
+    const { end } = dayRangeAt(anchorMs, 0);
+    return t >= start && t <= end;
   });
 
   const mlToday = Math.round(totalMl(feedToday));
   const mlYest  = Math.round(totalMl(feedYest));
   const intToday = avgIntervalMin(feedToday);
   const intYest  = avgIntervalMin(feedYest);
-  const int7d    = avgIntervalMin(feed7d);
+  const intRange = avgIntervalMin(feedRange);
 
-  // 7일 일별 수유 횟수 + ml
-  const days7 = last7Days();
-  const feedByDay = days7.map(d => {
+  // 기간 일별 수유 횟수 + ml
+  const daysN = lastNDaysAt(anchorMs, rangeDays);
+  const feedByDay = daysN.map(d => {
     const start = d, end = start + 86400000;
     return feeds.filter(f => {
       const t = new Date(f.start || f.time).getTime();
@@ -129,15 +157,15 @@ export default function StatsPanel() {
   const feedMlByDay    = feedByDay.map(arr => Math.round(totalMl(arr)));
   const maxFeedDay = Math.max(...feedCountByDay, 1);
 
-  // "7일 평균"은 최근 7일을 그대로 7로 나누면 기록을 안 한 날 때문에 평균이 낮아 보이므로,
+  // "기간 평균"은 그대로 rangeDays로 나누면 기록을 안 한 날 때문에 평균이 낮아 보이므로,
   // 실제로 기록이 있었던 날짜 수로만 나눈다 (예: 7일 중 5일만 기록했으면 5로 나눔).
   const feedActiveDays = feedCountByDay.filter(c => c > 0).length;
-  const avgFeedCount7d = feedActiveDays > 0 ? Math.round(feed7d.length / feedActiveDays * 10) / 10 : null;
-  const avgFeedMl7d    = feedActiveDays > 0 ? Math.round(totalMl(feed7d) / feedActiveDays) : null;
+  const avgFeedCountN = feedActiveDays > 0 ? Math.round(feedRange.length / feedActiveDays * 10) / 10 : null;
+  const avgFeedMlN    = feedActiveDays > 0 ? Math.round(totalMl(feedRange) / feedActiveDays) : null;
 
   // ══ 수면 ══
-  const sleepToday = sleeps.filter(s => s.end && inDay(s.start, 0));
-  const sleepYest  = sleeps.filter(s => s.end && inDay(s.start, -1));
+  const sleepToday = sleeps.filter(s => s.end && inDayAt(s.start, anchorMs, 0));
+  const sleepYest  = sleeps.filter(s => s.end && inDayAt(s.start, anchorMs, -1));
 
   const sleepMsToday = sleepToday.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
   const sleepMsYest  = sleepYest.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
@@ -147,7 +175,7 @@ export default function StatsPanel() {
   const napMs   = nap24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
   const nightMs = night24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
 
-  const sleepByDay = days7.map(d => {
+  const sleepByDay = daysN.map(d => {
     const start = d, end = start + 86400000;
     const ms = sleeps
       .filter(s => s.end && new Date(s.start).getTime() >= start && new Date(s.start).getTime() < end)
@@ -157,23 +185,62 @@ export default function StatsPanel() {
   const maxSleepDay = Math.max(...sleepByDay, 1);
 
   // ══ 기저귀 ══
-  const diapToday = diapers.filter(d => inDay(d.time, 0));
-  const diapYest  = diapers.filter(d => inDay(d.time, -1));
+  const diapToday = diapers.filter(d => inDayAt(d.time, anchorMs, 0));
+  const diapYest  = diapers.filter(d => inDayAt(d.time, anchorMs, -1));
   const wetToday    = diapToday.filter(d => d.type === 'wet' || d.type === 'both').length;
   const soiledToday = diapToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
 
+  function toggleCustom(on) {
+    if (on && (!rangeStart || !rangeEnd)) {
+      // 기간 선택을 처음 켤 때는 기본값(최근 7일)으로 미리 채워준다.
+      const endD = kstDate(todayMs);
+      const startD = kstDate(todayMs - 6 * 86400000);
+      const fmt = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      setRangeStart(fmt(startD));
+      setRangeEnd(fmt(endD));
+    }
+    setUseCustomRange(on);
+  }
+
   return (
     <>
-      <h2 className="daytitle" style={{ fontSize: 22, marginBottom: 20 }}>통계 분석</h2>
+      <h2 className="daytitle" style={{ fontSize: 22, marginBottom: 16 }}>통계 분석</h2>
+
+      {/* ─── 기간 선택 — 안 건드리면 항상 "오늘 기준" 기본값 그대로 ─── */}
+      <div className="modetoggle" style={{ marginBottom: useCustomRange ? 10 : 20 }}>
+        <button
+          className={`modetoggle-btn${!useCustomRange ? ' on' : ''}`}
+          onClick={() => toggleCustom(false)}
+          style={!useCustomRange ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+        >기본 (오늘 기준)</button>
+        <button
+          className={`modetoggle-btn${useCustomRange ? ' on' : ''}`}
+          onClick={() => toggleCustom(true)}
+          style={useCustomRange ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+        >기간 선택</button>
+      </div>
+      {useCustomRange && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+          <DateTimePicker mode="date" style={{ flex: 1 }} value={rangeStart} onChange={setRangeStart} />
+          <span style={{ color: 'var(--muted)', fontSize: 13 }}>~</span>
+          <DateTimePicker mode="date" style={{ flex: 1 }} value={rangeEnd} onChange={(v) => {
+            if (v && rangeStart && v < rangeStart) {
+              showToast('종료일이 시작일보다 빠를 수 없어요');
+              return;
+            }
+            setRangeEnd(v);
+          }} />
+        </div>
+      )}
 
       {/* ─── 수유 ─── */}
       <p className="seclbl" style={{ marginBottom: 10 }}>수유</p>
       <div className="sc-static" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {[
-            { label: '오늘', count: feedToday.length, ml: mlToday, interval: intToday },
-            { label: '어제', count: feedYest.length,  ml: mlYest,  interval: intYest },
-            { label: '7일 평균', count: avgFeedCount7d, ml: avgFeedMl7d, interval: int7d },
+            { label: label0, count: feedToday.length, ml: mlToday, interval: intToday },
+            { label: label1, count: feedYest.length,  ml: mlYest,  interval: intYest },
+            { label: labelN, count: avgFeedCountN, ml: avgFeedMlN, interval: intRange },
           ].map((s, i) => (
             <div key={i} style={{ borderRight: i < 2 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>{s.label}</div>
@@ -187,8 +254,8 @@ export default function StatsPanel() {
           ))}
         </div>
 
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>최근 7일 수유 횟수</div>
-        {days7.map((d, i) => (
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>{recentTitle}</div>
+        {daysN.map((d, i) => (
           <FeedBar key={i} label={dayLabel(d)} count={feedCountByDay[i]} ml={feedMlByDay[i]} maxCount={maxFeedDay} color="var(--cf)" />
         ))}
       </div>
@@ -198,8 +265,8 @@ export default function StatsPanel() {
       <div className="sc-static" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {[
-            { label: '오늘 총 수면', val: sleepMsToday > 0 ? durStr(sleepMsToday) : '—', sub: sleepToday.length + '회' },
-            { label: '어제 총 수면', val: sleepMsYest  > 0 ? durStr(sleepMsYest)  : '—', sub: sleepYest.length  + '회' },
+            { label: `${label0} 총 수면`, val: sleepMsToday > 0 ? durStr(sleepMsToday) : '—', sub: sleepToday.length + '회' },
+            { label: `${label1} 총 수면`, val: sleepMsYest  > 0 ? durStr(sleepMsYest)  : '—', sub: sleepYest.length  + '회' },
           ].map((s, i) => (
             <div key={i} style={{ borderRight: i < 1 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>{s.label}</div>
@@ -211,19 +278,19 @@ export default function StatsPanel() {
 
         <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>
           <div style={{ flex: 1, background: 'var(--fw)', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: 'var(--muted)' }}>낮잠 (오늘)</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)' }}>낮잠 ({label0})</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cf)' }}>{napMs > 0 ? durStr(napMs) : '—'}</div>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>{nap24.length}회</div>
           </div>
           <div style={{ flex: 1, background: 'var(--sw)', borderRadius: 10, padding: '8px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: 'var(--muted)' }}>밤잠 (오늘)</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)' }}>밤잠 ({label0})</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cs)' }}>{nightMs > 0 ? durStr(nightMs) : '—'}</div>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>{night24.length}회</div>
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>최근 7일 수면 시간</div>
-        {days7.map((d, i) => (
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>{recentSleepTitle}</div>
+        {daysN.map((d, i) => (
           <MiniBar key={i} label={dayLabel(d)} value={sleepByDay[i]} max={maxSleepDay} color="var(--cs)" unit="h" />
         ))}
       </div>
@@ -233,8 +300,8 @@ export default function StatsPanel() {
       <div className="sc-static" style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, textAlign: 'center' }}>
           {[
-            { label: '오늘', total: diapToday.length, wet: wetToday, soiled: soiledToday },
-            { label: '어제', total: diapYest.length,
+            { label: label0, total: diapToday.length, wet: wetToday, soiled: soiledToday },
+            { label: label1, total: diapYest.length,
               wet: diapYest.filter(d => d.type === 'wet' || d.type === 'both').length,
               soiled: diapYest.filter(d => d.type === 'soiled' || d.type === 'both').length },
           ].map((s, i) => (

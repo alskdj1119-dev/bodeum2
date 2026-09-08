@@ -79,7 +79,25 @@ export default function TrashPanel() {
 
   const sorted = [...trash].sort((a, b) => new Date(b._deletedAt) - new Date(a._deletedAt));
 
+  // 기록 종류별 SET_* 액션으로 dispatch — restore()/undoRestore() 둘 다 사용.
+  function dispatchCollection(_type, payload) {
+    switch (_type) {
+      case 'feeds':   dispatch({ type: 'SET_FEEDS',   payload }); break;
+      case 'diapers': dispatch({ type: 'SET_DIAPERS', payload }); break;
+      case 'sleeps':  dispatch({ type: 'SET_SLEEPS',  payload }); break;
+      case 'weights': dispatch({ type: 'SET_WEIGHTS', payload }); break;
+      case 'temps':   dispatch({ type: 'SET_TEMPS',   payload }); break;
+      case 'solids':  dispatch({ type: 'SET_SOLIDS',  payload }); break;
+      case 'visits':  dispatch({ type: 'SET_VISITS',  payload }); break;
+      case 'symptoms': dispatch({ type: 'SET_SYMPTOMS', payload }); break;
+      case 'heights':  dispatch({ type: 'SET_HEIGHTS',  payload }); break;
+      case 'headCircs': dispatch({ type: 'SET_HEAD_CIRCS', payload }); break;
+    }
+  }
+
   async function restore(trashItem) {
+    if (!window.confirm('이 기록을 복원하시겠어요?')) return;
+
     const { _deletedAt, _type, ...original } = trashItem;
     const newTrash = trash.filter(x => !(x.id === trashItem.id && x._type === _type && x._deletedAt === _deletedAt));
     const collection = db[_type] || [];
@@ -87,20 +105,24 @@ export default function TrashPanel() {
     const newDB = { ...db, [_type]: restored, trash: newTrash };
 
     dispatch({ type: 'SET_TRASH', payload: newTrash });
-    switch (_type) {
-      case 'feeds':   dispatch({ type: 'SET_FEEDS',   payload: restored }); break;
-      case 'diapers': dispatch({ type: 'SET_DIAPERS', payload: restored }); break;
-      case 'sleeps':  dispatch({ type: 'SET_SLEEPS',  payload: restored }); break;
-      case 'weights': dispatch({ type: 'SET_WEIGHTS', payload: restored }); break;
-      case 'temps':   dispatch({ type: 'SET_TEMPS',   payload: restored }); break;
-      case 'solids':  dispatch({ type: 'SET_SOLIDS',  payload: restored }); break;
-      case 'visits':  dispatch({ type: 'SET_VISITS',  payload: restored }); break;
-      case 'symptoms': dispatch({ type: 'SET_SYMPTOMS', payload: restored }); break;
-      case 'heights':  dispatch({ type: 'SET_HEIGHTS',  payload: restored }); break;
-      case 'headCircs': dispatch({ type: 'SET_HEAD_CIRCS', payload: restored }); break;
-    }
+    dispatchCollection(_type, restored);
     await saveDB(newDB);
-    showToast('복원됐어요 ✓');
+
+    // 토스트가 떠 있는 동안(2.8초)만 "되돌리기"로 복원을 취소할 수 있게 함.
+    // restore() 시점에 이미 계산해둔 restored/newTrash/newDB를 그대로 되돌리므로
+    // 그 사이 다른 변경이 없었다면 항상 정확하게 원상복구된다.
+    showToast('복원됐어요 ✓', {
+      label: '되돌리기',
+      onClick: async () => {
+        const undoCollection = restored.filter(x => x.id !== original.id);
+        const undoTrash = [trashItem, ...newTrash];
+        const undoDB = { ...newDB, [_type]: undoCollection, trash: undoTrash };
+        dispatch({ type: 'SET_TRASH', payload: undoTrash });
+        dispatchCollection(_type, undoCollection);
+        await saveDB(undoDB);
+        showToast('복원을 취소했어요');
+      },
+    });
   }
 
   async function clearAll() {

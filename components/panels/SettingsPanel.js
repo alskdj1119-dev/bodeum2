@@ -8,19 +8,6 @@ export default function SettingsPanel() {
     <>
       <h2 className="daytitle" style={{ fontSize: '22px', marginBottom: '18px' }}>설정</h2>
 
-      <button className="settmenu" onClick={() => goTab('stats', 'forward')}>
-        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-        </div>
-        <div className="settmenu-inf">
-          <div className="settmenu-title">통계</div>
-          <div className="settmenu-sub">요일·시간대별 패턴, 평균 수유 간격 등</div>
-        </div>
-        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </button>
-
       <button className="settmenu" onClick={() => goTab('babyInfo', 'forward')}>
         <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -34,15 +21,15 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
 
-      <button className="settmenu" onClick={() => goTab('familyCode', 'forward')}>
+      <button className="settmenu" onClick={() => goTab('stats', 'forward')}>
         <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
         </div>
         <div className="settmenu-inf">
-          <div className="settmenu-title">가족 코드</div>
-          <div className="settmenu-sub">파트너와 기록 실시간 공유</div>
+          <div className="settmenu-title">통계</div>
+          <div className="settmenu-sub">요일·시간대별 패턴, 평균 수유 간격 등</div>
         </div>
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
@@ -56,6 +43,19 @@ export default function SettingsPanel() {
         <div className="settmenu-inf">
           <div className="settmenu-title">직수 계산 설정</div>
           <div className="settmenu-sub">직수 섭취량 계산 기준 (분당 ml)</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+
+      <button className="settmenu" onClick={() => goTab('familyCode', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">가족 코드</div>
+          <div className="settmenu-sub">파트너와 기록 실시간 공유</div>
         </div>
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
@@ -87,19 +87,6 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
 
-      <button className="settmenu" onClick={() => goTab('export', 'forward')}>
-        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-        </div>
-        <div className="settmenu-inf">
-          <div className="settmenu-title">기록 내보내기</div>
-          <div className="settmenu-sub">전체 기록을 JSON·CSV 파일로 다운로드</div>
-        </div>
-        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-      </button>
-
       <p className="seclbl" style={{ margin: '18px 0 10px' }}>기타</p>
 
       <button className="settmenu" onClick={() => goTab('changelog', 'forward')}>
@@ -119,6 +106,18 @@ export default function SettingsPanel() {
         <div className="settmenu-inf">
           <div className="settmenu-title">기능 요청 / 건의사항</div>
           <div className="settmenu-sub">원하는 기능을 알려주세요</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+      <button className="settmenu" onClick={() => goTab('export', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">기록 내보내기</div>
+          <div className="settmenu-sub">전체 기록을 JSON·CSV 파일로 다운로드</div>
         </div>
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
