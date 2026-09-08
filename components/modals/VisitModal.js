@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
 
 export default function VisitModal() {
@@ -80,7 +81,7 @@ export default function VisitModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">방문 일시</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
           <div className="fld">
             <div className="flbl">병원 이름</div>
@@ -100,7 +101,7 @@ export default function VisitModal() {
           </div>
           <div className="fld">
             <div className="flbl">다음 방문 예정일 (선택)</div>
-            <input className="finp" type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} />
+            <DateTimePicker mode="date" value={followUpDate} onChange={setFollowUpDate} />
           </div>
           <div className="fld">
             <div className="flbl">메모</div>

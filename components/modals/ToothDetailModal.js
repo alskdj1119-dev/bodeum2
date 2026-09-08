@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { kstDate } from '../../lib/helpers';
 import { ALL_TEETH, normalizeToothInfo } from '../charts/TeethChart';
 
@@ -77,7 +78,7 @@ export default function ToothDetailModal() {
           <div className="fld">
             <div className="flbl">난 날짜</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <input className="finp" type="date" value={date} onChange={e => setDate(e.target.value)} style={{ flex: 1 }} />
+              <DateTimePicker mode="date" value={date} onChange={setDate} style={{ flex: 1 }} />
               <button className="bcan" style={{ padding: '0 16px' }} onClick={saveDate}>저장</button>
             </div>
           </div>
@@ -120,7 +121,7 @@ export default function ToothDetailModal() {
                 >{rt.label}</button>
               ))}
             </div>
-            <input className="finp" type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ marginBottom: 8, width: '100%' }} />
+            <DateTimePicker mode="date" value={newDate} onChange={setNewDate} style={{ marginBottom: 8, width: '100%' }} />
             <input className="finp" type="text" placeholder="메모 (선택)" value={newMemo} onChange={e => setNewMemo(e.target.value)} style={{ marginBottom: 8, width: '100%' }} />
             <button className="bpri" style={{ width: '100%' }} onClick={addRecord}>추가</button>
           </div>

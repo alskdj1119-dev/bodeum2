@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { toLocal, fromLocal, directFeedMlFromMs } from '../../lib/helpers';
 
 // Color scheme per feed type
@@ -290,30 +291,30 @@ export default function FeedModal() {
             <>
               <div className="fld">
                 <div className="flbl">왼쪽 시작 시간</div>
-                <input className="finp" type="datetime-local" value={leftStart} onChange={e => setLeftStart(e.target.value)} />
+                <DateTimePicker value={leftStart} onChange={setLeftStart} />
               </div>
               <div className="fld">
                 <div className="flbl">왼쪽 종료 시간</div>
-                <input className="finp" type="datetime-local" value={leftEnd} onChange={e => setLeftEnd(e.target.value)} />
+                <DateTimePicker value={leftEnd} onChange={setLeftEnd} />
               </div>
               <div className="fld">
                 <div className="flbl">오른쪽 시작 시간</div>
-                <input className="finp" type="datetime-local" value={rightStart} onChange={e => setRightStart(e.target.value)} />
+                <DateTimePicker value={rightStart} onChange={setRightStart} />
               </div>
               <div className="fld">
                 <div className="flbl">오른쪽 종료 시간</div>
-                <input className="finp" type="datetime-local" value={rightEnd} onChange={e => setRightEnd(e.target.value)} />
+                <DateTimePicker value={rightEnd} onChange={setRightEnd} />
               </div>
             </>
           ) : isEdit && (
             <>
               <div className="fld">
                 <div className="flbl">시작 시간</div>
-                <input className="finp" type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+                <DateTimePicker value={start} onChange={setStart} />
               </div>
               <div className="fld">
                 <div className="flbl">종료 시간</div>
-                <input className="finp" type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
+                <DateTimePicker value={end} onChange={setEnd} />
               </div>
             </>
           )}

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 
 const GENDER_OPTS = [
   { code: '',     label: '미설정' },
@@ -135,11 +136,11 @@ export default function BabyInfoPanel() {
       </div>
       <div className="fld">
         <div className="flbl">생년월일</div>
-        <input className="finp finp-white" type="date" value={form.birthDate} onChange={e => set('birthDate', e.target.value)} />
+        <DateTimePicker mode="date" className="finp-white" value={form.birthDate} onChange={v => set('birthDate', v)} />
       </div>
       <div className="fld">
         <div className="flbl">출생 시간</div>
-        <input className="finp finp-white" type="time" value={form.birthTime} onChange={e => set('birthTime', e.target.value)} />
+        <DateTimePicker mode="time" className="finp-white" value={form.birthTime} onChange={v => set('birthTime', v)} />
       </div>
       <div className="fld">
         <div className="flbl">출생 체중 (kg)</div>

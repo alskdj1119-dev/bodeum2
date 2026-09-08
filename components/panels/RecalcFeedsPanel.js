@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import {
   fmtFull, toLocal, directFeedDurationMs, directFeedMlFromMs, getDirectFeedRate,
   FEED_SIDE_LABEL,
@@ -83,9 +84,9 @@ export default function RecalcFeedsPanel() {
       <div className="fld">
         <div className="flbl">기간</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input className="finp finp-white" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <DateTimePicker mode="date" className="finp-white" style={{ flex: 1 }} value={startDate} onChange={setStartDate} />
           <span style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }}>~</span>
-          <input className="finp finp-white" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <DateTimePicker mode="date" className="finp-white" style={{ flex: 1 }} value={endDate} onChange={setEndDate} />
         </div>
       </div>
 

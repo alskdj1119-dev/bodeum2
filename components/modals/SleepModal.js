@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
 
 const PLACE_OPTIONS = [
@@ -100,12 +101,12 @@ export default function SleepModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">시작 시간</div>
-            <input className="finp" type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+            <DateTimePicker value={start} onChange={setStart} />
           </div>
 
           <div className="fld">
             <div className="flbl">종료 시간 <span>(비워두면 타이머 시작)</span></div>
-            <input className="finp" type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
+            <DateTimePicker value={end} onChange={setEnd} />
           </div>
 
           <div className="fld">

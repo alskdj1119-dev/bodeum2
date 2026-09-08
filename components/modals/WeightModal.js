@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal } from '../../lib/helpers';
 
 // Single-digit scroll column
@@ -115,7 +116,7 @@ export default function WeightModal() {
 
           <div className="fld" style={{ marginTop: 16 }}>
             <div className="flbl">날짜/시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
         </div>
         <div className="mfoot">

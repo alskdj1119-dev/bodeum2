@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { toLocal, fromLocal } from '../../lib/helpers';
 
 // 진행 중인(아직 종료하지 않은) 수유/수면 타이머를 탭했을 때 뜨는 팝업.
@@ -75,7 +76,7 @@ export default function ActiveTimerEditModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">시작 시간</div>
-            <input className="finp" type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+            <DateTimePicker value={start} onChange={setStart} />
           </div>
 
           {isDirectBreast && (

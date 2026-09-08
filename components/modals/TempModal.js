@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
 
 const METHOD_OPTIONS = [
@@ -114,7 +115,7 @@ export default function TempModal() {
           {/* Time */}
           <div className="fld">
             <div className="flbl">시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
 
           {/* Note */}

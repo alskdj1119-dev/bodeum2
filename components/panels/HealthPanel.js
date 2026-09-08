@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { fmtFull, elapsedStr, groupByDay, kstDate, kstMidnightMsFromDateStr, kstTodayStartMs, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
 import TeethChart from '../charts/TeethChart';
 
@@ -301,9 +302,9 @@ export default function HealthPanel() {
                   {status === 'done' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderTop: '1px solid var(--bdr)' }}>
                       <div style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>접종 완료일자</div>
-                      <input type="date" className="finp" value={doneDate}
-                        onChange={e => setVaccineDate(v.code, e.target.value)}
-                        style={{ padding: '5px 8px', fontSize: 12, width: 'auto', flex: 1 }} />
+                      <DateTimePicker mode="date" value={doneDate}
+                        onChange={val => setVaccineDate(v.code, val)}
+                        style={{ flex: 1 }} />
                     </div>
                   )}
                 </div>

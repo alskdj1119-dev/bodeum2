@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
+import DateTimePicker from '../DateTimePicker';
 import { nowISO, toLocal, fromLocal, DIAPER_COLOR_LABEL, DIAPER_CONSISTENCY_LABEL } from '../../lib/helpers';
 
 const DTYPE_OPTIONS = [
@@ -113,7 +114,7 @@ export default function DiaperModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">시간</div>
-            <input className="finp" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} />
+            <DateTimePicker value={time} onChange={setTime} />
           </div>
 
           <div className="fld">
