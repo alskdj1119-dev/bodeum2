@@ -39,6 +39,7 @@ export default function ToothDetailModal() {
   }
 
   function saveDate() {
+    if (!date) { showToast('날짜를 입력해주세요'); return; }
     persist(info.records, date);
     showToast('저장됐어요');
   }

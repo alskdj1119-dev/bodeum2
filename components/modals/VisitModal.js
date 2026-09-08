@@ -45,6 +45,7 @@ export default function VisitModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const list = db.visits || [];
     const newVisits = [...list];
     const data = {

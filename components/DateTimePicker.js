@@ -8,6 +8,9 @@ import { useState, useRef, useEffect } from 'react';
 //   mode="datetime" → 'YYYY-MM-DDTHH:mm'
 //   mode="date"     → 'YYYY-MM-DD'
 //   mode="time"     → 'HH:mm'
+//
+// 팝업 안에서 고르는 값은 바로바로 value에 반영되지 않고 "초안(draft)"으로만 잠깐 갖고 있다가,
+// 하단의 "저장"을 눌러야 실제로 반영되며 팝업이 닫힌다. "삭제"는 값을 바로 비우고 닫는다.
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -88,12 +91,20 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
   const wrapRef = useRef(null);
   const popRef = useRef(null);
   const parsed = parseValue(value, mode);
-  const [viewY, setViewY] = useState(parsed.y);
-  const [viewMo, setViewMo] = useState(parsed.mo);
   const hasValue = !!value;
 
+  // 팝업이 열려있는 동안 고르고 있는 초안 값. "저장"을 눌러야 실제 value로 반영된다.
+  const [draft, setDraft] = useState(parsed);
+  const [viewY, setViewY] = useState(parsed.y);
+  const [viewMo, setViewMo] = useState(parsed.mo);
+
   useEffect(() => {
-    if (open) { setViewY(parsed.y); setViewMo(parsed.mo); }
+    if (open) {
+      const p = parseValue(value, mode);
+      setDraft(p);
+      setViewY(p.y);
+      setViewMo(p.mo);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -114,10 +125,6 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
     return () => clearTimeout(t);
   }, [open]);
 
-  function commit(patch) {
-    onChange(formatValue({ ...parsed, ...patch }, mode));
-  }
-
   function prevMonth() {
     let y = viewY, mo = viewMo - 1;
     if (mo < 0) { mo = 11; y -= 1; }
@@ -128,10 +135,17 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
     if (mo > 11) { mo = 0; y += 1; }
     setViewY(y); setViewMo(mo);
   }
-  function goToday() {
-    const now = new Date();
-    setViewY(now.getFullYear()); setViewMo(now.getMonth());
-    commit({ y: now.getFullYear(), mo: now.getMonth(), d: now.getDate() });
+  function pickDate(d) {
+    setViewY(viewY); setViewMo(viewMo);
+    setDraft(prev => ({ ...prev, y: viewY, mo: viewMo, d }));
+  }
+  function saveAndClose() {
+    onChange(formatValue(draft, mode));
+    setOpen(false);
+  }
+  function clearAndClose() {
+    onChange('');
+    setOpen(false);
   }
 
   const showCalendar = mode !== 'time';
@@ -146,13 +160,13 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
 
   const today = new Date();
   const isToday = (d) => d != null && viewY === today.getFullYear() && viewMo === today.getMonth() && d === today.getDate();
-  const isSelected = (d) => hasValue && d != null && showCalendar && viewY === parsed.y && viewMo === parsed.mo && d === parsed.d;
+  const isSelected = (d) => d != null && showCalendar && viewY === draft.y && viewMo === draft.mo && d === draft.d;
 
   const hourItems = Array.from({ length: 24 }, (_, h) => {
     const ampm = h < 12 ? '오전' : '오후';
     const h12 = h % 12 === 0 ? 12 : h % 12;
     return { value: h, label: pad2(h12), ampm };
-  }).filter(it => it.ampm === (parsed.h < 12 ? '오전' : '오후'));
+  }).filter(it => it.ampm === (draft.h < 12 ? '오전' : '오후'));
   const minuteItems = Array.from({ length: 60 }, (_, m) => ({ value: m, label: pad2(m) }));
   const ampmItems = [{ value: 'am', label: '오전' }, { value: 'pm', label: '오후' }];
 
@@ -199,39 +213,35 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', cla
             <div className="dtp-time">
               <TimeColumn
                 items={hourItems.map(it => ({ value: it.value, label: it.label }))}
-                selected={parsed.h}
-                onPick={(h) => commit({ h })}
+                selected={draft.h}
+                onPick={(h) => setDraft(prev => ({ ...prev, h }))}
               />
               <TimeColumn
                 items={minuteItems}
-                selected={parsed.mi}
-                onPick={(mi) => commit({ mi })}
+                selected={draft.mi}
+                onPick={(mi) => setDraft(prev => ({ ...prev, mi }))}
               />
               <TimeColumn
                 items={ampmItems}
-                selected={parsed.h < 12 ? 'am' : 'pm'}
+                selected={draft.h < 12 ? 'am' : 'pm'}
                 onPick={(v) => {
-                  const isPm = parsed.h >= 12;
+                  const isPm = draft.h >= 12;
                   const wantPm = v === 'pm';
                   if (isPm === wantPm) return;
-                  const h12 = parsed.h % 12 === 0 ? 12 : parsed.h % 12;
+                  const h12 = draft.h % 12 === 0 ? 12 : draft.h % 12;
                   const newH = wantPm ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
-                  commit({ h: newH });
+                  setDraft(prev => ({ ...prev, h: newH }));
                 }}
               />
             </div>
           )}
 
           <div className="dtp-foot">
-            <button type="button" className="dtp-foot-clear" onClick={() => { onChange(''); setOpen(false); }}>삭제</button>
-            <button type="button" className="dtp-foot-today" onClick={goToday}>오늘</button>
+            <button type="button" className="dtp-foot-clear" onClick={clearAndClose}>삭제</button>
+            <button type="button" className="dtp-foot-save" onClick={saveAndClose}>저장</button>
           </div>
         </div>
       )}
     </div>
   );
-
-  function pickDate(d) {
-    commit({ y: viewY, mo: viewMo, d });
-  }
 }

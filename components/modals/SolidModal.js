@@ -58,6 +58,7 @@ export default function SolidModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const list = db.solids || [];
     const newSolids = [...list];
     const foodName = (food || '').trim() || '이유식';

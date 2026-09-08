@@ -30,6 +30,7 @@ export default function HeadCircModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const cm = parseFloat(cmStr);
     if (isNaN(cm) || cm < 25 || cm > 55) {
       showToast('올바른 머리둘레를 입력해주세요 (25~55cm)');

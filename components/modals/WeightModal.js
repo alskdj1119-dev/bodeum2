@@ -77,6 +77,7 @@ export default function WeightModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const isoTime = new Date(time).toISOString();
     const newWeights = [...db.weights];
     if (isEdit) {

@@ -71,6 +71,7 @@ export default function DiaperModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const newDiapers = [...db.diapers];
     if (isEdit) {
       const idx = newDiapers.findIndex(d => d.id === editId);

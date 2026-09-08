@@ -30,6 +30,7 @@ export default function HeightModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const cm = parseFloat(cmStr);
     if (isNaN(cm) || cm < 30 || cm > 120) {
       showToast('올바른 키를 입력해주세요 (30~120cm)');

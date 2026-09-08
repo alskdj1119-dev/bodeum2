@@ -43,6 +43,7 @@ export default function TempModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const temp = parseFloat(tempStr);
     if (isNaN(temp) || temp < 34 || temp > 43) {
       showToast('올바른 체온을 입력해주세요 (34~43°C)');

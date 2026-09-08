@@ -109,6 +109,11 @@ export default function FeedModal() {
       showToast('준비량(ml)을 입력해주세요');
       return;
     }
+    // 직수가 아닌 기록 수정 화면은 "완결된"(시작+종료 다 있는) 기록만 다루므로 둘 다 필수
+    if (isEdit && !isDirectBreast) {
+      if (!start) { showToast('시작 시간을 입력해주세요'); return; }
+      if (!end) { showToast('종료 시간을 입력해주세요'); return; }
+    }
     // 종료 시간이 시작 시간보다 빠르면(=시작이 미래) 저장하지 않고 경고
     // ("YYYY-MM-DDTHH:mm" 형식이라 문자열 비교로 시간 순서 비교가 가능함)
     if (isEdit && end && start && end < start) {

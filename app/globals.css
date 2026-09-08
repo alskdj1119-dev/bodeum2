@@ -185,7 +185,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .dtp-foot{display:flex;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--bdr)}
 .dtp-foot button{flex:1;background:var(--bg);border:none;border-radius:var(--r-btn);font-family:var(--sans) !important;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;padding:8px 6px;box-shadow:var(--sh-sm);-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;transition:box-shadow .15s}
 .dtp-foot button:active{box-shadow:var(--sh-inset)}
-.dtp-foot-today{color:var(--sage)}
+.dtp-foot-save{color:var(--sage)}
 /* 아이정보 화면의 생년월일/출생시간(type=date, type=time)이 네이티브 캘린더/시계
    아이콘 때문에 우측이 짤려 보이던 문제 — 다른 입력란과 동일한 폭을 명시적으로 고정. */
 .fld input[type="date"].finp,

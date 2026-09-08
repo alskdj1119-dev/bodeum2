@@ -35,7 +35,8 @@ export default function ActiveTimerEditModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
-    if (!record || !start) { close(); return; }
+    if (!record) { close(); return; }
+    if (!start) { showToast('시작 시간을 입력해주세요'); return; }
     const newStartISO = fromLocal(start);
     if (new Date(newStartISO).getTime() > Date.now() + 60000) {
       showToast('시작 시각은 미래로 설정할 수 없어요');

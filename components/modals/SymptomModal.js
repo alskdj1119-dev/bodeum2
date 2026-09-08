@@ -42,6 +42,7 @@ export default function SymptomModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    if (!time) { showToast('시간을 입력해주세요'); return; }
     const list = db.symptoms || [];
     const newSymptoms = [...list];
     const symptomName = symptom.trim() || '증상';
