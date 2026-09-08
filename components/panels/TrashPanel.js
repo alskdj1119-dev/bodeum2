@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, durStr, fmt, useNowTick,
+  fmtFull, elapsedStr, durStr, fmt, sleepDotClass, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, DIAPER_TYPE_LABEL as TD,
   SOLID_REACTION_LABEL as TSR,
 } from '../../lib/helpers';
@@ -156,7 +156,7 @@ export default function TrashPanel() {
             삭제된 기록은 여기서 확인하고 복원할 수 있어요.
           </p>
           {sorted.map((item) => {
-            const dotClass = TYPE_DOT[item._type] || 'f';
+            const dotClass = (item._type === 'sleeps' && item.start) ? sleepDotClass(item.start) : (TYPE_DOT[item._type] || 'f');
             return (
               <div key={`${item._type}-${item.id}-${item._deletedAt}`} className="ec" style={{ alignItems: 'flex-start' }}>
                 <div className={`edot ${dotClass}`} style={{ marginTop: '4px', opacity: 0.5 }}></div>

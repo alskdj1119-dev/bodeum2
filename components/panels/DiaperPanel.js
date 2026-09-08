@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, groupByDay, useNowTick,
+  fmtFull, elapsedStr, groupByDay, diaperColor, useNowTick,
   DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC, DIAPER_CONSISTENCY_LABEL as TCS,
 } from '../../lib/helpers';
 
@@ -21,14 +21,6 @@ export default function DiaperPanel() {
   function openNew() {
     setEditId(null); setEditType(null);
     setOpenModal('diaper');
-  }
-
-  // 소변/대변/소변+대변 색 구분 (카드 배경색)
-  function diaperColor(type) {
-    if (type === 'wet') return { dot: 'var(--cd-wet)', bg: 'var(--dw-wet)' };
-    if (type === 'soiled') return { dot: 'var(--cd)', bg: 'var(--dw)' };
-    // both: 두 색을 절반씩
-    return { dot: 'linear-gradient(90deg, var(--cd-wet) 50%, var(--cd) 50%)', bg: 'linear-gradient(90deg, var(--dw-wet) 50%, var(--dw) 50%)' };
   }
 
   function delDiaper(id) {

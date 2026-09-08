@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, useNowTick,
+  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, sleepColor, useNowTick,
   SLEEP_PLACE_LABEL as PL,
 } from '../../lib/helpers';
 import SleepBarChart from '../charts/SleepBarChart';
@@ -83,9 +83,10 @@ export default function SleepPanel() {
               const dur = s.end ? durStr(new Date(s.end) - new Date(s.start)) : '';
               const timeRange = `${fmt(s.start)} → ${fmt(s.end)}`;
               const place = s.place ? PL[s.place] : '';
+              const sc = sleepColor(s.start);
               return (
-                <div key={s.id} className="ec" onClick={() => openEdit(s)}>
-                  <div className="edot s"></div>
+                <div key={s.id} className="ec" onClick={() => openEdit(s)} style={{ background: sc.bg }}>
+                  <div className="edot" style={{ background: sc.dot }}></div>
                   <div className="emain">
                     <div className="epri">{dur}</div>
                     <div className="esec">{timeRange}{place ? ' · ' + place : ''}</div>

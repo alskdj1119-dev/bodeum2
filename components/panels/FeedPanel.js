@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, useNowTick,
+  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, feedColor, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, FEED_SIDE_LABEL as TS,
 } from '../../lib/helpers';
 
@@ -46,13 +46,6 @@ export default function FeedPanel() {
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     saveDB(newDB);
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
-  }
-
-  // 모유(직수)/모유(유축)/분유 색 구분 (카드 배경색) — FeedModal의 색상 체계와 동일
-  function feedColor(f) {
-    if (f.type === 'bottle') return { dot: 'var(--cd)', bg: 'var(--dw)' };
-    if (f.subtype === 'pumped') return { dot: 'var(--cf)', bg: 'var(--fw)' };
-    return { dot: 'var(--cs)', bg: 'var(--sw)' }; // 직수 (기본)
   }
 
   function feedLabel(f) {

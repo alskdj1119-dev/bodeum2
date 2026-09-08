@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
 import Home24hModal from '../modals/Home24hModal';
-import { durStr, feedEffectiveMl, kstDate, kstTodayStartMs, kstMidnightMsFromDateStr } from '../../lib/helpers';
+import { durStr, feedEffectiveMl, diaperWetCount, diaperSoiledCount, kstDate, kstTodayStartMs, kstMidnightMsFromDateStr } from '../../lib/helpers';
 
 // ──────────── 날짜 범위 헬퍼 (한국 시간 00:00~23:59 기준) ────────────
 // anchorMs("기준일 자정")로부터 offsetDays만큼 떨어진 하루의 범위를 계산한다.
@@ -260,10 +260,10 @@ export default function StatsPanel() {
     const t = new Date(d.time).getTime();
     return t >= rangeStartMs && t <= rangeEndMs;
   });
-  const wetToday    = diapToday.filter(d => d.type === 'wet' || d.type === 'both').length;
-  const soiledToday = diapToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
-  const wetRange    = diapRange.filter(d => d.type === 'wet' || d.type === 'both').length;
-  const soiledRange = diapRange.filter(d => d.type === 'soiled' || d.type === 'both').length;
+  const wetToday    = diaperWetCount(diapToday);
+  const soiledToday = diaperSoiledCount(diapToday);
+  const wetRange    = diaperWetCount(diapRange);
+  const soiledRange = diaperSoiledCount(diapRange);
 
   const diapByDay = daysN.map(d => {
     const start = d, end = start + 86400000;
@@ -284,7 +284,7 @@ export default function StatsPanel() {
       ]
     : [
         { label: '오늘', total: diapToday.length, wet: wetToday, soiled: soiledToday },
-        { label: '어제', total: diapYest.length, wet: diapYest.filter(d => d.type === 'wet' || d.type === 'both').length, soiled: diapYest.filter(d => d.type === 'soiled' || d.type === 'both').length },
+        { label: '어제', total: diapYest.length, wet: diaperWetCount(diapYest), soiled: diaperSoiledCount(diapYest) },
       ];
 
   function toggleCustom(on) {

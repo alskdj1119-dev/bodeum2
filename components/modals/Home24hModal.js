@@ -2,7 +2,9 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, kstDate, kstMidnightMsFromDateStr, useNowTick,
+  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, feedColor, diaperColor,
+  diaperWetCount, diaperSoiledCount, sleepColor, sleepPeriod, dailyAvgStr,
+  kstDate, kstMidnightMsFromDateStr, useNowTick,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
@@ -30,12 +32,47 @@ function StatBar({ value, max, color }) {
   );
 }
 
+// 값 문자열이 길어지면(예: "55시간 25분") 카드 폭을 벗어나지 않도록 폰트 크기를 단계적으로 줄인다.
+// 줄바꿈은 하지 않고(요청사항) 한 줄 안에서 크기만 조정한다.
+function valueFontSize(value) {
+  const len = String(value).length;
+  if (len <= 6) return 22;
+  if (len <= 8) return 18;
+  return 15;
+}
+
 function StatCard({ label, value, sub, color }) {
   return (
     <div style={{ flex: 1, background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', minWidth: 0, boxShadow: 'var(--sh-sm)' }}>
       <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{sub}</div>}
+      <div style={{ fontSize: valueFontSize(value), fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3, whiteSpace: 'nowrap' }}>{sub}</div>}
+    </div>
+  );
+}
+
+// 유형별 비율 위젯 — 기본은 횟수를 보여주고, 탭하면 전체가 ml(있는 항목만) 표시로 토글된다.
+function RatioWidget({ title, items, showMl, onToggle, hasMl }) {
+  const metricOf = (it) => (showMl ? (it.ml || 0) : it.count);
+  const max = Math.max(...items.map(metricOf), 1);
+  return (
+    <div
+      onClick={hasMl ? onToggle : undefined}
+      style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)', cursor: hasMl ? 'pointer' : 'default' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em' }}>{title}</div>
+        {hasMl && <div style={{ fontSize: 10, color: 'var(--muted)' }}>{showMl ? '터치: 횟수 보기' : '터치: 총 ml 보기'}</div>}
+      </div>
+      {items.map(item => (
+        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <div style={{ fontSize: 11, color: 'var(--muted)', width: 60, flexShrink: 0 }}>{item.label}</div>
+          <StatBar value={metricOf(item)} max={max} color={item.color} />
+          <div style={{ fontSize: 11, fontWeight: 600, color: item.color, width: 48, textAlign: 'right', whiteSpace: 'nowrap' }}>
+            {showMl ? (item.ml || 0) + 'ml' : item.count + '회'}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -46,7 +83,22 @@ function FeedDetail({ records, onEdit, dayList }) {
   const totalMl = records.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
   const count = records.length;
   const avgMl = count > 0 && totalMl > 0 ? Math.round(totalMl / count) : 0;
+  const days = dayList && dayList.length > 0 ? dayList.length : 1;
+  const mlList = records.map(f => feedEffectiveMl(f)).filter(v => v > 0);
+  const minMl = mlList.length > 0 ? Math.round(Math.min(...mlList)) : 0;
+  const maxMl = mlList.length > 0 ? Math.round(Math.max(...mlList)) : 0;
   const showDaily = dayList && dayList.length > 1;
+
+  // 유형별(분유/모유-직수/모유-유축) 비율 — FeedPanel의 색상 체계(feedColor)와 동일한 색을 쓴다.
+  const [showMl, setShowMl] = useState(false);
+  const feedCats = [
+    { label: '분유', color: 'var(--cd)', test: f => f.type === 'bottle' },
+    { label: '모유(직수)', color: 'var(--cs)', test: f => f.type !== 'bottle' && f.subtype !== 'pumped' },
+    { label: '모유(유축)', color: 'var(--cf)', test: f => f.type !== 'bottle' && f.subtype === 'pumped' },
+  ].map(cat => {
+    const recs = records.filter(cat.test);
+    return { ...cat, count: recs.length, ml: Math.round(recs.reduce((a, f) => a + feedEffectiveMl(f), 0)) };
+  });
 
   // 시간대별 바 차트 (24개 버킷) — 기간이 하루 이내일 때만 사용
   const hourBuckets = Array(24).fill(0);
@@ -70,9 +122,14 @@ function FeedDetail({ records, onEdit, dayList }) {
       {/* 통계 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <StatCard label="총 섭취량" value={totalMl > 0 ? totalMl + 'ml' : count + '회'} sub={totalMl > 0 ? count + '회 수유' : '수유 횟수'} color="var(--cf)" />
-        <StatCard label="수유 횟수" value={count + '회'} sub={avgMl > 0 ? '평균 ' + avgMl + 'ml' : '24시간'} color="var(--cf)" />
-        {avgMl > 0 && <StatCard label="회당 평균" value={avgMl + 'ml'} sub={'총 ' + totalMl + 'ml'} color="var(--cf)" />}
+        <StatCard label="수유 횟수" value={count + '회'} sub={dailyAvgStr(count, days)} color="var(--cf)" />
+        {avgMl > 0 && <StatCard label="회당 평균" value={avgMl + 'ml'} sub={`최소 ${minMl}ml · 최대 ${maxMl}ml`} color="var(--cf)" />}
       </div>
+
+      {/* 유형별 비율 */}
+      {count > 0 && (
+        <RatioWidget title="유형별 비율" items={feedCats} showMl={showMl} onToggle={() => setShowMl(v => !v)} hasMl={totalMl > 0} />
+      )}
 
       {/* 시간대별/일자별 분포 */}
       {count > 0 && (
@@ -101,9 +158,10 @@ function FeedDetail({ records, onEdit, dayList }) {
           durMs = new Date(f.end) - new Date(f.start);
         }
         const durTxt = durMs ? ' · ' + durStr(durMs) : '';
+        const fc = feedColor(f);
         return (
-          <div key={f.id || i} className="ec" onClick={() => onEdit(f)} style={{ marginBottom: 8 }}>
-            <div className="edot f" />
+          <div key={f.id || i} className="ec" onClick={() => onEdit(f)} style={{ marginBottom: 8, background: fc.bg }}>
+            <div className="edot" style={{ background: fc.dot }} />
             <div className="emain">
               <div className="epri">{TF[f.type] || f.type}{f.subtype === 'direct' ? ' (직수)' : f.subtype === 'pumped' ? ' (유축)' : ''}</div>
               <div className="esub">{amtStr}{durTxt}</div>
@@ -118,10 +176,10 @@ function FeedDetail({ records, onEdit, dayList }) {
 
 // ─── 기저귀 상세 ───
 function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
-  const wet = records.filter(d => d.type === 'wet').length;
-  const soiled = records.filter(d => d.type === 'soiled').length;
-  const both = records.filter(d => d.type === 'both').length;
+  const wet = diaperWetCount(records);
+  const soiled = diaperSoiledCount(records);
   const total = records.length;
+  const days = dayList && dayList.length > 0 ? dayList.length : 1;
   const showDaily = dayList && dayList.length > 1;
 
   const hourBuckets = Array(24).fill(0);
@@ -136,15 +194,15 @@ function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
     <>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <StatCard label="총 횟수" value={total + '회'} sub={periodLabel} color="var(--cd)" />
-        <StatCard label="소변" value={wet + '회'} sub={both > 0 ? '혼합 ' + both + '회' : '소변 전용'} color="var(--cd)" />
-        <StatCard label="대변" value={soiled + '회'} sub={total > 0 ? Math.round((soiled + both) / total * 100) + '%' : '—'} color="var(--cd)" />
+        <StatCard label="소변" value={wet + '회'} sub={dailyAvgStr(wet, days)} color="var(--cd)" />
+        <StatCard label="대변" value={soiled + '회'} sub={dailyAvgStr(soiled, days)} color="var(--cd)" />
       </div>
 
-      {/* 분류 바 */}
+      {/* 유형별 비율 — 소변+대변(both) 기록은 소변·대변 양쪽 횟수에 각각 포함해서 계산 */}
       {total > 0 && (
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>유형별 비율</div>
-          {[{ label: '소변', count: wet, color: 'var(--cf)' }, { label: '대변', count: soiled, color: 'var(--cd)' }, { label: '소변+대변', count: both, color: 'var(--cs)' }].map(item => (
+          {[{ label: '소변', count: wet, color: 'var(--cd-wet)' }, { label: '대변', count: soiled, color: 'var(--cd)' }].map(item => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', width: 60, flexShrink: 0 }}>{item.label}</div>
               <StatBar value={item.count} max={total} color={item.color} />
@@ -166,16 +224,19 @@ function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
       {records.length === 0 && (
         <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)', fontSize: 13 }}>기록이 없어요</div>
       )}
-      {[...records].sort((a, b) => new Date(b.time) - new Date(a.time)).map((d, i) => (
-        <div key={d.id || i} className="ec" onClick={() => onEdit(d)} style={{ marginBottom: 8 }}>
-          <div className="edot d" />
-          <div className="emain">
-            <div className="epri">{TD[d.type] || d.type}</div>
-            {d.note && <div className="esub">{d.note}</div>}
+      {[...records].sort((a, b) => new Date(b.time) - new Date(a.time)).map((d, i) => {
+        const dc = diaperColor(d.type);
+        return (
+          <div key={d.id || i} className="ec" onClick={() => onEdit(d)} style={{ marginBottom: 8, background: dc.bg }}>
+            <div className="edot" style={{ background: dc.dot }} />
+            <div className="emain">
+              <div className="epri">{TD[d.type] || d.type}</div>
+              {d.note && <div className="esub">{d.note}</div>}
+            </div>
+            <div className="etime">{fmt(d.time)}<br /><span className="eago">{elapsedStr(d.time)}</span></div>
           </div>
-          <div className="etime">{fmt(d.time)}<br /><span className="eago">{elapsedStr(d.time)}</span></div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }
@@ -185,6 +246,7 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
   const totalMs = records.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
   const count = records.length;
   const avgMs = count > 0 ? Math.round(totalMs / count) : 0;
+  const days = dayList && dayList.length > 0 ? dayList.length : 1;
   const showDaily = dayList && dayList.length > 1;
 
   const hourBuckets = Array(24).fill(0);
@@ -198,18 +260,27 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
       }
     });
   }
+  // 일자별 낮잠(06-18시 시작)/밤잠(18-06시 시작) 구간별 시간을 나눠 쌓아 보여준다.
   const dayBuckets = showDaily
-    ? bucketByDay(records, dayList, s => new Date(s.start).getTime(), dayRecs => ({
-        value: Math.round(dayRecs.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0) / 3600000 * 10) / 10,
-        count: dayRecs.length,
-      }))
+    ? bucketByDay(records, dayList, s => new Date(s.start).getTime(), dayRecs => {
+        const napRecs = dayRecs.filter(s => sleepPeriod(s.start) === 'day');
+        const nightRecs = dayRecs.filter(s => sleepPeriod(s.start) === 'night');
+        const napHours = Math.round(napRecs.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0) / 3600000 * 10) / 10;
+        const nightHours = Math.round(nightRecs.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0) / 3600000 * 10) / 10;
+        return {
+          value: Math.round((napHours + nightHours) * 10) / 10,
+          count: dayRecs.length,
+          napHours, nightHours,
+          segments: [{ value: napHours, color: 'var(--cs-day)' }, { value: nightHours, color: 'var(--cs-night)' }],
+        };
+      })
     : null;
 
   return (
     <>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <StatCard label="총 수면" value={totalMs > 0 ? durStr(totalMs) : '0분'} sub={count + '회 수면'} color="var(--cs)" />
-        <StatCard label="수면 횟수" value={count + '회'} sub={periodLabel} color="var(--cs)" />
+        <StatCard label="수면 횟수" value={count + '회'} sub={dailyAvgStr(count, days)} color="var(--cs)" />
         {avgMs > 0 && <StatCard label="평균 수면" value={durStr(avgMs)} sub="회당 평균" color="var(--cs)" />}
       </div>
 
@@ -217,8 +288,18 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
           <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>{showDaily ? '일자별 수면' : '시간대별 수면'}</div>
           {showDaily
-            ? <DayBarChart days={dayBuckets} color="var(--cs)" formatTip={d => `${d.label}: ${d.value}시간 (${d.count}회)`} />
+            ? <DayBarChart days={dayBuckets} color="var(--cs)" formatTip={d => `${d.label}: 낮잠 ${d.napHours}시간 · 밤잠 ${d.nightHours}시간 (${d.count}회)`} />
             : <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />}
+          {showDaily && (
+            <div style={{ display: 'flex', gap: 14, marginTop: 8, justifyContent: 'center' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--muted)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--cs-day)', display: 'inline-block' }} />낮잠
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--muted)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--cs-night)', display: 'inline-block' }} />밤잠
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -226,16 +307,19 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
       {records.length === 0 && (
         <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)', fontSize: 13 }}>기록이 없어요</div>
       )}
-      {[...records].sort((a, b) => new Date(b.start) - new Date(a.start)).map((s, i) => (
-        <div key={s.id || i} className="ec" onClick={() => onEdit(s)} style={{ marginBottom: 8 }}>
-          <div className="edot s" />
-          <div className="emain">
-            <div className="epri">{durStr(new Date(s.end) - new Date(s.start))}</div>
-            <div className="esub">{fmt(s.start)} — {fmt(s.end)}</div>
+      {[...records].sort((a, b) => new Date(b.start) - new Date(a.start)).map((s, i) => {
+        const sc = sleepColor(s.start);
+        return (
+          <div key={s.id || i} className="ec" onClick={() => onEdit(s)} style={{ marginBottom: 8, background: sc.bg }}>
+            <div className="edot" style={{ background: sc.dot }} />
+            <div className="emain">
+              <div className="epri">{durStr(new Date(s.end) - new Date(s.start))}</div>
+              <div className="esub">{fmt(s.start)} — {fmt(s.end)}</div>
+            </div>
+            <div className="etime">{fmt(s.start)}<br /><span className="eago">{elapsedStr(s.start)}</span></div>
           </div>
-          <div className="etime">{fmt(s.start)}<br /><span className="eago">{elapsedStr(s.start)}</span></div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

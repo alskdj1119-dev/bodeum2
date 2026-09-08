@@ -4,6 +4,7 @@ import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
+  diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -233,8 +234,8 @@ export default function HomePanel() {
   const diaper24 = diapers.filter(d => (now - new Date(d.time).getTime()) <= h24);
   const sleep24 = sleeps.filter(s => s.end && (now - new Date(s.start).getTime()) <= h24);
   const sleepMs = sleep24.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
-  const diaperWet24 = diaper24.filter(d => d.type === 'wet' || d.type === 'both').length;
-  const diaperSoiled24 = diaper24.filter(d => d.type === 'soiled' || d.type === 'both').length;
+  const diaperWet24 = diaperWetCount(diaper24);
+  const diaperSoiled24 = diaperSoiledCount(diaper24);
   const feedMl = feed24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
 
   // "오늘 N건 기록했어요" 배너 — 24시간 롤링이 아니라 달력상 "오늘"(KST 자정 이후) 기준 총 건수
@@ -249,8 +250,8 @@ export default function HomePanel() {
   const diaperToday = diapers.filter(d => new Date(d.time).getTime() >= todayStartMs);
   const sleepToday = sleeps.filter(s => s.end && new Date(s.start).getTime() >= todayStartMs);
   const sleepMsToday = sleepToday.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
-  const diaperWetToday = diaperToday.filter(d => d.type === 'wet' || d.type === 'both').length;
-  const diaperSoiledToday = diaperToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
+  const diaperWetToday = diaperWetCount(diaperToday);
+  const diaperSoiledToday = diaperSoiledCount(diaperToday);
   const feedMlToday = feedToday.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
 
   const sumFeedList = sumMode === 'day' ? feedToday : feed24;
@@ -343,7 +344,7 @@ export default function HomePanel() {
     all.push({ t: 'f', time: t, label: '수유 — ' + (TF[f.type] || ''), sub: amtStr + durTxt, raw: f });
   });
   diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d }));
-  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', time: s.start, label: '수면', sub: durStr(new Date(s.end) - new Date(s.start)), raw: s }));
+  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', dotCls: sleepDotClass(s.start), time: s.start, label: '수면', sub: durStr(new Date(s.end) - new Date(s.start)), raw: s }));
   all.sort((a, b) => new Date(b.time) - new Date(a.time));
   const recent = all.slice(0, 10);
 
@@ -598,7 +599,7 @@ export default function HomePanel() {
                   onTouchMove={ev => handleCardTouchMove(key, ev)}
                   onTouchEnd={ev => handleCardTouchEnd(key, ev)}
                 >
-                  <div className={`rico ${e.t}`}>{recentIcon(e.t)}</div>
+                  <div className={`rico ${e.dotCls || e.t}`}>{recentIcon(e.t)}</div>
                   <div className="rbody">
                     <div className="rti">{e.label}</div>
                     {e.sub && <div className="rsub">{e.sub}</div>}
