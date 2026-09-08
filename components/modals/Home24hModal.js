@@ -7,6 +7,19 @@ import {
 } from '../../lib/helpers';
 import { useApp } from '../../lib/store';
 import HourBarChart from '../charts/HourBarChart';
+import DayBarChart from '../charts/DayBarChart';
+
+function dateLabel(ms) { const d = kstDate(ms); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; }
+
+// records를 dayList(하루 시작 시각 배열, KST 자정 ms)에 맞춰 일자별로 묶는다.
+// getMs: 레코드에서 기준 시각을 뽑는 함수, reduceDay: 그 날짜의 레코드 배열로 {value, ml?}을 만드는 함수.
+function bucketByDay(records, dayList, getMs, reduceDay) {
+  return dayList.map(dayStart => {
+    const dayEnd = dayStart + 86400000;
+    const dayRecs = records.filter(r => { const t = getMs(r); return t >= dayStart && t < dayEnd; });
+    return { ms: dayStart, label: dateLabel(dayStart), ...reduceDay(dayRecs) };
+  });
+}
 
 function StatBar({ value, max, color }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
@@ -28,17 +41,29 @@ function StatCard({ label, value, sub, color }) {
 }
 
 // ─── 수유 상세 ───
-function FeedDetail({ records, onEdit }) {
+// dayList가 주어지면(기간이 하루를 넘는 경우) 일자별 그래프를, 아니면 기존 시간대별 그래프를 보여준다.
+function FeedDetail({ records, onEdit, dayList }) {
   const totalMl = records.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
   const count = records.length;
   const avgMl = count > 0 && totalMl > 0 ? Math.round(totalMl / count) : 0;
+  const showDaily = dayList && dayList.length > 1;
 
-  // 시간대별 바 차트 (24개 버킷)
+  // 시간대별 바 차트 (24개 버킷) — 기간이 하루 이내일 때만 사용
   const hourBuckets = Array(24).fill(0);
-  records.forEach(f => {
-    const h = kstDate(new Date(f.start || f.time).getTime()).getUTCHours();
-    hourBuckets[h]++;
-  });
+  if (!showDaily) {
+    records.forEach(f => {
+      const h = kstDate(new Date(f.start || f.time).getTime()).getUTCHours();
+      hourBuckets[h]++;
+    });
+  }
+
+  // 일자별 버킷(횟수 + ml) — 기간이 하루를 넘을 때만 사용
+  const dayBuckets = showDaily
+    ? bucketByDay(records, dayList, f => new Date(f.start || f.time).getTime(), dayRecs => ({
+        value: dayRecs.length,
+        ml: Math.round(dayRecs.reduce((a, f) => a + feedEffectiveMl(f), 0)),
+      }))
+    : null;
 
   return (
     <>
@@ -49,11 +74,13 @@ function FeedDetail({ records, onEdit }) {
         {avgMl > 0 && <StatCard label="회당 평균" value={avgMl + 'ml'} sub={'총 ' + totalMl + 'ml'} color="var(--cf)" />}
       </div>
 
-      {/* 시간대별 분포 */}
+      {/* 시간대별/일자별 분포 */}
       {count > 0 && (
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
-          <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수유</div>
-          <HourBarChart buckets={hourBuckets} color="var(--cf)" formatTip={(h, v) => `${h}시대: ${v}회`} />
+          <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>{showDaily ? '일자별 수유' : '시간대별 수유'}</div>
+          {showDaily
+            ? <DayBarChart days={dayBuckets} color="var(--cf)" formatTip={d => `${d.label}: ${d.value}회${d.ml > 0 ? ' · ' + d.ml + 'ml' : ''}`} />
+            : <HourBarChart buckets={hourBuckets} color="var(--cf)" formatTip={(h, v) => `${h}시대: ${v}회`} />}
         </div>
       )}
 
@@ -90,14 +117,20 @@ function FeedDetail({ records, onEdit }) {
 }
 
 // ─── 기저귀 상세 ───
-function DiaperDetail({ records, onEdit, periodLabel }) {
+function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
   const wet = records.filter(d => d.type === 'wet').length;
   const soiled = records.filter(d => d.type === 'soiled').length;
   const both = records.filter(d => d.type === 'both').length;
   const total = records.length;
+  const showDaily = dayList && dayList.length > 1;
 
   const hourBuckets = Array(24).fill(0);
-  records.forEach(d => { hourBuckets[kstDate(new Date(d.time).getTime()).getUTCHours()]++; });
+  if (!showDaily) {
+    records.forEach(d => { hourBuckets[kstDate(new Date(d.time).getTime()).getUTCHours()]++; });
+  }
+  const dayBuckets = showDaily
+    ? bucketByDay(records, dayList, d => new Date(d.time).getTime(), dayRecs => ({ value: dayRecs.length }))
+    : null;
 
   return (
     <>
@@ -119,10 +152,12 @@ function DiaperDetail({ records, onEdit, periodLabel }) {
             </div>
           ))}
 
-          {/* 시간대 */}
+          {/* 시간대/일자 분포 */}
           <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>시간대별</div>
-            <HourBarChart buckets={hourBuckets} color="var(--cd)" height={30} formatTip={(h, v) => `${h}시대: ${v}회`} />
+            <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{showDaily ? '일자별' : '시간대별'}</div>
+            {showDaily
+              ? <DayBarChart days={dayBuckets} color="var(--cd)" height={44} formatTip={d => `${d.label}: ${d.value}회`} />
+              : <HourBarChart buckets={hourBuckets} color="var(--cd)" height={30} formatTip={(h, v) => `${h}시대: ${v}회`} />}
           </div>
         </div>
       )}
@@ -146,20 +181,29 @@ function DiaperDetail({ records, onEdit, periodLabel }) {
 }
 
 // ─── 수면 상세 ───
-function SleepDetail({ records, onEdit, periodLabel }) {
+function SleepDetail({ records, onEdit, periodLabel, dayList }) {
   const totalMs = records.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
   const count = records.length;
   const avgMs = count > 0 ? Math.round(totalMs / count) : 0;
+  const showDaily = dayList && dayList.length > 1;
 
   const hourBuckets = Array(24).fill(0);
-  records.forEach(s => {
-    const startH = kstDate(new Date(s.start).getTime()).getUTCHours();
-    const endH = kstDate(new Date(s.end).getTime()).getUTCHours();
-    for (let h = startH; h !== (endH + 1) % 24; h = (h + 1) % 24) {
-      hourBuckets[h]++;
-      if (h === endH) break;
-    }
-  });
+  if (!showDaily) {
+    records.forEach(s => {
+      const startH = kstDate(new Date(s.start).getTime()).getUTCHours();
+      const endH = kstDate(new Date(s.end).getTime()).getUTCHours();
+      for (let h = startH; h !== (endH + 1) % 24; h = (h + 1) % 24) {
+        hourBuckets[h]++;
+        if (h === endH) break;
+      }
+    });
+  }
+  const dayBuckets = showDaily
+    ? bucketByDay(records, dayList, s => new Date(s.start).getTime(), dayRecs => ({
+        value: Math.round(dayRecs.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0) / 3600000 * 10) / 10,
+        count: dayRecs.length,
+      }))
+    : null;
 
   return (
     <>
@@ -171,8 +215,10 @@ function SleepDetail({ records, onEdit, periodLabel }) {
 
       {count > 0 && (
         <div style={{ background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', marginBottom: 16, boxShadow: 'var(--sh-sm)' }}>
-          <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>시간대별 수면</div>
-          <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />
+          <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>{showDaily ? '일자별 수면' : '시간대별 수면'}</div>
+          {showDaily
+            ? <DayBarChart days={dayBuckets} color="var(--cs)" formatTip={d => `${d.label}: ${d.value}시간 (${d.count}회)`} />
+            : <HourBarChart buckets={hourBuckets} color="var(--cs)" formatTip={(h, v) => v > 0 ? `${h}시대: 수면 중` : `${h}시대: 깨어있음`} />}
         </div>
       )}
 
@@ -197,12 +243,18 @@ function SleepDetail({ records, onEdit, periodLabel }) {
 // ─── 메인 모달 ───
 // initialDate("YYYY-MM-DD", KST 기준)가 주어지면 그 날짜의 "당일" 모드로 열리고,
 // 없으면 "직전 24시간" 모드로 열린다. 안에서 두 모드를 토글로 바꿀 수 있다.
-export default function Home24hModal({ type, initialDate, initialMode, onClose }) {
+//
+// records(배열)가 주어지면 "기간 모드"로 동작한다 — 통계 화면(StatsPanel)에서 카드를 눌러
+// 열 때 쓰는 방식으로, 직전24시간/당일 토글 없이 이미 필터링된 기록을 그대로 보여준다.
+// 이때 dayList(하루 시작 시각 배열)가 함께 주어지면, 기간이 하루를 넘는 경우 시간대별
+// 그래프 대신 일자별 그래프를 보여준다(하루짜리 기간이면 기존처럼 시간대별 유지).
+export default function Home24hModal({ type, initialDate, initialMode, records: recordsProp, dayList, rangeLabel, onClose }) {
   const { db, setOpenModal, setEditId, setEditType } = useApp();
   const { feeds, diapers, sleeps } = db;
-  const dayOnly = !!initialDate; // 요일 스트립에서 특정 날짜를 눌러 열린 경우 — "당일" 고정, 토글 불필요
+  const isRangeMode = Array.isArray(recordsProp);
+  const dayOnly = !isRangeMode && !!initialDate; // 요일 스트립에서 특정 날짜를 눌러 열린 경우 — "당일" 고정, 토글 불필요
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState(dayOnly ? 'day' : (initialMode || 'recent24h'));
+  const [mode, setMode] = useState(isRangeMode ? 'range' : (dayOnly ? 'day' : (initialMode || 'recent24h')));
   const [selectedDate, setSelectedDate] = useState(() => initialDate || kstDate(Date.now()).toISOString().slice(0, 10));
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
@@ -227,9 +279,9 @@ export default function Home24hModal({ type, initialDate, initialMode, onClose }
   const diaperDay = diapers.filter(d => { const t = new Date(d.time).getTime(); return t >= dayStartMs && t < dayEndMs; });
   const sleepDay = sleeps.filter(s => s.end && (() => { const t = new Date(s.start).getTime(); return t >= dayStartMs && t < dayEndMs; })());
 
-  const feedRecords = mode === 'day' ? feedDay : feed24;
-  const diaperRecords = mode === 'day' ? diaperDay : diaper24;
-  const sleepRecords = mode === 'day' ? sleepDay : sleep24;
+  const feedRecords = isRangeMode ? (recordsProp || []) : (mode === 'day' ? feedDay : feed24);
+  const diaperRecords = isRangeMode ? (recordsProp || []) : (mode === 'day' ? diaperDay : diaper24);
+  const sleepRecords = isRangeMode ? (recordsProp || []) : (mode === 'day' ? sleepDay : sleep24);
 
   const dateLabelStr = `${dm}월 ${dd}일(${['일','월','화','수','목','금','토'][kstDate(dayStartMs).getUTCDay()]})`;
 
@@ -280,7 +332,7 @@ export default function Home24hModal({ type, initialDate, initialMode, onClose }
         <div className="mhandle" />
         <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px 14px', borderBottom: '1px solid var(--bdr)' }}>
           <div style={{ fontSize: 19, fontWeight: 700, fontFamily: 'var(--serif)', color: colors[type] }}>
-            {mode === 'day' ? `${dateLabelStr} ${titles[type]}` : `직전 24시간 ${titles[type]}`}
+            {isRangeMode ? `${rangeLabel} ${titles[type]}` : mode === 'day' ? `${dateLabelStr} ${titles[type]}` : `직전 24시간 ${titles[type]}`}
           </div>
           <button
             onClick={handleClose}
@@ -292,8 +344,8 @@ export default function Home24hModal({ type, initialDate, initialMode, onClose }
           </button>
         </div>
 
-        {/* 직전 24시간 / 당일 토글 — 요일 날짜를 눌러 "당일" 고정으로 연 경우는 불필요하므로 숨김 */}
-        {!dayOnly && (
+        {/* 직전 24시간 / 당일 토글 — 요일 날짜를 눌러 "당일" 고정으로 연 경우나 기간 모드(통계 카드)는 불필요하므로 숨김 */}
+        {!dayOnly && !isRangeMode && (
           <div className="modetoggle" style={{ padding: '12px 20px 0' }}>
             <button
               className={`modetoggle-btn${mode === 'recent24h' ? ' on' : ''}`}
@@ -314,9 +366,9 @@ export default function Home24hModal({ type, initialDate, initialMode, onClose }
 
         {/* 내용 스크롤 영역 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' }}>
-          {type === 'feed' && <FeedDetail records={feedRecords} onEdit={editFeed} />}
-          {type === 'diaper' && <DiaperDetail records={diaperRecords} onEdit={editDiaper} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} />}
-          {type === 'sleep' && <SleepDetail records={sleepRecords} onEdit={editSleep} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} />}
+          {type === 'feed' && <FeedDetail records={feedRecords} onEdit={editFeed} dayList={isRangeMode ? dayList : null} />}
+          {type === 'diaper' && <DiaperDetail records={diaperRecords} onEdit={editDiaper} periodLabel={isRangeMode ? rangeLabel : (mode === 'day' ? '당일' : '직전 24시간')} dayList={isRangeMode ? dayList : null} />}
+          {type === 'sleep' && <SleepDetail records={sleepRecords} onEdit={editSleep} periodLabel={isRangeMode ? rangeLabel : (mode === 'day' ? '당일' : '직전 24시간')} dayList={isRangeMode ? dayList : null} />}
         </div>
       </div>
     </div>,

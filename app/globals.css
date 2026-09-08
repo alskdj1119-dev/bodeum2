@@ -222,6 +222,8 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
    .sc를 그대로 쓰면 안에 있는 버튼을 누를 때 :active 눌림 효과가 조상인 이 박스까지 전파되어
    버튼 하나 누른 것뿐인데 큰 박스 전체가 움찔거리는 것처럼 보이는 문제가 있었음. */
 .sc-static{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 13px;box-shadow:var(--sh);min-width:0;overflow:hidden}
+.sc-static.clickable{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s}
+.sc-static.clickable:active{transform:scale(.97);box-shadow:var(--sh-inset)}
 .ec{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:11px 13px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);margin-bottom:8px;cursor:pointer;transition:transform .12s cubic-bezier(.34,1.56,.64,1), box-shadow .15s}
 .ec:active{transform:scale(.98);box-shadow:var(--sh-inset)}
 /* ── HOME ── */

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
+import Home24hModal from '../modals/Home24hModal';
 import { durStr, feedEffectiveMl, kstDate, kstTodayStartMs, kstMidnightMsFromDateStr } from '../../lib/helpers';
 
 // ──────────── 날짜 범위 헬퍼 (한국 시간 00:00~23:59 기준) ────────────
@@ -60,8 +61,8 @@ const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 function dayLabel(ms) { return DAY_LABELS[kstDate(ms).getUTCDay()]; }
 function dateLabel(ms) { const d = kstDate(ms); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; }
 
-// 기간 선택 시 하루 단위 막대가 너무 많아지지 않도록 최대 60일로 제한
-const MAX_RANGE_DAYS = 60;
+// 기간 선택 시 하루 단위 막대가 너무 많아지지 않도록 최대 30일로 제한
+const MAX_RANGE_DAYS = 30;
 
 // ──────────── 막대 차트 (수유 전용 — 횟수 + ml 표시) ────────────
 function FeedBar({ label, count, ml, maxCount, color }) {
@@ -95,6 +96,16 @@ function MiniBar({ label, value, max, color, unit = '' }) {
   );
 }
 
+// 섹션 제목 줄 — 오른쪽에 "카드를 누르면 전체 기록을 볼 수 있다"는 힌트를 통일해서 붙인다.
+function SectionTitle({ children }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+      <p className="seclbl" style={{ marginBottom: 0 }}>{children}</p>
+      <span style={{ fontSize: 11, color: 'var(--muted)' }}>전체 기록 ›</span>
+    </div>
+  );
+}
+
 // 통계 카드 상단의 N칸짜리 숫자 요약 행 (오늘/어제/N일평균 또는 합계/평균)
 function StatRow({ items, color }) {
   return (
@@ -120,6 +131,9 @@ export default function StatsPanel() {
   const diapers = filterByActiveBaby(db.diapers);
   const sleeps = filterByActiveBaby(db.sleeps);
 
+  // ══ 통계 카드를 눌렀을 때 열리는 전체 기록 팝업 (수유/수면/기저귀) ══
+  const [detailType, setDetailType] = useState(null); // null | 'feed' | 'sleep' | 'diaper'
+
   // ══ 기간 선택 — 안 건드리면 지금까지와 완전히 동일한 "오늘 기준" 기본값 ══
   const todayMs = kstTodayStartMs();
   const [useCustomRange, setUseCustomRange] = useState(false);
@@ -139,9 +153,10 @@ export default function StatsPanel() {
     }
   }
 
-  const recentTitle = isCustom ? `선택 기간(${rangeDays}일) 수유 횟수` : '최근 7일 수유 횟수';
-  const recentSleepTitle = isCustom ? `선택 기간(${rangeDays}일) 수면 시간` : '최근 7일 수면 시간';
-  const napNightLabel = isCustom ? `선택 기간(${rangeDays}일)` : '오늘';
+  const periodLabel = isCustom ? `선택 기간(${rangeDays}일)` : '최근 7일';
+  const recentTitle = `${periodLabel} 수유 횟수`;
+  const recentSleepTitle = `${periodLabel} 수면 시간`;
+  const napNightLabel = isCustom ? periodLabel : '오늘';
 
   // ══ 기간 전체(anchorMs를 마지막 날로 하는 rangeDays일) 범위 ══
   const { start: rangeStartMs } = dayRangeAt(anchorMs, -(rangeDays - 1));
@@ -241,7 +256,7 @@ export default function StatsPanel() {
   });
   const wetToday    = diapToday.filter(d => d.type === 'wet' || d.type === 'both').length;
   const soiledToday = diapToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
-  const wetRange    = diapRange.filter(d => d.type === 'wet' || d.type === 'both').length;
+  const wetRange    = diapRange.filter(d => d.type == 'wet' || d.type === 'both').length;
   const soiledRange = diapRange.filter(d => d.type === 'soiled' || d.type === 'both').length;
 
   const diapByDay = daysN.map(d => {
@@ -262,13 +277,13 @@ export default function StatsPanel() {
         { label: '일 평균', total: avgDiapCount != null ? avgDiapCount : '—', wet: avgWet != null ? avgWet : '—', soiled: avgSoiled != null ? avgSoiled : '—' },
       ]
     : [
-        { label: '오늘', total: diapToday.length, wet: wetToday, soiled: soiledToday },
+        { label: '수면', total: diapToday.length, wet: wetToday, soiled: soiledToday },
         { label: '어제', total: diapYest.length, wet: diapYest.filter(d => d.type === 'wet' || d.type === 'both').length, soiled: diapYest.filter(d => d.type === 'soiled' || d.type === 'both').length },
       ];
 
   function toggleCustom(on) {
     if (on && (!rangeStart || !rangeEnd)) {
-      // 기간 선택을 처음 켤 때는 기본값(최근 7일)으로 미리 채워준다.
+      // 기간 선택완 �ܺ 때음 켤 때는 기본값(최근 7일)으로 미리 채워준다.
       const endD = kstDate(todayMs);
       const startD = kstDate(todayMs - 6 * 86400000);
       const fmt = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
@@ -277,6 +292,8 @@ export default function StatsPanel() {
     }
     setUseCustomRange(on);
   }
+
+  const detailRecords = detailType === 'feed' ? feedRange : detailType === 'sleep' ? sleepRange : diapRange;
 
   return (
     <>
@@ -310,8 +327,8 @@ export default function StatsPanel() {
       )}
 
       {/* ─── 수유 ─── */}
-      <p className="seclbl" style={{ marginBottom: 10 }}>수유</p>
-      <div className="sc-static" style={{ marginBottom: 12 }}>
+      <SectionTitle>수유</SectionTitle>
+      <div className="sc-static clickable" style={{ marginBottom: 12 }} onClick={() => setDetailType('feed')}>
         <StatRow items={feedStatItems} color="var(--cf)" />
 
         <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '.05em' }}>{recentTitle}</div>
@@ -321,8 +338,8 @@ export default function StatsPanel() {
       </div>
 
       {/* ─── 수면 ─── */}
-      <p className="seclbl" style={{ marginBottom: 10 }}>수면</p>
-      <div className="sc-static" style={{ marginBottom: 12 }}>
+      <SectionTitle>수면</SectionTitle>
+      <div className="sc-static clickable" style={{ marginBottom: 12 }} onClick={() => setDetailType('sleep')}>
         <div style={{ display: 'grid', gridTemplateColumns: sleepStatItems.map(() => '1fr').join(' '), gap: 0, textAlign: 'center', marginBottom: 12 }}>
           {sleepStatItems.map((s, i) => (
             <div key={i} style={{ borderRight: i < sleepStatItems.length - 1 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
@@ -353,8 +370,8 @@ export default function StatsPanel() {
       </div>
 
       {/* ─── 기저귀 ─── */}
-      <p className="seclbl" style={{ marginBottom: 10 }}>기저귀</p>
-      <div className="sc-static" style={{ marginBottom: 20 }}>
+      <SectionTitle>기저귀</SectionTitle>
+      <div className="sc-static clickable" style={{ marginBottom: 20 }} onClick={() => setDetailType('diaper')}>
         <div style={{ display: 'grid', gridTemplateColumns: diapStatItems.map(() => '1fr').join(' '), gap: 0, textAlign: 'center' }}>
           {diapStatItems.map((s, i) => (
             <div key={i} style={{ borderRight: i < diapStatItems.length - 1 ? '1px solid var(--bdr)' : 'none', padding: '0 8px' }}>
@@ -365,6 +382,17 @@ export default function StatsPanel() {
           ))}
         </div>
       </div>
+
+      {/* ─── 통계 카드 상세 팝업 (수유/수면/기저귀 카드를 누르면 표시) ─── */}
+      {detailType && (
+        <Home24hModal
+          type={detailType}
+          records={detailRecords}
+          dayList={daysN}
+          rangeLabel={periodLabel}
+          onClose={() => setDetailType(null)}
+        />
+      )}
     </>
   );
 }
