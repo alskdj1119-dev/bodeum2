@@ -256,7 +256,7 @@ export default function StatsPanel() {
   });
   const wetToday    = diapToday.filter(d => d.type === 'wet' || d.type === 'both').length;
   const soiledToday = diapToday.filter(d => d.type === 'soiled' || d.type === 'both').length;
-  const wetRange    = diapRange.filter(d => d.type == 'wet' || d.type === 'both').length;
+  const wetRange    = diapRange.filter(d => d.type === 'wet' || d.type === 'both').length;
   const soiledRange = diapRange.filter(d => d.type === 'soiled' || d.type === 'both').length;
 
   const diapByDay = daysN.map(d => {
@@ -277,13 +277,13 @@ export default function StatsPanel() {
         { label: '일 평균', total: avgDiapCount != null ? avgDiapCount : '—', wet: avgWet != null ? avgWet : '—', soiled: avgSoiled != null ? avgSoiled : '—' },
       ]
     : [
-        { label: '수면', total: diapToday.length, wet: wetToday, soiled: soiledToday },
+        { label: '오늘', total: diapToday.length, wet: wetToday, soiled: soiledToday },
         { label: '어제', total: diapYest.length, wet: diapYest.filter(d => d.type === 'wet' || d.type === 'both').length, soiled: diapYest.filter(d => d.type === 'soiled' || d.type === 'both').length },
       ];
 
   function toggleCustom(on) {
     if (on && (!rangeStart || !rangeEnd)) {
-      // 기간 선택완 �ܺ 때음 켤 때는 기본값(최근 7일)으로 미리 채워준다.
+      // 기간 선택을 처음 켤 때는 기본값(최근 7일)으로 미리 채워준다.
       const endD = kstDate(todayMs);
       const startD = kstDate(todayMs - 6 * 86400000);
       const fmt = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
