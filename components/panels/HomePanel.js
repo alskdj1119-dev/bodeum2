@@ -604,8 +604,8 @@ export default function HomePanel() {
                     {e.sub && <div className="rsub">{e.sub}</div>}
                   </div>
                   <div className="rval">
-                    <div className="rvaltime">{fmtFull(e.time)}</div>
-                    <div className="rvalago">{elapsedStr(e.time)}</div>
+                    <div className="etime">{fmtFull(e.time)}</div>
+                    <div className="eago">{elapsedStr(e.time)}</div>
                   </div>
                 </div>
               </div>

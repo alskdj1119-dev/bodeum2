@@ -296,11 +296,11 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .rti{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rsub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rval{flex-shrink:0;text-align:right}
-.rvaltime{font-size:12.5px;font-weight:700;color:var(--sage);display:inline-block;border-bottom:2px solid var(--sage);padding-bottom:2px;white-space:nowrap}
-.rvalago{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}
+/* 최근 기록 카드의 날짜/경과시간도 아래 "기록 날짜·경과시간 표시 규칙"에 따라
+   .etime/.eago를 그대로 재사용한다(별도 .rvaltime/.rvalago 클래스로 중복 정의하지 않음) —
+   HomePanel.js에서 className="etime"/"eago"로 사용 중. */
 .rtrash{position:absolute;top:0;right:0;bottom:0;width:58px;border-radius:0 16px 16px 0;background:var(--alert);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .rtrash svg{width:17px;height:17px}
-.tltime{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .eago{font-size:11px;color:var(--muted)}
 
 /* ── LOG PANELS ── */
@@ -314,6 +314,18 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .emain{flex:1;min-width:0}
 .epri{font-size:14px;font-weight:500;color:var(--ink)}
 .esec{font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── 기록 날짜·경과시간 표시 규칙(반드시 지킬 것) ──────────────────
+   앱 전체에서 "기록 하나의 날짜/시간 + 경과시간"을 보여줄 때는 항상 이 두 클래스만
+   쓴다 — 별도 색(파란색 등)이나 굵기로 강조하지 않고, 첫 줄에 날짜·시간, 그
+   아래 줄에 "N시간 N분 전" 형태의 경과시간을 muted 색으로 붙인다.
+     .etime : 날짜/시간 한 줄 — fmtFull()(예: "2026년 09월 07일 15:41") 또는
+              24시간 이내로 범위가 고정된 목록(Home24hModal)에서만 fmt()(짧은
+              "15:41")를 써도 됨
+     .eago  : 그 아래 경과시간 한 줄 — elapsedStr() 결과
+   새로운 기록 리스트를 추가하거나 기존 날짜/경과시간 표시를 수정할 때는 항상
+   이 두 클래스를 그대로 쓸 것(색이나 크기를 새로 정의하지 말 것) — 이렇게 하면
+   여기 스타일 하나만 고쳐도 수유/수면/기저귀/체온/체중/키/머리둘레/치아 등
+   모든 기록 목록과 홈 화면 "최근 기록"까지 한 번에 함께 바뀐다. */
 .etime{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .edel{background:none;border:none;cursor:pointer;padding:4px;margin-left:2px;color:var(--muted);opacity:.4;transition:transform .12s, opacity .15s, background .15s;line-height:1;-webkit-tap-highlight-color:transparent}
 .edel:hover{opacity:.85}

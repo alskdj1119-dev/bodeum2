@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { fmtFull } from '../../lib/helpers';
+import { fmtFull, elapsedStr } from '../../lib/helpers';
 
 // 유치(젖니) 20개 — 정중선에서 바깥쪽 순서로 이름 붙임 (임상 표기 대신 보호자가 이해하기 쉬운 이름 사용)
 const TOOTH_NAMES = ['중절치', '측절치', '견치', '제1유구치', '제2유구치'];
@@ -111,7 +111,7 @@ export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
                   <div className="esec" style={{ fontSize: 11 }}>추가 기록 {info.records.length}건</div>
                 )}
               </div>
-              <div className="etime">{fmtFull(info.updatedAt || info.date)}</div>
+              <div className="etime">{fmtFull(info.updatedAt || info.date)}<br/><span className="eago">{elapsedStr(info.updatedAt || info.date)}</span></div>
               <button className="edel" onClick={e => { e.stopPropagation(); onToggle(t.id); }}>
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>

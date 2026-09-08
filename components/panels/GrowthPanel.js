@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, groupByDay } from '../../lib/helpers';
+import { fmtFull, elapsedStr, groupByDay } from '../../lib/helpers';
 import WeightValueChart from '../charts/WeightValueChart';
 import SimpleValueChart from '../charts/SimpleValueChart';
 import WHOPercentileChart from '../charts/WHOPercentileChart';
@@ -134,7 +134,7 @@ export default function GrowthPanel() {
                   <div key={w.id} className="ec" onClick={() => openWeightEdit(w)}>
                     <div className="edot w"></div>
                     <div className="emain"><div className="epri">{w.kg.toFixed(3)} kg</div></div>
-                    <div className="etime">{fmtFull(w.time)}</div>
+                    <div className="etime">{fmtFull(w.time)}<br/><span className="eago">{elapsedStr(w.time)}</span></div>
                     <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 체중 기록을 삭제하시겠어요?')) delWeight(w.id); }}>
                       <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
@@ -164,7 +164,7 @@ export default function GrowthPanel() {
                   <div key={h.id} className="ec" onClick={() => openHeightEdit(h)}>
                     <div className="edot w"></div>
                     <div className="emain"><div className="epri">{h.cm.toFixed(1)} cm</div></div>
-                    <div className="etime">{fmtFull(h.time)}</div>
+                    <div className="etime">{fmtFull(h.time)}<br/><span className="eago">{elapsedStr(h.time)}</span></div>
                     <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 키 기록을 삭제하시겠어요?')) delHeight(h.id); }}>
                       <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
@@ -194,7 +194,7 @@ export default function GrowthPanel() {
                   <div key={h.id} className="ec" onClick={() => openHeadCircEdit(h)}>
                     <div className="edot v"></div>
                     <div className="emain"><div className="epri">{h.cm.toFixed(1)} cm</div></div>
-                    <div className="etime">{fmtFull(h.time)}</div>
+                    <div className="etime">{fmtFull(h.time)}<br/><span className="eago">{elapsedStr(h.time)}</span></div>
                     <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 머리둘레 기록을 삭제하시겠어요?')) delHeadCirc(h.id); }}>
                       <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
