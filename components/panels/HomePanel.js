@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
@@ -8,9 +8,6 @@ import {
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
-
-// 최근 기록 스와이프 삭제 — 쓰레기통 폭(px). CSS .rtrash의 width와 반드시 같아야 한다.
-const TRASH_W = 58;
 
 // 타이머 배너와 "직전" 카드의 디밍 블링크(.blink-live, 주기 1.8s)가 서로 다른 시점에 마운트돼도
 // 항상 같은 박자로 깜빡이도록 — 각 요소가 마운트되는 순간의 실제 시각(Date.now())을 기준으로
@@ -119,65 +116,15 @@ export default function HomePanel() {
     setEditId(null); setEditType(null); setOpenModal(modal);
   }
 
-  // "최근 기록" 카드 — 왼쪽 기준으로 살짝 축소되며 오른쪽에 쓰레기통이 나타나는 스와이프 삭제.
-  // 누르고 일정 시간(LONG_PRESS_MS) 이상 유지한 뒤 가로로 움직였을 때만 스와이프로 인정한다.
-  // 그 전에(짧게 누르자마자) 조금이라도 움직이면 — 위아래든 대각선이든 — 스크롤로 확정하고
-  // 스와이프는 이번 터치 동안 다시 활성화되지 않는다.
-  const LONG_PRESS_MS = 180;
-  const [swipedKey, setSwipedKey] = useState(null);
-  const [swipeScale, setSwipeScale] = useState(0.84);
-  const touchStartXRef = useRef(null);
-  const touchStartYRef = useRef(null);
-  const touchStartTimeRef = useRef(0);
-  const touchKeyRef = useRef(null);
-  const touchAxisRef = useRef(null); // 'x' | 'y' | null — 'y'가 되면 이번 터치 동안 스와이프 불가(스크롤 확정)
-  const touchWidthRef = useRef(0);
-  function handleCardTouchStart(key, e) {
-    const t = e.touches[0];
-    touchStartXRef.current = t.clientX;
-    touchStartYRef.current = t.clientY;
-    touchStartTimeRef.current = Date.now();
-    touchKeyRef.current = key;
-    touchAxisRef.current = null;
-    touchWidthRef.current = e.currentTarget.getBoundingClientRect().width;
-  }
-  function handleCardTouchMove(key, e) {
-    if (touchKeyRef.current !== key || touchStartXRef.current == null) return;
-    if (touchAxisRef.current === 'y') return; // 이미 스크롤로 확정됨
-    const t = e.touches[0];
-    const dx = t.clientX - touchStartXRef.current;
-    const dy = t.clientY - touchStartYRef.current;
-    const moved = Math.abs(dx) > 8 || Math.abs(dy) > 8;
-    if (!moved) return;
-    const heldLongEnough = (Date.now() - touchStartTimeRef.current) >= LONG_PRESS_MS;
-    if (!heldLongEnough) {
-      // 롱프레스 시간이 되기 전에 움직였다면 방향과 무관하게 스크롤로 확정
-      touchAxisRef.current = 'y';
-      return;
-    }
-    if (touchAxisRef.current == null) {
-      // 충분히 누른 뒤 처음 움직인 방향 — 가로 성분이 세로보다 뚜렷하게 클 때만 스와이프로 인정
-      touchAxisRef.current = Math.abs(dx) > Math.abs(dy) * 1.5 ? 'x' : 'y';
-    }
-    if (touchAxisRef.current === 'x') e.stopPropagation();
-  }
-  function handleCardTouchEnd(key, e) {
-    if (touchStartXRef.current == null || touchKeyRef.current !== key) return;
-    const dx = e.changedTouches[0].clientX - touchStartXRef.current;
-    const isHorizontal = touchAxisRef.current === 'x';
-    const width = touchWidthRef.current;
-    touchStartXRef.current = null;
-    touchStartYRef.current = null;
-    touchAxisRef.current = null;
-    if (!isHorizontal) return; // 스크롤이었으면 스와이프로 취급하지 않음
+  // "최근 기록" 카드 — 오른쪽 위 × 버튼을 누르면 삭제 확인 팝오버가 뜬다.
+  // 팝오버는 한 번에 하나만 열리며, 다른 카드의 ×를 누르면 열려있던 팝오버는 닫히고 새로 열린다.
+  const [confirmDeleteKey, setConfirmDeleteKey] = useState(null);
+  function toggleDeleteConfirm(key, e) {
     e.stopPropagation();
-    if (dx < -24) {
-      // 쓰레기통 폭(TRASH_W)만큼만 정확히 줄어들도록, 카드 실제 폭을 기준으로 축소 비율 계산
-      setSwipeScale(width > 0 ? Math.max(0.7, (width - TRASH_W) / width) : 0.84);
-      setSwipedKey(key);
-    } else if (dx > 24) {
-      setSwipedKey(prev => (prev === key ? null : prev));
-    }
+    setConfirmDeleteKey(prev => (prev === key ? null : key));
+  }
+  function closeDeleteConfirm() {
+    setConfirmDeleteKey(null);
   }
 
   // 진행 중인 타이머 (홈 최상단 요약 배너용)
@@ -355,16 +302,15 @@ export default function HomePanel() {
     return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>;
   }
 
-  // 최근 기록 클릭 → 수정 팝업 (스와이프로 열려있는 카드는 탭해서 다시 닫기만 함)
-  function handleRecentClick(e, key) {
-    if (swipedKey) { setSwipedKey(null); return; }
+  // 최근 기록 클릭 → 수정 팝업
+  function handleRecentClick(e) {
     if (!e.raw) return;
     if (e.t === 'f') openEditFeed(e.raw);
     else if (e.t === 'd') openEditDiaper(e.raw);
     else if (e.t === 's') openEditSleep(e.raw);
   }
 
-  // 최근 기록 카드 — 스와이프로 열린 쓰레기통을 한 번 더 탭하면 삭제
+  // 최근 기록 카드 — × → 삭제 확인 팝오버에서 "삭제"를 누르면 실제로 삭제
   const RECENT_TYPE_MAP = {
     f: { key: 'feeds', action: 'SET_FEEDS' },
     d: { key: 'diapers', action: 'SET_DIAPERS' },
@@ -384,7 +330,7 @@ export default function HomePanel() {
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     saveDB(newDB);
     showToast('삭제됐어요 (설정 > 삭제 기록에서 복원 가능)');
-    setSwipedKey(null);
+    setConfirmDeleteKey(null);
   }
 
   return (
@@ -584,21 +530,18 @@ export default function HomePanel() {
           {recent.map((e, i) => {
             const key = `${e.t}-${e.raw ? e.raw.id : i}`;
             return (
-              <div key={key} className="rswipe">
-                <div className="rtrash" onClick={ev => { ev.stopPropagation(); deleteRecent(e); }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-                </div>
-                <div
-                  className={`rcard${swipedKey === key ? ' swiped' : ''}`}
-                  style={{
-                    animationDelay: `${i * 40}ms`,
-                    transform: swipedKey === key ? `scale(${swipeScale})` : undefined,
-                  }}
-                  onClick={() => handleRecentClick(e, key)}
-                  onTouchStart={ev => handleCardTouchStart(key, ev)}
-                  onTouchMove={ev => handleCardTouchMove(key, ev)}
-                  onTouchEnd={ev => handleCardTouchEnd(key, ev)}
-                >
+              <div key={key} className="rwrap">
+                <button className="delx" onClick={ev => toggleDeleteConfirm(key, ev)} aria-label="기록 삭제">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                {confirmDeleteKey === key && (
+                  <div className="delpop" onClick={ev => ev.stopPropagation()}>
+                    <div className="delpop-text">이 기록을 삭제하시겠어요?</div>
+                    <button className="btn-delete" onClick={() => deleteRecent(e)}>삭제</button>
+                    <button className="btn-cancel" onClick={closeDeleteConfirm}>취소</button>
+                  </div>
+                )}
+                <div className="rcard" onClick={() => handleRecentClick(e)}>
                   <div className={`rico ${e.dotCls || e.t}`}>{recentIcon(e.t)}</div>
                   <div className="rbody">
                     <div className="rti">{e.label}</div>
@@ -614,6 +557,7 @@ export default function HomePanel() {
           })}
         </div>
       )}
+      {confirmDeleteKey && <div className="deldim" onClick={closeDeleteConfirm} />}
 
       {/* 직전 24시간 상세 모달 */}
       {detail24 && (
