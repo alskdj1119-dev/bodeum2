@@ -41,12 +41,19 @@ function valueFontSize(value) {
   return 15;
 }
 
+function subFontSize(sub) {
+  const len = String(sub).length;
+  if (len <= 10) return 11;
+  if (len <= 16) return 10;
+  return 9;
+}
+
 function StatCard({ label, value, sub, color }) {
   return (
     <div style={{ flex: 1, background: 'var(--surf2)', borderRadius: 14, padding: '12px 14px', minWidth: 0, boxShadow: 'var(--sh-sm)' }}>
       <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: valueFontSize(value), fontWeight: 700, color: color, fontFamily: 'var(--serif)', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3, whiteSpace: 'nowrap' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: subFontSize(sub), color: 'var(--muted)', marginTop: 3, lineHeight: 1.3, wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{sub}</div>}
     </div>
   );
 }
