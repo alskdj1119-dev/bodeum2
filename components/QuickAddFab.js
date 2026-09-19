@@ -8,11 +8,21 @@ import { useApp } from '../lib/store';
 // 위치는 화면 폭 대비 비율(0~1)로 로컬에 저장 — 기기가 바뀌어도 자연스럽게 맞는다.
 const POS_KEY = 'bodeum_fab_pos_ratio_v1';
 const BTN_SIZE = 42; // .qplus 크기와 일치
+const MENU_WIDTH = 132; // app/globals.css .qmenu 의 width 와 일치 — 버튼 중앙 기준으로 펼쳐짐
 const CONTAINER_MAX = 430; // .app-root/.bnav의 max-width와 일치
 const MARGIN = 14; // 화면 끝에 완전히 붙지 않도록 두는 여백
 const DRAG_THRESHOLD = 6; // 이 이상 움직여야 "드래그"로 보고, 아니면 탭(메뉴 열기)으로 처리
 
 function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+
+// 버튼은 42px 이지만, 눌렀을 때 펼쳐지는 메뉴는 132px 폭으로 버튼 중앙에 겹쳐서 뜬다.
+// 그래서 이동 가능 범위는 버튼이 아니라 "펼쳐진 메뉴"가 화면 밖으로 나가지 않는 범위로 잡아야 한다.
+function getBounds(containerW) {
+  const half = MENU_WIDTH / 2;
+  const min = MARGIN + half - BTN_SIZE / 2;
+  const max = containerW - MARGIN - half - BTN_SIZE / 2;
+  return { min, max: Math.max(min, max) };
+}
 
 export default function QuickAddFab() {
   const { setOpenModal, setEditId, setEditType } = useApp();
@@ -53,7 +63,8 @@ export default function QuickAddFab() {
     const dx = e.clientX - d.startX;
     if (Math.abs(dx) > DRAG_THRESHOLD) d.moved = true;
     if (!d.moved) return;
-    const range = d.width - BTN_SIZE - MARGIN * 2;
+    const { min, max } = getBounds(d.width);
+    const range = max - min;
     const deltaRatio = range > 0 ? dx / range : 0;
     setRatio(clamp(d.startRatio + deltaRatio, 0, 1));
   }
@@ -73,8 +84,8 @@ export default function QuickAddFab() {
     dragRef.current.dragging = false;
   }
 
-  const range = Math.max(0, containerW - BTN_SIZE - MARGIN * 2);
-  const left = MARGIN + ratio * range;
+  const { min: fabMin, max: fabMax } = getBounds(containerW);
+  const left = fabMin + ratio * (fabMax - fabMin);
 
   return (
     <div className="fab-layer">
