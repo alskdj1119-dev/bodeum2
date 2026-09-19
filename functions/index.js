@@ -59,6 +59,36 @@ function elapsedLabel(ms) {
   return mm ? hh + '시간 ' + mm + '분' : hh + '시간';
 }
 
+// 배열에서 무작위로 하나 고른다. 알림 문구를 매번 같은 문장이 아니라
+// 여러 버전 중 랜덤하게 골라 보내서 "기록 누락 알림"보다 다정하게 느껴지도록 한다.
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// 알림 종류별 문구 후보 — 놓친 걸 지적하기보다 응원하는 톤으로,
+// 발송 기준이 되는 경과시간(t)을 문구 안에 자연스럽게 포함한다.
+const HUNGER_MESSAGES = [
+  (ga, name, t) => `${ga} 배가 출출할 시간이에요 🍼 마지막 맘마로부터 ${t} 지났어요, 맘마 준비해볼까요?`,
+  (ga, name, t) => `슬슬 맘마 시간이 다가와요 🌿 ${name}한테 물어봐주세요, 배고프지 않은지! 마지막 맘마로부터 ${t} 지났어요.`,
+  (ga, name, t) => `${ga} 기다리고 있을지도 몰라요 🍼 마지막 수유로부터 ${t} 지났어요.`,
+  (ga, name, t) => `오늘도 잘 챙기고 계시죠? ${name} 맘마 시간이 됐어요 🌿 마지막 맘마로부터 ${t} 지났어요.`,
+];
+const FEED_TIMER_MESSAGES = [
+  (ga, name, t) => `맘마 타이머가 ${t}째 진행 중이에요 🌿 다 드셨으면 타이머를 멈춰주세요.`,
+  (ga, name, t) => `${name}랑 맘마 타임 ${t}째, 즐거우셨나요? 다 먹었다면 기록을 마무리해주세요 🍼`,
+  (ga, name, t) => `맘마 타이머가 ${t}째 돌고 있어요 ⏱️ 끝났으면 살짝 종료 눌러주세요.`,
+];
+const SLEEP_TIMER_MESSAGES = [
+  (ga, name, t) => `${ga} 쿨쿨 잘 자고 있나요? 🌙 잠든 지 ${t} 지났어요.`,
+  (ga, name, t) => `포근한 잠 시간이었길 바라요 🌙 ${t} 지났는데, 일어났다면 기록해주세요.`,
+  (ga, name, t) => `${name}의 소중한 잠, 잘 채워지고 있나요? ${t}째 자고 있어요 🌿`,
+];
+const DIAPER_MESSAGES = [
+  (ga, name, t) => `${ga} 기저귀 상태 한번 살펴봐 줄까요? 🌿 마지막 교체로부터 ${t} 지났어요.`,
+  (ga, name, t) => `뽀송뽀송하게, 기저귀 체크 타임이에요 🍃 마지막 교체로부터 ${t} 지났어요.`,
+  (ga, name, t) => `${ga} 편안한지 기저귀 한번 확인해주세요 🌿 마지막 교체로부터 ${t} 지났어요.`,
+];
+
 // 한국 표준시(UTC+9, 서머타임 없음) 기준 "현재 몇 시"인지.
 function kstHour(nowMs) {
   const kst = new Date(nowMs + 9 * 3600 * 1000);
@@ -125,7 +155,7 @@ function decideNotifications(family, state, nowMs) {
         out.push({
           key: 'hunger',
           title: '보듬 🌿',
-          body: `${addGa(name)} 배고플 시간, 맘마 준비해주세요.\n마지막 맘마로부터 ${elapsedLabel(elapsed)} 지났어요.`,
+          body: pick(HUNGER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
         nextState.hunger = { lastKey: state.lastFeedTime, lastSentAt: nowMs };
       } else {
@@ -144,7 +174,7 @@ function decideNotifications(family, state, nowMs) {
         out.push({
           key: 'feedTimer',
           title: '보듬 🌿',
-          body: `${addGa(name)} 아직 맘마 중인가요? 맘마 다 먹었으면 타이머 종료해주세요.`,
+          body: pick(FEED_TIMER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
         nextState.feedTimer = { lastKey: state.activeFeedStart, sent: true };
       } else {
@@ -163,7 +193,7 @@ function decideNotifications(family, state, nowMs) {
         out.push({
           key: 'sleepTimer',
           title: '보듬 🌿',
-          body: `${addGa(name)} 잠든 지 ${settings.sleepAlertH}시간이 지났어요. 일어났나요?`,
+          body: pick(SLEEP_TIMER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
         nextState.sleepTimer = { lastKey: state.activeSleepStart, sent: true };
       } else {
@@ -182,7 +212,7 @@ function decideNotifications(family, state, nowMs) {
         out.push({
           key: 'diaper',
           title: '보듬 🌿',
-          body: `${addGa(name)} 기저귀 교체한 지 ${settings.diaperAlertH}시간이 지났어요. 확인해주세요.`,
+          body: pick(DIAPER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
         nextState.diaper = { lastKey: state.lastDiaperTime, sent: true };
       } else {
