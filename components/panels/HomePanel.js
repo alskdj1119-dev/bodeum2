@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
-  agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr,
+  agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
@@ -287,7 +287,8 @@ export default function HomePanel() {
     const amtStr = f.consumedAmount != null && fAmt != null ? `준비 ${fAmt}ml / 섭취 ${f.consumedAmount}ml`
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : fAmt ? `${fAmt}ml` : '';
-    const durTxt = (f.start && f.end) ? ' · ' + durStr(new Date(f.end) - new Date(f.start)) : '';
+    const durMs = directFeedDurationMs(f);
+    const durTxt = durMs > 0 ? ' · ' + durStr(durMs) : '';
     all.push({ t: 'f', time: t, label: '수유 — ' + (TF[f.type] || ''), sub: amtStr + durTxt, raw: f });
   });
   diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d }));
