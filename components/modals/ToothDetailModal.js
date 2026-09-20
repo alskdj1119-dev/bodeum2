@@ -23,7 +23,9 @@ export default function ToothDetailModal() {
   const { teethStatus, saveTeethStatus, editId, setOpenModal, setEditId, uid, showToast } = useApp();
   const toothId = editId;
   const tooth = ALL_TEETH.find(t => t.id === toothId);
-  const info = normalizeToothInfo(teethStatus?.[toothId]) || { date: todayStr(), records: [] };
+  const existing = normalizeToothInfo(teethStatus?.[toothId]);
+  const isNew = !existing; // 아직 기록이 없는 치아 — 여기서 날짜를 입력하고 저장해야 기록이 시작된다.
+  const info = existing || { date: todayStr(), records: [] };
 
   const [date, setDate] = useState(info.date);
   const [newType, setNewType] = useState('treatment');
@@ -41,7 +43,7 @@ export default function ToothDetailModal() {
   function saveDate() {
     if (!date) { showToast('날짜를 입력해주세요'); return; }
     persist(info.records, date);
-    showToast('저장됐어요');
+    showToast(isNew ? '치아 기록이 시작됐어요' : '저장됐어요');
   }
 
   function addRecord() {
@@ -78,62 +80,73 @@ export default function ToothDetailModal() {
         <div className="mbody">
           <div className="fld">
             <div className="flbl">난 날짜</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <DateTimePicker mode="date" value={date} onChange={setDate} style={{ flex: 1 }} />
-              <button className="bcan" style={{ padding: '0 16px' }} onClick={saveDate}>저장</button>
-            </div>
-          </div>
-
-          <div className="fld">
-            <div className="flbl">추가 기록{info.records.length > 0 ? ` (${info.records.length}건)` : ''}</div>
-            {sortedRecords.length === 0 ? (
-              <div style={{ fontSize: 12, color: 'var(--muted)', padding: '4px 0 8px' }}>치료·특이사항·발치 등을 기록해보세요</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-                {sortedRecords.map(r => {
-                  const rt = RECORD_TYPE_MAP[r.type] || RECORD_TYPES[1];
-                  return (
-                    <div key={r.id} className="ec" style={{ padding: '8px 10px', cursor: 'default' }}>
-                      <div className="emain">
-                        <div className="epri" style={{ fontSize: 13 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, background: rt.bg, color: rt.color, borderRadius: 4, padding: '1px 6px', marginRight: 6 }}>{rt.label}</span>
-                          {r.date}
-                        </div>
-                        {r.memo && <div className="esec" style={{ fontSize: 12 }}>{r.memo}</div>}
-                      </div>
-                      <button className="edel" onClick={() => deleteRecord(r.id)}>
-                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
-                    </div>
-                  );
-                })}
+            {isNew && (
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, lineHeight: 1.5 }}>
+                아직 기록이 없어요 — 이가 난 날짜를 고르고 저장하면 이 날짜로 기록이 시작돼요.
               </div>
             )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <DateTimePicker mode="date" value={date} onChange={setDate} style={{ flex: 1 }} />
+              <button className="bcan" style={{ padding: '0 16px' }} onClick={saveDate}>{isNew ? '기록 시작' : '저장'}</button>
+            </div>
           </div>
 
-          <div className="fld">
-            <div className="flbl">기록 추가</div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-              {RECORD_TYPES.map(rt => (
-                <button
-                  key={rt.code}
-                  className={`sbtn${newType === rt.code ? ' on' : ''}`}
-                  onClick={() => setNewType(rt.code)}
-                >{rt.label}</button>
-              ))}
-            </div>
-            <DateTimePicker mode="date" value={newDate} onChange={setNewDate} style={{ marginBottom: 8, width: '100%' }} />
-            <input className="finp" type="text" placeholder="메모 (선택)" value={newMemo} onChange={e => setNewMemo(e.target.value)} style={{ marginBottom: 8, width: '100%' }} />
-            <button className="bpri" style={{ width: '100%' }} onClick={addRecord}>추가</button>
-          </div>
+          {!isNew && (
+            <>
+              <div className="fld">
+                <div className="flbl">추가 기록{info.records.length > 0 ? ` (${info.records.length}건)` : ''}</div>
+                {sortedRecords.length === 0 ? (
+                  <div style={{ fontSize: 12, color: 'var(--muted)', padding: '4px 0 8px' }}>치료·특이사항·발치 등을 기록해보세요</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                    {sortedRecords.map(r => {
+                      const rt = RECORD_TYPE_MAP[r.type] || RECORD_TYPES[1];
+                      return (
+                        <div key={r.id} className="ec" style={{ padding: '8px 10px', cursor: 'default' }}>
+                          <div className="emain">
+                            <div className="epri" style={{ fontSize: 13 }}>
+                              <span style={{ fontSize: 10, fontWeight: 600, background: rt.bg, color: rt.color, borderRadius: 4, padding: '1px 6px', marginRight: 6 }}>{rt.label}</span>
+                              {r.date}
+                            </div>
+                            {r.memo && <div className="esec" style={{ fontSize: 12 }}>{r.memo}</div>}
+                          </div>
+                          <button className="edel" onClick={() => deleteRecord(r.id)}>
+                            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="fld">
+                <div className="flbl">기록 추가</div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  {RECORD_TYPES.map(rt => (
+                    <button
+                      key={rt.code}
+                      className={`sbtn${newType === rt.code ? ' on' : ''}`}
+                      onClick={() => setNewType(rt.code)}
+                    >{rt.label}</button>
+                  ))}
+                </div>
+                <DateTimePicker mode="date" value={newDate} onChange={setNewDate} style={{ marginBottom: 8, width: '100%' }} />
+                <input className="finp" type="text" placeholder="메모 (선택)" value={newMemo} onChange={e => setNewMemo(e.target.value)} style={{ marginBottom: 8, width: '100%' }} />
+                <button className="bpri" style={{ width: '100%' }} onClick={addRecord}>추가</button>
+              </div>
+            </>
+          )}
         </div>
         <div className="mfoot">
           <button className="bcan" style={{ flex: 1 }} onClick={close}>닫기</button>
-          <button
-            className="bcan"
-            style={{ flex: 1, color: '#E05A4E' }}
-            onClick={deleteTooth}
-          >치아 기록 전체 삭제</button>
+          {!isNew && (
+            <button
+              className="bcan"
+              style={{ flex: 1, color: '#E05A4E' }}
+              onClick={deleteTooth}
+            >치아 기록 전체 삭제</button>
+          )}
         </div>
       </div>
     </div>,

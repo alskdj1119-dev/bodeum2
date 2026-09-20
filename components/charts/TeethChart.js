@@ -48,10 +48,12 @@ function archPoints(baselineY, amplitude, curveDown) {
   });
 }
 
-// 치아 기록 다이어그램 — 위/아래 잇몸 아치 모양으로 20개 유치를 배치하고,
-// 탭하면 오늘 날짜로 "났음" 표시, 다시 탭하면 취소한다.
-// 아래 목록의 각 치아 행을 탭하면 onOpenDetail(toothId)로 상세(추가 기록) 화면을 연다.
-// teethStatus: { [toothId]: 'YYYY-MM-DD' | { date, records } } / onToggle(toothId)
+// 치아 기록 다이어그램 — 위/아래 잇몸 아치 모양으로 20개 유치를 배치한다.
+// 아직 기록이 없는 치아를 탭하면 onOpenDetail(toothId)로 상세 화면을 열어 실제로 이가 난 날짜를
+// 입력해서 저장하도록 한다 (예전엔 탭 즉시 "오늘" 날짜로 기록됐는데, 실제 난 날짜와 다를 수 있어서
+// 날짜를 직접 고르고 저장해야 기록이 생기도록 바꿨다). 이미 기록이 있는 치아는 탭하면 기존처럼
+// 기록을 삭제한다(다시 시작하고 싶을 때). 상세 수정은 아래 목록에서 연다.
+// teethStatus: { [toothId]: 'YYYY-MM-DD' | { date, records } } / onToggle(toothId) / onOpenDetail(toothId)
 export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
   const [selected, setSelected] = useState(null);
   const upperPts = archPoints(55, 28, false);
@@ -67,7 +69,11 @@ export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
       <g
         className="chart-hit"
         style={{ cursor: 'pointer' }}
-        onClick={() => { onToggle(tooth.id); setSelected(tooth.id); }}
+        onClick={() => {
+          setSelected(tooth.id);
+          if (erupted) onToggle(tooth.id);
+          else onOpenDetail(tooth.id);
+        }}
       >
         <circle cx={pt.x} cy={pt.y} r="12" fill={erupted ? 'var(--cv)' : 'var(--surf)'}
           stroke={isSelected ? 'var(--cv)' : 'var(--muted)'} strokeWidth={isSelected ? 2.5 : 1.5} strokeOpacity={isSelected ? 1 : 0.5} />
@@ -96,7 +102,7 @@ export default function TeethChart({ teethStatus, onToggle, onOpenDetail }) {
           {LOWER_TEETH.map((t, i) => <ToothDot key={t.id} tooth={t} pt={lowerPts[i]} />)}
         </svg>
         <div style={{ textAlign: 'center', fontSize: 10, color: 'var(--muted)' }}>
-          동그라미를 탭하면 이가 난 날짜(오늘)로 기록돼요 · 위쪽 = 윗니, 아래쪽 = 아랫니
+          동그라미를 탭하면 이가 난 날짜를 입력해서 기록해요 · 위쪽 = 윗니, 아래쪽 = 아랫니
         </div>
       </div>
 
