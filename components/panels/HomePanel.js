@@ -8,6 +8,7 @@ import {
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
+import HandoffNoteCard from '../HandoffNoteCard';
 
 // 타이머 배너와 "직전" 카드의 디밍 블링크(.blink-live, 주기 1.8s)가 서로 다른 시점에 마운트돼도
 // 항상 같은 박자로 깜빡이도록 — 각 요소가 마운트되는 순간의 실제 시각(Date.now())을 기준으로
@@ -332,6 +333,8 @@ export default function HomePanel() {
       <h1 className="daytitle" style={{ fontSize: encourageFontSize(encouragePhrase) + 'px', wordBreak:'keep-all', whiteSpace:'pre-line', marginBottom:'16px' }}>
         {encouragePhrase}
       </h1>
+
+      <HandoffNoteCard />
 
       {/* 요일 스트립 — 이번 주 기록 있는 날엔 점, 오늘 요일엔 포인트색 밑줄 */}
       <div className="weekstrip">

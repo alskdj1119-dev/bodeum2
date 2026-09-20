@@ -8,7 +8,7 @@ import { useApp } from '../lib/store';
 // 위치는 화면 폭 대비 비율(0~1)로 로컬에 저장 — 기기가 바뀌어도 자연스럽게 맞는다.
 const POS_KEY = 'bodeum_fab_pos_ratio_v1';
 const BTN_SIZE = 42; // .qplus 크기와 일치
-const MENU_WIDTH = 132; // app/globals.css .qmenu 의 width 와 일치 — 버튼 중앙 기준으로 펼쳐짐
+const MENU_WIDTH = 150; // app/globals.css .qmenu.fab-menu 의 width 와 일치 — 버튼 중앙 기준으로 펼쳐짐
 const CONTAINER_MAX = 430; // .app-root/.bnav의 max-width와 일치
 const MARGIN = 14; // 화면 끝에 완전히 붙지 않도록 두는 여백
 const DRAG_THRESHOLD = 6; // 이 이상 움직여야 "드래그"로 보고, 아니면 탭(메뉴 열기)으로 처리
@@ -104,6 +104,11 @@ export default function QuickAddFab() {
             <button onClick={() => openQuick('sleep')}>
               <span className="mico s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
               수면
+            </button>
+            <div className="qmenu-sep" />
+            <button onClick={() => openQuick('handoffNote')}>
+              <span className="mico n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+              잘 부탁해 메모
             </button>
           </div>
         )}

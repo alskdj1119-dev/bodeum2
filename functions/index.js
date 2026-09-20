@@ -10,6 +10,7 @@
  */
 
 const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -227,35 +228,77 @@ function decideNotifications(family, state, nowMs) {
 async function sendToFamily(docSnap) {
   const family = docSnap.data() || {};
   const tokens = family.fcmTokens || [];
-  if (!tokens.length) return;
 
   const nowMs = Date.now();
   const state = extractState(family);
   const { toSend, nextState } = decideNotifications(family, state, nowMs);
 
-  if (!toSend.length) return;
+  // "잘 부탁해 메모" 다시보기 예약 시간이 지난 게 있으면 다시 대기중 상태로 돌리고
+  // (앱을 안 열어도 알 수 있게) 리마인더 푸시를 보낸다. 이 체크는 tokens가 비어 있어도
+  // 문서 상태(handoffNotes)는 갱신해야 하므로, 아래 tokens.length 체크보다 먼저 계산해둔다.
+  const handoffNotes = Array.isArray(family.handoffNotes) ? family.handoffNotes : [];
+  const dueReminders = [];
+  const updatedHandoffNotes = handoffNotes.map((n) => {
+    if (n.status === 'snoozed' && n.snoozeUntil && n.snoozeUntil <= nowMs) {
+      const flipped = { ...n, status: 'active', snoozeUntil: null };
+      dueReminders.push(flipped);
+      return flipped;
+    }
+    return n;
+  });
+  const handoffChanged = dueReminders.length > 0;
+
+  if (!toSend.length && !handoffChanged) return;
 
   let invalidTokens = [];
-  for (const notif of toSend) {
-    const res = await messaging.sendEachForMulticast({
-      tokens,
-      data: { title: notif.title, body: notif.body, tag: notif.key },
-      webpush: { headers: { Urgency: 'high' } },
-    });
-    res.responses.forEach((r, i) => {
-      if (!r.success) {
-        const code = r.error && r.error.code;
-        if (
-          code === 'messaging/registration-token-not-registered' ||
-          code === 'messaging/invalid-registration-token' ||
-          code === 'messaging/invalid-argument'
-        ) {
-          invalidTokens.push(tokens[i]);
-        } else {
-          logger.warn(`[${docSnap.id}] FCM 발송 실패 (${notif.key}):`, code);
+
+  if (tokens.length) {
+    for (const notif of toSend) {
+      const res = await messaging.sendEachForMulticast({
+        tokens,
+        data: { title: notif.title, body: notif.body, tag: notif.key },
+        webpush: { headers: { Urgency: 'high' } },
+      });
+      res.responses.forEach((r, i) => {
+        if (!r.success) {
+          const code = r.error && r.error.code;
+          if (
+            code === 'messaging/registration-token-not-registered' ||
+            code === 'messaging/invalid-registration-token' ||
+            code === 'messaging/invalid-argument'
+          ) {
+            invalidTokens.push(tokens[i]);
+          } else {
+            logger.warn(`[${docSnap.id}] FCM 발송 실패 (${notif.key}):`, code);
+          }
         }
-      }
-    });
+      });
+    }
+
+    // 다시보기 리마인더는 메모를 남긴 본인 기기 말고 상대방 기기로만 보낸다.
+    for (const note of dueReminders) {
+      const targetTokens = tokens.filter((t) => t !== note.senderToken);
+      if (!targetTokens.length) continue;
+      const res = await messaging.sendEachForMulticast({
+        tokens: targetTokens,
+        data: { title: '보듬 🌿', body: `⏰ "${note.text}" 잘 부탁해 메모, 다시 확인해주세요`, tag: 'handoffNote' },
+        webpush: { headers: { Urgency: 'high' } },
+      });
+      res.responses.forEach((r, i) => {
+        if (!r.success) {
+          const code = r.error && r.error.code;
+          if (
+            code === 'messaging/registration-token-not-registered' ||
+            code === 'messaging/invalid-registration-token' ||
+            code === 'messaging/invalid-argument'
+          ) {
+            invalidTokens.push(targetTokens[i]);
+          } else {
+            logger.warn(`[${docSnap.id}] FCM 발송 실패 (handoffNote):`, code);
+          }
+        }
+      });
+    }
   }
 
   // 이전 알림 내역 — 설정 화면에서 "알림 내역"으로 확인할 수 있도록 최근 발송분을 저장해둔다.
@@ -267,11 +310,19 @@ async function sendToFamily(docSnap) {
     notifState: nextState,
     notifLog: [...prevLog, ...newLogEntries].slice(-MAX_LOG),
   };
+  if (handoffChanged) {
+    update.handoffNotes = updatedHandoffNotes;
+  }
   if (invalidTokens.length) {
     update.fcmTokens = admin.firestore.FieldValue.arrayRemove(...invalidTokens);
   }
   await docSnap.ref.update(update);
-  logger.info(`[${docSnap.id}] 알림 ${toSend.length}건 발송: ${toSend.map((n) => n.key).join(', ')}`);
+  if (toSend.length) {
+    logger.info(`[${docSnap.id}] 알림 ${toSend.length}건 발송: ${toSend.map((n) => n.key).join(', ')}`);
+  }
+  if (handoffChanged) {
+    logger.info(`[${docSnap.id}] 잘 부탁해 메모 다시보기 리마인더 ${dueReminders.length}건 발송`);
+  }
 }
 
 exports.checkNotifications = onSchedule(
@@ -284,5 +335,44 @@ exports.checkNotifications = onSchedule(
     const snap = await db.collection(COLLECTION).get();
     logger.info(`가족 문서 ${snap.size}개 확인 시작`);
     await Promise.all(snap.docs.map((d) => sendToFamily(d).catch((e) => logger.error(`[${d.id}] 처리 실패`, e))));
+  }
+);
+
+// "잘 부탁해 메모"는 5분 주기 스케줄과 달리 "남기는 즉시" 상대방에게 도착해야 하므로,
+// 가족 문서가 바뀔 때마다(onDocumentUpdated) 새 메모가 추가됐는지 확인해서 그 자리에서 바로 푸시를 보낸다.
+// handoffNotes는 항상 최신 메모가 배열 맨 앞(index 0)에 온다 (lib/store.js addHandoffNote 참고).
+exports.onHandoffNoteAdded = onDocumentUpdated(
+  { document: `${COLLECTION}/{code}`, region: 'asia-northeast3' },
+  async (event) => {
+    const before = event.data.before.data() || {};
+    const after = event.data.after.data() || {};
+    const beforeNotes = Array.isArray(before.handoffNotes) ? before.handoffNotes : [];
+    const afterNotes = Array.isArray(after.handoffNotes) ? after.handoffNotes : [];
+    if (!afterNotes.length) return;
+
+    const newest = afterNotes[0];
+    const prevNewest = beforeNotes[0];
+    // 새로 추가된 메모가 아니라 기존 메모의 상태만 바뀐 경우(확인함/다시보기)는 그냥 지나간다 —
+    // 확인/다시보기는 상대방이 이미 앱을 열어 본 뒤라 즉시 푸시가 따로 필요 없다.
+    if (prevNewest && prevNewest.id === newest.id) return;
+    if (newest.status !== 'active') return;
+
+    const tokens = Array.isArray(after.fcmTokens) ? after.fcmTokens : [];
+    const targetTokens = tokens.filter((t) => t !== newest.senderToken);
+    if (!targetTokens.length) return;
+
+    const body = `${newest.author ? newest.author + '님이 ' : ''}잘 부탁해 메모를 남겼어요: "${newest.text}"`;
+    try {
+      const res = await messaging.sendEachForMulticast({
+        tokens: targetTokens,
+        data: { title: '보듬 🌿', body, tag: 'handoffNote' },
+        webpush: { headers: { Urgency: 'high' } },
+      });
+      res.responses.forEach((r, i) => {
+        if (!r.success) logger.warn(`[${event.params.code}] 잘 부탁해 메모 즉시 푸시 실패:`, r.error && r.error.code);
+      });
+    } catch (e) {
+      logger.error(`[${event.params.code}] 잘 부탁해 메모 즉시 푸시 처리 실패`, e);
+    }
   }
 );

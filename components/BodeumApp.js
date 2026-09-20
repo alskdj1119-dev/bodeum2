@@ -35,6 +35,7 @@ import WeightModal from './modals/WeightModal';
 import ConsumedModal from './modals/ConsumedModal';
 import TempModal from './modals/TempModal';
 import ActiveTimerEditModal from './modals/ActiveTimerEditModal';
+import HandoffNoteModal from './modals/HandoffNoteModal';
 import SolidModal from './modals/SolidModal';
 import VisitModal from './modals/VisitModal';
 import SymptomModal from './modals/SymptomModal';
@@ -263,6 +264,7 @@ export default function BodeumApp() {
       {openModal === 'consumed' && <ConsumedModal />}
       {openModal === 'temp' && <TempModal />}
       {openModal === 'activeTimerEdit' && <ActiveTimerEditModal />}
+      {openModal === 'handoffNote' && <HandoffNoteModal />}
 
       <Toast />
 
