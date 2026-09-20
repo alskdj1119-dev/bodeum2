@@ -60,6 +60,25 @@ function elapsedLabel(ms) {
   return mm ? hh + '시간 ' + mm + '분' : hh + '시간';
 }
 
+// "잘 부탁해 메모"의 역할 라벨 — lib/helpers.js의 HANDOFF_ROLES와 동일한 목록을
+// Cloud Functions는 lib/를 import할 수 없어 여기 그대로 복제해둔다 (elapsedLabel과 같은 이유).
+const HANDOFF_ROLE_LABEL = {
+  mom: '엄마',
+  dad: '아빠',
+  family: '가족',
+  helper: '도우미',
+  other: '기타',
+};
+function roleLabel(key) {
+  return HANDOFF_ROLE_LABEL[key] || key || '';
+}
+
+// family.deviceRoles(배열 [{token, role}])에서 특정 역할로 등록된 기기의 토큰만 골라낸다.
+function tokensForRole(family, role) {
+  const deviceRoles = Array.isArray(family.deviceRoles) ? family.deviceRoles : [];
+  return deviceRoles.filter((d) => d.role === role).map((d) => d.token).filter(Boolean);
+}
+
 // 배열에서 무작위로 하나 고른다. 알림 문구를 매번 같은 문장이 아니라
 // 여러 버전 중 랜덤하게 골라 보내서 "기록 누락 알림"보다 다정하게 느껴지도록 한다.
 function pick(arr) {
@@ -275,9 +294,10 @@ async function sendToFamily(docSnap) {
       });
     }
 
-    // 다시보기 리마인더는 메모를 남긴 본인 기기 말고 상대방 기기로만 보낸다.
+    // 다시보기 리마인더는 메모의 받는 역할(targetRole)로 등록된 기기에만 보낸다.
+    // (메모를 남긴 본인 기기는 senderToken으로 한 번 더 안전하게 제외)
     for (const note of dueReminders) {
-      const targetTokens = tokens.filter((t) => t !== note.senderToken);
+      const targetTokens = tokensForRole(family, note.targetRole).filter((t) => t !== note.senderToken);
       if (!targetTokens.length) continue;
       const res = await messaging.sendEachForMulticast({
         tokens: targetTokens,
@@ -357,11 +377,12 @@ exports.onHandoffNoteAdded = onDocumentUpdated(
     if (prevNewest && prevNewest.id === newest.id) return;
     if (newest.status !== 'active') return;
 
-    const tokens = Array.isArray(after.fcmTokens) ? after.fcmTokens : [];
-    const targetTokens = tokens.filter((t) => t !== newest.senderToken);
+    // 새 메모는 받는 역할(targetRole)로 등록된 기기에만 보낸다.
+    // (메모를 남긴 본인 기기는 senderToken으로 한 번 더 안전하게 제외)
+    const targetTokens = tokensForRole(after, newest.targetRole).filter((t) => t !== newest.senderToken);
     if (!targetTokens.length) return;
 
-    const body = `${newest.author ? newest.author + '님이 ' : ''}잘 부탁해 메모를 남겼어요: "${newest.text}"`;
+    const body = `${roleLabel(newest.authorRole)}가 잘 부탁해 메모를 남겼어요: "${newest.text}"`;
     try {
       const res = await messaging.sendEachForMulticast({
         tokens: targetTokens,

@@ -16,6 +16,7 @@ import FeedSettingsPanel from './panels/FeedSettingsPanel';
 import CardColorSettingsPanel from './panels/CardColorSettingsPanel';
 import RecalcFeedsPanel from './panels/RecalcFeedsPanel';
 import FamilyCodePanel from './panels/FamilyCodePanel';
+import MyRoleSettingsPanel from './panels/MyRoleSettingsPanel';
 import NotifSettingsPanel from './panels/NotifSettingsPanel';
 import ChangelogPanel from './panels/ChangelogPanel';
 import RequestsPanel from './panels/RequestsPanel';
@@ -44,8 +45,8 @@ import HeadCircModal from './modals/HeadCircModal';
 import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
 
-const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export'];
+const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'myRoleSettings'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'myRoleSettings'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
@@ -59,6 +60,7 @@ const BACK_TARGET = {
   export: 'settings',
   recalcFeeds: 'feedSettings',
   notifHistory: 'home',
+  myRoleSettings: 'settings',
 };
 
 export default function BodeumApp() {
@@ -238,6 +240,7 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('cardColorSettings')}><CardColorSettingsPanel /></div>
         <div className="panel" ref={panelRef('export')}><ExportPanel /></div>
         <div className="panel" ref={panelRef('familyCode')}><FamilyCodePanel /></div>
+        <div className="panel" ref={panelRef('myRoleSettings')}><MyRoleSettingsPanel /></div>
         <div className="panel" ref={panelRef('notifSettings')}><NotifSettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
         <div className="panel" ref={panelRef('requests')}><RequestsPanel /></div>

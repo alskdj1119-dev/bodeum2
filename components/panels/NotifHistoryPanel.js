@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, elapsedStr, useNowTick } from '../../lib/helpers';
+import { fmtFull, elapsedStr, useNowTick, handoffRoleLabel, handoffRoleEmoji } from '../../lib/helpers';
 
 const KEY_LABEL = {
   hunger: '배고픔',
@@ -22,11 +22,16 @@ const HANDOFF_STATUS_LABEL = {
 };
 
 export default function NotifHistoryPanel() {
-  const { notifLog, handoffNotes } = useApp();
+  const { notifLog, handoffNotes, myRole } = useApp();
   const [tab, setTab] = useState('notif'); // 'notif' | 'handoff'
+  const [handoffSub, setHandoffSub] = useState('received'); // 'received' | 'sent'
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
   const sortedNotif = [...(notifLog || [])].sort((a, b) => b.sentAt - a.sentAt);
-  const sortedHandoff = [...(handoffNotes || [])].sort((a, b) => b.createdAt - a.createdAt);
+  // 내 역할(myRole)이 받는 사람인 메모 = 받은 메시지, 내가 남긴 메모(authorRole===myRole) = 보낸 메시지.
+  // 다른 역할끼리 주고받은 메모는 이 기기에서는 보이지 않는다.
+  const receivedNotes = (handoffNotes || []).filter((n) => n.targetRole === myRole);
+  const sentNotes = (handoffNotes || []).filter((n) => n.authorRole === myRole);
+  const sortedHandoff = [...(handoffSub === 'received' ? receivedNotes : sentNotes)].sort((a, b) => b.createdAt - a.createdAt);
   const sorted = tab === 'notif' ? sortedNotif : sortedHandoff;
 
   return (
@@ -36,7 +41,7 @@ export default function NotifHistoryPanel() {
         <span className="badge">{sorted.length}</span>
       </div>
 
-      <div className="modetoggle" style={{ marginBottom: 16 }}>
+      <div className="modetoggle" style={{ marginBottom: tab === 'notif' ? 16 : 10 }}>
         <button
           className={`modetoggle-btn${tab === 'notif' ? ' on' : ''}`}
           onClick={() => setTab('notif')}
@@ -49,7 +54,27 @@ export default function NotifHistoryPanel() {
         >잘 부탁해 메모</button>
       </div>
 
-      {tab === 'notif' ? (
+      {tab === 'handoff' && (
+        <div className="modetoggle" style={{ marginBottom: 16 }}>
+          <button
+            className={`modetoggle-btn${handoffSub === 'received' ? ' on' : ''}`}
+            onClick={() => setHandoffSub('received')}
+            style={handoffSub === 'received' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+          >받은 메시지</button>
+          <button
+            className={`modetoggle-btn${handoffSub === 'sent' ? ' on' : ''}`}
+            onClick={() => setHandoffSub('sent')}
+            style={handoffSub === 'sent' ? { background: 'var(--sage)', borderColor: 'var(--sage)' } : undefined}
+          >보낸 메시지</button>
+        </div>
+      )}
+
+      {!myRole && tab === 'handoff' ? (
+        <div className="empty">
+          <div className="empty-ico">✎</div>
+          <div className="empty-lbl">설정에서 내 역할을 먼저 선택해주세요</div>
+        </div>
+      ) : tab === 'notif' ? (
         sortedNotif.length === 0 ? (
           <div className="empty">
             <div className="empty-ico">🔔</div>
@@ -84,19 +109,21 @@ export default function NotifHistoryPanel() {
         sortedHandoff.length === 0 ? (
           <div className="empty">
             <div className="empty-ico">✎</div>
-            <div className="empty-lbl">아직 남긴 잘 부탁해 메모가 없어요</div>
+            <div className="empty-lbl">{handoffSub === 'received' ? '아직 받은 메모가 없어요' : '아직 보낸 메모가 없어요'}</div>
           </div>
         ) : (
           <div>
             <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '12px', lineHeight: '1.5' }}>
-              지난 메모 {sortedHandoff.length}건이에요. 최대 50건까지 보관돼요.
+              {handoffSub === 'received' ? '받은' : '보낸'} 메모 {sortedHandoff.length}건이에요. 최대 50건까지 보관돼요.
             </p>
             {sortedHandoff.map((n) => (
               <div key={n.id} className="ec" style={{ alignItems: 'flex-start' }}>
                 <div className="edot hn" style={{ marginTop: '4px' }}></div>
                 <div className="emain" style={{ flex: 1, minWidth: 0 }}>
                   <div className="epri" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{n.author}님</span>
+                    <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                      {handoffRoleEmoji(n.authorRole)} {handoffRoleLabel(n.authorRole)} → {handoffRoleEmoji(n.targetRole)} {handoffRoleLabel(n.targetRole)}
+                    </span>
                     <span className={`hi-badge ${n.status}`}>{HANDOFF_STATUS_LABEL[n.status] || n.status}</span>
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--ink)', whiteSpace: 'pre-line', marginTop: '4px', lineHeight: '1.4' }}>

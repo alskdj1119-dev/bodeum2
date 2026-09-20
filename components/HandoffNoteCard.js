@@ -1,19 +1,19 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../lib/store';
-import { elapsedStr, useNowTick } from '../lib/helpers';
+import { elapsedStr, useNowTick, handoffRoleLabel, handoffRoleEmoji } from '../lib/helpers';
 
 // 홈 화면 상단 "잘 부탁해 메모" 카드 — 육아 교대할 때 남긴 메모를 다음 사람이 놓치지 않도록 보여준다.
-// handoffNotes는 항상 최신 메모가 배열 맨 앞(index 0)에 온다 (lib/store.js addHandoffNote 참고).
-// 최신 메모가 '확인 완료' 상태면 카드 자체를 숨기고(할 일이 없으니), 그 외(대기중/다시보기 예약)에는 보여준다.
-// 새로 메모를 남기는 건 이 카드가 아니라 "+" 빠른 기록 버튼 메뉴에서 한다.
+// 이 기기의 역할(myRole)이 받는 사람(targetRole)으로 지정된 메모 중 아직 확인 안 한 것만 보여준다 —
+// 다른 역할에게 보낸 메모는 이 기기에 뜨지 않는다.
 export default function HandoffNoteCard() {
-  const { handoffNotes, confirmHandoffNote, snoozeHandoffNote, showToast } = useApp();
+  const { handoffNotes, myRole, confirmHandoffNote, snoozeHandoffNote, showToast } = useApp();
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   useNowTick(30000); // "N분 전"/"약 N분 후" 표시가 시간 지나도 갱신되도록
 
-  const latest = handoffNotes && handoffNotes[0];
-  if (!latest || latest.status === 'done') return null;
+  const mine = (handoffNotes || []).filter((n) => n.targetRole === myRole && n.status !== 'done');
+  const latest = mine.length ? mine.sort((a, b) => b.createdAt - a.createdAt)[0] : null;
+  if (!latest) return null;
 
   function onConfirm() {
     confirmHandoffNote(latest.id);
@@ -42,8 +42,10 @@ export default function HandoffNoteCard() {
           <span className="handoff-label">잘 부탁해 메모</span>
           <span className="handoff-time">{elapsedStr(latest.createdAt)}</span>
         </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '6px' }}>
+          {handoffRoleEmoji(latest.authorRole)} {handoffRoleLabel(latest.authorRole)} → {handoffRoleEmoji(latest.targetRole)} {handoffRoleLabel(latest.targetRole)}
+        </div>
         <div className="handoff-text">{latest.text}</div>
-        <div className="handoff-author">{latest.author}님이 남김</div>
         <div className="handoff-actions">
           <button className="hbtn confirm" onClick={onConfirm}>확인했어요</button>
           <button className="hbtn snooze" onClick={() => setSnoozeOpen(v => !v)}>다시보기</button>
