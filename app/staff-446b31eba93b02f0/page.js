@@ -8,6 +8,12 @@ import { getDb, collection, doc, updateDoc, addDoc, query, orderBy, onSnapshot }
 // 비밀번호 화면을 새로 만들면 그게 오히려 첫 번째로 뚫리는 지점이 된다. 대신 여기서는
 // familyCode처럼 진짜 민감한 값은 애초에 저장/노출하지 않도록 해서(RequestsPanel.js도 함께 수정),
 // 이 주소가 알려지더라도 볼 수 있는 건 "사용자가 보낸 건의사항 텍스트"뿐이게 만든다.
+//
+// comments 서브컬렉션은 원래 "내부 메모"(사용자에게 안 보임) 용도로 만들었지만,
+// 이후 RequestsPanel.js에서 사용자가 자신이 보낸 요청에 대한 관리자 답변을 볼 수 있게
+// 바뀌면서 이 댓글이 곧 "사용자에게 보이는 답변"이 됐다. 그래서 이 화면의 문구도
+// 그에 맞춰 "내부 메모" → "답변"으로 바꾼다: 여기서 남기는 내용은 해당 요청을 보낸
+// 사용자 본인에게는 보인다(다른 사용자에게는 안 보임).
 const REQUESTS_COLLECTION = 'bodeum_requests';
 
 const STATUS_OPTIONS = ['접수', '처리중', '처리완료', '미진행'];
@@ -83,12 +89,17 @@ function AdminRequestItem({ r }) {
         </select>
         <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
           <div style={{ fontSize: '14px', color: 'var(--ink)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.text}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 3 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: 3, flexWrap: 'wrap' }}>
             <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
               {r.createdAt ? r.createdAt.slice(0, 16).replace('T', ' ') : ''}
             </span>
+            {r.updatedAt && (
+              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                (사용자가 수정함) · {r.updatedAt.slice(0, 16).replace('T', ' ')}
+              </span>
+            )}
             <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: 600 }}>
-              {open ? '내부 메모 숨기기 ▲' : '내부 메모 ▼'}
+              {open ? '답변 숨기기 ▲' : '답변 ▼'}
             </span>
           </div>
         </div>
@@ -97,7 +108,7 @@ function AdminRequestItem({ r }) {
       {open && (
         <div style={{ marginLeft: '34px', marginTop: '10px' }}>
           {notes.length === 0 && (
-            <div style={{ fontSize: '12.5px', color: 'var(--muted)', marginBottom: '8px' }}>내부 메모가 없어요 (사용자에게는 보이지 않아요)</div>
+            <div style={{ fontSize: '12.5px', color: 'var(--muted)', marginBottom: '8px' }}>아직 답변이 없어요 (등록하면 이 요청을 보낸 사용자에게 보여요)</div>
           )}
           {notes.map(c => (
             <div key={c.id} style={{
@@ -117,7 +128,7 @@ function AdminRequestItem({ r }) {
               value={memo}
               onChange={e => setMemo(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addNote(); }}
-              placeholder="내부 메모 남기기 (사용자에게 보이지 않음)"
+              placeholder="답변 남기기 (이 요청을 보낸 사용자에게 보여요)"
               style={{ flex: 1 }}
             />
             <button
