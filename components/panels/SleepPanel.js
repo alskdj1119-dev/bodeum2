@@ -58,7 +58,7 @@ export default function SleepPanel() {
             <div className="slivelbl">{isPaused ? '일시정지 중' : '수면 중'}</div>
             <div className="slivetimer">{timerStr(sleepTimerMs)}</div>
           </div>
-          <button className="spause" style={{ '--pause-c':'var(--cs)' }}
+          <button className="spause" style={{ '--pause-c':'color-mix(in srgb, var(--cs) 65%, white)' }}
             onClick={e => { e.stopPropagation(); isPaused ? resumeActiveSleep() : pauseActiveSleep(); }}>
             {isPaused ? '이어서' : '일시정지'}
           </button>

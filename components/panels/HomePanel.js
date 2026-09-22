@@ -405,7 +405,7 @@ export default function HomePanel() {
                 <span className="slive-mini-lbl">{paused ? '일시정지' : '수유 중'}</span>
                 <span className="slive-mini-timer">{timerStr(feedTimerMs)}</span>
                 {canPause && (
-                  <button className="slive-mini-pause" style={{ '--pause-c':'var(--cf)' }}
+                  <button className="slive-mini-pause" style={{ '--pause-c':'color-mix(in srgb, var(--cf) 65%, white)' }}
                     onClick={e => { e.stopPropagation(); paused ? resumeActiveFeed() : pauseActiveFeed(); }}>
                     {paused ? '이어서' : '일시정지'}
                   </button>
@@ -422,7 +422,7 @@ export default function HomePanel() {
                 <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
                 <span className="slive-mini-lbl">{paused ? '일시정지' : '수면 중'}</span>
                 <span className="slive-mini-timer">{timerStr(sleepTimerMs)}</span>
-                <button className="slive-mini-pause" style={{ '--pause-c':'var(--cs)' }}
+                <button className="slive-mini-pause" style={{ '--pause-c':'color-mix(in srgb, var(--cs) 65%, white)' }}
                   onClick={e => { e.stopPropagation(); paused ? resumeActiveSleep() : pauseActiveSleep(); }}>
                   {paused ? '이어서' : '일시정지'}
                 </button>

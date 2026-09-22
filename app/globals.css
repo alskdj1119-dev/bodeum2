@@ -413,6 +413,15 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .slive-mini-timer{flex:1;font-size:14px;font-family:var(--font-display);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .slive-mini-stop{color:#fff;border:none;border-radius:var(--r-btn);padding:6px 14px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:var(--sh-sm);transition:box-shadow .15s,transform .12s}
 .slive-mini-stop:active{box-shadow:var(--sh-inset);transform:scale(.96)}
+/* 일시정지 버튼 — 종료 버튼과 동일한(채워진) UI를 쓰되, 색상만 종료 버튼보다 옅게(--pause-c에
+   color-mix로 흰색을 섞은 값을 넘겨받음) 써서 "종료"보다는 가벼운 동작임을 구분한다.
+   일시정지 중엔 배너의 깜빡임/점 펄스를 멈춰 "멈춤" 상태를 드러낸다. */
+.slive-mini-pause,.spause{color:#fff;border:none;background:var(--pause-c,var(--cf));border-radius:var(--r-btn);font-family:var(--sans);font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:var(--sh-sm);transition:box-shadow .15s,transform .12s}
+.slive-mini-pause{padding:6px 14px;font-size:12px}
+.spause{padding:9px 18px;font-size:13px}
+.slive-mini-pause:active,.spause:active{box-shadow:var(--sh-inset);transform:scale(.96)}
+.slive-mini.paused .slive-mini-dot,.slive.paused .spulse{animation:none;opacity:.45}
+.slive-mini.paused .slive-mini-timer,.slive.paused .slivetimer{color:var(--muted)}
 .empty{text-align:center;padding:52px 20px;color:var(--muted)}
 .empty-ico{font-size:36px;margin-bottom:10px;opacity:.55}
 .empty-lbl{font-size:14px}

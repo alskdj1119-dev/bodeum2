@@ -1,18 +1,21 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, feedColor, useNowTick,
+  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, directFeedDurationMs, feedColor, useNowTick,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, FEED_SIDE_LABEL as TS,
 } from '../../lib/helpers';
 
 export default function FeedPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed, filterByActiveBaby, activeBabyId, babies } = useApp();
+  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed, pauseActiveFeed, resumeActiveFeed, filterByActiveBaby, activeBabyId, babies } = useApp();
   // 화면에는 지금 보고 있는 아이의 기록만 — 실제 삭제/저장은 항상 db.feeds(전체) 기준으로 해서
   // 다른 아이의 기록이 실수로 사라지지 않게 한다 (아래 delFeed 참고).
   const feeds = filterByActiveBaby(db.feeds);
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const activeFeed = feeds.find(f => f.start && !f.end);
+  // 직수만 일시정지 가능 — 멈춘 동안의 시간은 섭취량(ml) 계산에서 빠진다.
+  const canPause = !!activeFeed && activeFeed.type === 'breast' && activeFeed.subtype === 'direct';
+  const isPaused = canPause && !!activeFeed.pausedAt;
   const done = feeds.filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));
   const grouped = groupByDay(done, f => f.start || f.time);
 
@@ -60,12 +63,7 @@ export default function FeedPanel() {
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : dispAmt ? `${dispAmt}ml` : '';
     // 직수를 왼쪽/오른쪽 이어서 한 기록은 sideTimes 각 구간의 합으로 실제 수유 시간을 계산.
-    let durMs = null;
-    if (f.sideTimes) {
-      durMs = Object.values(f.sideTimes).reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
-    } else if (f.start && f.end) {
-      durMs = new Date(f.end) - new Date(f.start);
-    }
+    const durMs = directFeedDurationMs(f) || null;
     const dur = durMs ? durStr(durMs) : '';
     const side = f.side ? TS[f.side] : '';
     return [amtStr, dur, side, f.note || ''].filter(Boolean).join(' · ');
@@ -74,12 +72,18 @@ export default function FeedPanel() {
   return (
     <>
       {activeFeed && (
-        <div className="slive banner-in" style={{ background:'var(--fw)', cursor:'pointer' }} onClick={openActiveEdit}>
+        <div className={`slive banner-in${isPaused ? ' paused' : ''}`} style={{ background:'var(--fw)', cursor:'pointer' }} onClick={openActiveEdit}>
           <div className="spulse" style={{ background:'var(--cf)' }}></div>
           <div className="sliveinf">
-            <div className="slivelbl">수유 중</div>
+            <div className="slivelbl">{isPaused ? '일시정지 중' : '수유 중'}</div>
             <div className="slivetimer">{timerStr(feedTimerMs)}</div>
           </div>
+          {canPause && (
+            <button className="spause" style={{ '--pause-c':'color-mix(in srgb, var(--cf) 65%, white)' }}
+              onClick={e => { e.stopPropagation(); isPaused ? resumeActiveFeed() : pauseActiveFeed(); }}>
+              {isPaused ? '이어서' : '일시정지'}
+            </button>
+          )}
           <button className="sstop" style={{ background:'var(--cf)' }} onClick={e => { e.stopPropagation(); stopActiveFeed(); }}>종료</button>
         </div>
       )}
