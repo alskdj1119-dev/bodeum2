@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, durStr, fmt, sleepDotClass, useNowTick,
+  fmtFull, elapsedStr, durStr, fmt, sleepDotClass, useNowTick, sleepDurationMs,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, DIAPER_TYPE_LABEL as TD,
   SOLID_REACTION_LABEL as TSR,
 } from '../../lib/helpers';
@@ -43,7 +43,7 @@ function itemSummary(item) {
     return `${TD[item.type] || '기저귀'} — ${fmtFull(item.time)}`;
   }
   if (t === 'sleeps') {
-    const dur = item.start && item.end ? durStr(new Date(item.end) - new Date(item.start)) : '-';
+    const dur = item.start && item.end ? durStr(sleepDurationMs(item)) : '-';
     const range = item.start && item.end ? ` (${fmt(item.start)} → ${fmt(item.end)})` : '';
     return `수면 ${dur}${range}`;
   }

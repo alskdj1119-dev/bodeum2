@@ -44,6 +44,7 @@ import HeightModal from './modals/HeightModal';
 import HeadCircModal from './modals/HeadCircModal';
 import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
+import { activeFeedElapsedMs, activeSleepElapsedMs } from '../lib/helpers';
 
 const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'myRoleSettings'];
 const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'myRoleSettings'];
@@ -90,7 +91,8 @@ export default function BodeumApp() {
     const activeFeed = filterByActiveBaby(db.feeds).find(f => f.start && !f.end);
     if (!activeFeed) { setFeedTimerMs(0); return; }
     const tick = () => {
-      setFeedTimerMs(Date.now() - new Date(activeFeed.start).getTime());
+      // 일시정지했던 시간은 빼고, 일시정지 중이면 타이머가 멈춰 보이도록 계산한다.
+      setFeedTimerMs(activeFeedElapsedMs(activeFeed));
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -102,7 +104,8 @@ export default function BodeumApp() {
     const activeSleep = filterByActiveBaby(db.sleeps).find(s => s.start && !s.end);
     if (!activeSleep) { setSleepTimerMs(0); return; }
     const tick = () => {
-      setSleepTimerMs(Date.now() - new Date(activeSleep.start).getTime());
+      // 일시정지했던 시간은 빼고, 일시정지 중이면 타이머가 멈춰 보이도록 계산한다.
+      setSleepTimerMs(activeSleepElapsedMs(activeSleep));
     };
     tick();
     const id = setInterval(tick, 1000);

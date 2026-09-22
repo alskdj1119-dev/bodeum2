@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useRef, useState } from 'react';
-import { kstDate, KST_OFFSET_MS } from '../../lib/helpers';
+import { kstDate, KST_OFFSET_MS, sleepDurationMs } from '../../lib/helpers';
 import ChartTooltip from './ChartTooltip';
 
 // 한국 자정(00:00 KST) 기준 ms 타임스탬프. offsetDays만큼 오늘에서 이동.
@@ -27,7 +27,7 @@ export default function SleepBarChart({ sleeps }) {
       const end = start + 86400000;
       const ms = sleeps
         .filter(s => s.end && new Date(s.start).getTime() >= start && new Date(s.start).getTime() < end)
-        .reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
+        .reduce((acc, s) => acc + sleepDurationMs(s), 0);
       const hours = Math.round(ms / 3600000 * 10) / 10;
       const d = kstDate(start);
       const label = days === 7

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import {
-  p2, kstDate, durStr, feedAmountMl,
+  p2, kstDate, durStr, feedAmountMl, directFeedDurationMs, sleepDurationMs,
   FEED_TYPE_LABEL, FEED_SUBTYPE_LABEL, FEED_SIDE_LABEL,
   DIAPER_TYPE_LABEL, DIAPER_COLOR_LABEL, DIAPER_CONSISTENCY_LABEL,
   SLEEP_PLACE_LABEL, SOLID_REACTION_LABEL, TEMP_METHOD_LABEL,
@@ -48,9 +48,7 @@ function download(filename, content, mime) {
 function feedRow(f) {
   const { date, time } = splitDT(f.start || f.time);
   const amt = feedAmountMl(f);
-  let durMs = null;
-  if (f.sideTimes) durMs = Object.values(f.sideTimes).reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
-  else if (f.start && f.end) durMs = new Date(f.end) - new Date(f.start);
+  const durMs = directFeedDurationMs(f) || null;
   return {
     날짜: date, 시간: time,
     종류: FEED_TYPE_LABEL[f.type] || f.type || '',
@@ -78,7 +76,7 @@ function diaperRow(d) {
 function sleepRow(s) {
   const start = splitDT(s.start);
   const end = splitDT(s.end);
-  const dur = (s.start && s.end) ? durStr(new Date(s.end) - new Date(s.start)) : '진행 중';
+  const dur = (s.start && s.end) ? durStr(sleepDurationMs(s)) : '진행 중';
   return {
     날짜: start.date, 시작시간: start.time, 종료시간: s.end ? end.time : '',
     장소: s.place ? (SLEEP_PLACE_LABEL[s.place] || '') : '',

@@ -1,17 +1,21 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, sleepColor, useNowTick,
+  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, sleepColor, useNowTick, sleepDurationMs,
   SLEEP_PLACE_LABEL as PL,
 } from '../../lib/helpers';
 import SleepBarChart from '../charts/SleepBarChart';
 
 export default function SleepPanel() {
-  const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, sleepTimerMs, stopActiveSleep, filterByActiveBaby } = useApp();
+  const {
+    db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast,
+    sleepTimerMs, stopActiveSleep, pauseActiveSleep, resumeActiveSleep, filterByActiveBaby,
+  } = useApp();
   const sleeps = filterByActiveBaby(db.sleeps);
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
   const activeSleep = sleeps.find(s => s.start && !s.end);
+  const isPaused = !!(activeSleep && activeSleep.pausedAt);
   const done = sleeps.filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start));
   const grouped = groupByDay(done, s => s.start);
 
@@ -48,12 +52,16 @@ export default function SleepPanel() {
   return (
     <>
       {activeSleep && (
-        <div className="slive banner-in" style={{ background:'var(--sw)', cursor:'pointer' }} onClick={openActiveEdit}>
+        <div className={`slive banner-in${isPaused ? ' paused' : ''}`} style={{ background:'var(--sw)', cursor:'pointer' }} onClick={openActiveEdit}>
           <div className="spulse" style={{ background:'var(--cs)' }}></div>
           <div className="sliveinf">
-            <div className="slivelbl">수면 중</div>
+            <div className="slivelbl">{isPaused ? '일시정지 중' : '수면 중'}</div>
             <div className="slivetimer">{timerStr(sleepTimerMs)}</div>
           </div>
+          <button className="spause" style={{ '--pause-c':'var(--cs)' }}
+            onClick={e => { e.stopPropagation(); isPaused ? resumeActiveSleep() : pauseActiveSleep(); }}>
+            {isPaused ? '이어서' : '일시정지'}
+          </button>
           <button className="sstop" style={{ background:'var(--cs)' }} onClick={e => { e.stopPropagation(); stopActiveSleep(); }}>종료</button>
         </div>
       )}
@@ -80,7 +88,7 @@ export default function SleepPanel() {
           <div key={day} className="daygrp">
             <div className="daylbl">{day}</div>
             {items.map(s => {
-              const dur = s.end ? durStr(new Date(s.end) - new Date(s.start)) : '';
+              const dur = s.end ? durStr(sleepDurationMs(s)) : '';
               const timeRange = `${fmt(s.start)} → ${fmt(s.end)}`;
               const place = s.place ? PL[s.place] : '';
               const sc = sleepColor(s.start);

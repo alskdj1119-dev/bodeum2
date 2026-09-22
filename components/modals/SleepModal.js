@@ -65,10 +65,21 @@ export default function SleepModal() {
     if (isEdit) {
       const idx = newSleeps.findIndex(s => s.id === editId);
       if (idx < 0) return;
+      const startISO = fromLocal(start);
+      const endISO = end ? fromLocal(end) : undefined;
+      // 일시정지했던 시간(pausedMs)은 시간을 고쳐도 유지한다 — 단, 고친 구간 길이보다
+      // 길어지지 않게 잘라서 수면 시간이 음수가 되지 않도록 한다.
+      const prevPausedMs = newSleeps[idx].pausedMs;
+      let pausedMs = prevPausedMs;
+      if (prevPausedMs && endISO) {
+        const kept = Math.min(prevPausedMs, Math.max(0, new Date(endISO) - new Date(startISO)));
+        pausedMs = kept > 0 ? kept : undefined;
+      }
       newSleeps[idx] = {
         ...newSleeps[idx],
-        start: fromLocal(start),
-        end: end ? fromLocal(end) : undefined,
+        start: startISO,
+        end: endISO,
+        pausedMs,
         place,
         note: note || undefined,
         author: author || undefined,
@@ -109,6 +120,12 @@ export default function SleepModal() {
             <div className="flbl">종료 시간 <span>(비워두면 타이머 시작)</span></div>
             <DateTimePicker value={end} onChange={setEnd} />
           </div>
+
+          {existing && existing.pausedMs > 0 && (
+            <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5, margin: '-4px 0 12px' }}>
+              일시정지한 시간({Math.max(1, Math.round(existing.pausedMs / 60000))}분)은 수면 시간에서 빠져 있어요.
+            </p>
+          )}
 
           <div className="fld">
             <div className="flbl">장소</div>

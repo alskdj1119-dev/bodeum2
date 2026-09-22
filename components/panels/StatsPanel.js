@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
 import Home24hModal from '../modals/Home24hModal';
-import { durStr, feedEffectiveMl, diaperWetCount, diaperSoiledCount, kstDate, kstTodayStartMs, kstMidnightMsFromDateStr } from '../../lib/helpers';
+import { durStr, feedEffectiveMl, diaperWetCount, diaperSoiledCount, kstDate, kstTodayStartMs, kstMidnightMsFromDateStr, sleepDurationMs } from '../../lib/helpers';
 
 // ──────────── 날짜 범위 헬퍼 (한국 시간 00:00~23:59 기준) ────────────
 // anchorMs("기준일 자정")로부터 offsetDays만큼 떨어진 하루의 범위를 계산한다.
@@ -222,20 +222,20 @@ export default function StatsPanel() {
     return t >= rangeStartMs && t <= rangeEndMs;
   });
 
-  const sleepMsToday = sleepToday.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
-  const sleepMsYest  = sleepYest.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
-  const sleepMsRange = sleepRange.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
+  const sleepMsToday = sleepToday.reduce((a, s) => a + sleepDurationMs(s), 0);
+  const sleepMsYest  = sleepYest.reduce((a, s) => a + sleepDurationMs(s), 0);
+  const sleepMsRange = sleepRange.reduce((a, s) => a + sleepDurationMs(s), 0);
 
   const nap24   = (isCustom ? sleepRange : sleepToday).filter(s => !isNight(s.start));
   const night24 = (isCustom ? sleepRange : sleepToday).filter(s => isNight(s.start));
-  const napMs   = nap24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
-  const nightMs = night24.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
+  const napMs   = nap24.reduce((a, s) => a + sleepDurationMs(s), 0);
+  const nightMs = night24.reduce((a, s) => a + sleepDurationMs(s), 0);
 
   const sleepByDay = daysN.map(d => {
     const start = d, end = start + 86400000;
     const ms = sleeps
       .filter(s => s.end && new Date(s.start).getTime() >= start && new Date(s.start).getTime() < end)
-      .reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0);
+      .reduce((a, s) => a + sleepDurationMs(s), 0);
     return Math.round(ms / 3600000 * 10) / 10;
   });
   const maxSleepDay = Math.max(...sleepByDay, 1);

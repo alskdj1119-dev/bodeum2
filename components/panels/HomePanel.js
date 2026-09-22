@@ -4,7 +4,7 @@ import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
-  diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor,
+  diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -87,7 +87,8 @@ function pickEncouragePhrase() {
 export default function HomePanel() {
   const {
     db, dispatch, saveDB, showToast, baby, babies, setOpenModal, setEditId, setEditType,
-    feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep,
+    feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep, pauseActiveFeed, resumeActiveFeed,
+    pauseActiveSleep, resumeActiveSleep,
     notifPermission, requestNotifPermission,
     filterByActiveBaby, activeBabyId, switchBaby,
   } = useApp();
@@ -174,7 +175,7 @@ export default function HomePanel() {
   const feed24 = feeds.filter(f => (now - new Date(f.start||f.time).getTime()) <= h24);
   const diaper24 = diapers.filter(d => (now - new Date(d.time).getTime()) <= h24);
   const sleep24 = sleeps.filter(s => s.end && (now - new Date(s.start).getTime()) <= h24);
-  const sleepMs = sleep24.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
+  const sleepMs = sleep24.reduce((acc, s) => acc + sleepDurationMs(s), 0);
   const diaperWet24 = diaperWetCount(diaper24);
   const diaperSoiled24 = diaperSoiledCount(diaper24);
   const feedMl = feed24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
@@ -190,7 +191,7 @@ export default function HomePanel() {
   const feedToday = feeds.filter(f => new Date(f.start || f.time).getTime() >= todayStartMs);
   const diaperToday = diapers.filter(d => new Date(d.time).getTime() >= todayStartMs);
   const sleepToday = sleeps.filter(s => s.end && new Date(s.start).getTime() >= todayStartMs);
-  const sleepMsToday = sleepToday.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
+  const sleepMsToday = sleepToday.reduce((acc, s) => acc + sleepDurationMs(s), 0);
   const diaperWetToday = diaperWetCount(diaperToday);
   const diaperSoiledToday = diaperSoiledCount(diaperToday);
   const feedMlToday = feedToday.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
@@ -286,7 +287,7 @@ export default function HomePanel() {
     all.push({ t: 'f', time: t, label: '수유 — ' + (TF[f.type] || ''), sub: amtStr + durTxt, raw: f });
   });
   diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d }));
-  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', dotCls: sleepDotClass(s.start), time: s.start, label: '수면', sub: durStr(new Date(s.end) - new Date(s.start)), raw: s }));
+  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', dotCls: sleepDotClass(s.start), time: s.start, label: '수면', sub: durStr(sleepDurationMs(s)), raw: s }));
   all.sort((a, b) => new Date(b.time) - new Date(a.time));
   const recent = all.slice(0, 10);
 
@@ -393,24 +394,42 @@ export default function HomePanel() {
       {/* 진행 중인 타이머 — 얇은 한 줄 요약 배너 */}
       {(activeFeed || activeSleep) && (
         <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
-          {activeFeed && (
-            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', '--blink-base':'color-mix(in srgb, var(--cf) 22%, var(--surf))', '--blink-light':'color-mix(in srgb, var(--cf) 40%, white)', animationDelay: feedTimerBlinkDelay }}
-              onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
-              <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
-              <span className="slive-mini-lbl">수유 중</span>
-              <span className="slive-mini-timer">{timerStr(feedTimerMs)}</span>
-              <button className="slive-mini-stop" style={{ background:'var(--cf)' }} onClick={e => { e.stopPropagation(); stopActiveFeed(); }}>종료</button>
-            </div>
-          )}
-          {activeSleep && (
-            <div className="slive-mini banner-in blink-live" style={{ cursor:'pointer', '--blink-base':'color-mix(in srgb, var(--cs) 22%, var(--surf))', '--blink-light':'color-mix(in srgb, var(--cs) 40%, white)', animationDelay: sleepTimerBlinkDelay }}
-              onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
-              <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
-              <span className="slive-mini-lbl">수면 중</span>
-              <span className="slive-mini-timer">{timerStr(sleepTimerMs)}</span>
-              <button className="slive-mini-stop" style={{ background:'var(--cs)' }} onClick={e => { e.stopPropagation(); stopActiveSleep(); }}>종료</button>
-            </div>
-          )}
+          {activeFeed && (() => {
+            // 직수만 일시정지 가능 — 멈춘 동안의 시간은 섭취량(ml) 계산에서 빠진다.
+            const canPause = activeFeed.type === 'breast' && activeFeed.subtype === 'direct';
+            const paused = canPause && !!activeFeed.pausedAt;
+            return (
+              <div className={`slive-mini banner-in${paused ? ' paused' : ' blink-live'}`} style={{ cursor:'pointer', '--blink-base':'color-mix(in srgb, var(--cf) 22%, var(--surf))', '--blink-light':'color-mix(in srgb, var(--cf) 40%, white)', animationDelay: feedTimerBlinkDelay }}
+                onClick={() => { setEditId(activeFeed.id); setEditType('feeds'); setOpenModal('activeTimerEdit'); }}>
+                <span className="slive-mini-dot" style={{ background:'var(--cf)' }} />
+                <span className="slive-mini-lbl">{paused ? '일시정지' : '수유 중'}</span>
+                <span className="slive-mini-timer">{timerStr(feedTimerMs)}</span>
+                {canPause && (
+                  <button className="slive-mini-pause" style={{ '--pause-c':'var(--cf)' }}
+                    onClick={e => { e.stopPropagation(); paused ? resumeActiveFeed() : pauseActiveFeed(); }}>
+                    {paused ? '이어서' : '일시정지'}
+                  </button>
+                )}
+                <button className="slive-mini-stop" style={{ background:'var(--cf)' }} onClick={e => { e.stopPropagation(); stopActiveFeed(); }}>종료</button>
+              </div>
+            );
+          })()}
+          {activeSleep && (() => {
+            const paused = !!activeSleep.pausedAt;
+            return (
+              <div className={`slive-mini banner-in${paused ? ' paused' : ' blink-live'}`} style={{ cursor:'pointer', '--blink-base':'color-mix(in srgb, var(--cs) 22%, var(--surf))', '--blink-light':'color-mix(in srgb, var(--cs) 40%, white)', animationDelay: sleepTimerBlinkDelay }}
+                onClick={() => { setEditId(activeSleep.id); setEditType('sleeps'); setOpenModal('activeTimerEdit'); }}>
+                <span className="slive-mini-dot" style={{ background:'var(--cs)' }} />
+                <span className="slive-mini-lbl">{paused ? '일시정지' : '수면 중'}</span>
+                <span className="slive-mini-timer">{timerStr(sleepTimerMs)}</span>
+                <button className="slive-mini-pause" style={{ '--pause-c':'var(--cs)' }}
+                  onClick={e => { e.stopPropagation(); paused ? resumeActiveSleep() : pauseActiveSleep(); }}>
+                  {paused ? '이어서' : '일시정지'}
+                </button>
+                <button className="slive-mini-stop" style={{ background:'var(--cs)' }} onClick={e => { e.stopPropagation(); stopActiveSleep(); }}>종료</button>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -482,7 +501,7 @@ export default function HomePanel() {
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           </div>
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastSleep ? agoShort(lastSleep.start) : '—'}</div>
-          <div className="ssub">{lastSleep ? durStr(new Date(lastSleep.end) - new Date(lastSleep.start)) : '기록 없음'}</div>
+          <div className="ssub">{lastSleep ? durStr(sleepDurationMs(lastSleep)) : '기록 없음'}</div>
         </div>
       </div>
 

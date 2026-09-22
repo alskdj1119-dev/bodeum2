@@ -2,8 +2,8 @@
 import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import {
-  durStr, fmt, elapsedStr, feedAmountMl, feedEffectiveMl, feedColor, diaperColor,
-  diaperWetCount, diaperSoiledCount, sleepColor, sleepPeriod, dailyAvgStr,
+  durStr, fmt, elapsedStr, directFeedDurationMs, feedAmountMl, feedEffectiveMl, feedColor, diaperColor,
+  diaperWetCount, diaperSoiledCount, sleepColor, sleepPeriod, dailyAvgStr, sleepDurationMs,
   kstDate, kstMidnightMsFromDateStr, useNowTick,
   DIAPER_TYPE_LABEL as TD, FEED_TYPE_LABEL as TF,
 } from '../../lib/helpers';
@@ -163,12 +163,7 @@ function FeedDetail({ records, onEdit, dayList }) {
         const amtStr = f.consumedAmount != null && amt != null ? `준비 ${amt}ml / 섭취 ${f.consumedAmount}ml`
           : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
           : amt ? `${amt}ml` : '';
-        let durMs = null;
-        if (f.sideTimes) {
-          durMs = Object.values(f.sideTimes).reduce((acc, t) => acc + (new Date(t.end) - new Date(t.start)), 0);
-        } else if (f.start && f.end) {
-          durMs = new Date(f.end) - new Date(f.start);
-        }
+        const durMs = directFeedDurationMs(f) || null;
         const durTxt = durMs ? ' · ' + durStr(durMs) : '';
         const fc = feedColor(f);
         return (
@@ -252,7 +247,7 @@ function DiaperDetail({ records, onEdit, periodLabel, dayList }) {
 
 // ─── 수면 상세 ───
 function SleepDetail({ records, onEdit, periodLabel, dayList }) {
-  const totalMs = records.reduce((acc, s) => acc + (new Date(s.end) - new Date(s.start)), 0);
+  const totalMs = records.reduce((acc, s) => acc + sleepDurationMs(s), 0);
   const count = records.length;
   const avgMs = count > 0 ? Math.round(totalMs / count) : 0;
   const days = dayList && dayList.length > 0 ? dayList.length : 1;
@@ -274,8 +269,8 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
     ? bucketByDay(records, dayList, s => new Date(s.start).getTime(), dayRecs => {
         const napRecs = dayRecs.filter(s => sleepPeriod(s.start) === 'day');
         const nightRecs = dayRecs.filter(s => sleepPeriod(s.start) === 'night');
-        const napHours = Math.round(napRecs.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0) / 3600000 * 10) / 10;
-        const nightHours = Math.round(nightRecs.reduce((a, s) => a + (new Date(s.end) - new Date(s.start)), 0) / 3600000 * 10) / 10;
+        const napHours = Math.round(napRecs.reduce((a, s) => a + sleepDurationMs(s), 0) / 3600000 * 10) / 10;
+        const nightHours = Math.round(nightRecs.reduce((a, s) => a + sleepDurationMs(s), 0) / 3600000 * 10) / 10;
         return {
           value: Math.round((napHours + nightHours) * 10) / 10,
           count: dayRecs.length,
@@ -312,7 +307,7 @@ function SleepDetail({ records, onEdit, periodLabel, dayList }) {
           <div key={s.id || i} className="ec" onClick={() => onEdit(s)} style={{ marginBottom: 8, background: sc.bg }}>
             <div className="edot" style={{ background: sc.dot }} />
             <div className="emain">
-              <div className="epri">{durStr(new Date(s.end) - new Date(s.start))}</div>
+              <div className="epri">{durStr(sleepDurationMs(s))}</div>
               <div className="esub">{fmt(s.start)} — {fmt(s.end)}</div>
             </div>
             <div className="etime">{fmt(s.start)}<br /><span className="eago">{elapsedStr(s.start)}</span></div>

@@ -50,7 +50,7 @@ export default function OrientationGuard() {
   if (activeFeed) {
     return (
       <div className="orient-overlay" style={{ background: 'var(--cf)' }}>
-        <div className="orient-timer-label">수유 중</div>
+        <div className="orient-timer-label">{activeFeed.pausedAt ? '수유 일시정지' : '수유 중'}</div>
         <div className="orient-timer-value">{timerStr(feedTimerMs)}</div>
       </div>
     );
@@ -59,7 +59,7 @@ export default function OrientationGuard() {
   if (activeSleep) {
     return (
       <div className="orient-overlay" style={{ background: 'var(--cs)' }}>
-        <div className="orient-timer-label">수면 중</div>
+        <div className="orient-timer-label">{activeSleep.pausedAt ? '수면 일시정지' : '수면 중'}</div>
         <div className="orient-timer-value">{timerStr(sleepTimerMs)}</div>
       </div>
     );
