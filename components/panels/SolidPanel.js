@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, groupByDay, useNowTick,
+  fmtFull, elapsedStr, groupByDay, useNowTick, capTrash,
   SOLID_REACTION_LABEL as TR,
 } from '../../lib/helpers';
 
@@ -28,7 +28,7 @@ export default function SolidPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'solids' };
     const newSolids = (db.solids || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     const newDB = { ...db, solids: newSolids, trash: newTrash };
     dispatch({ type: 'SET_SOLIDS', payload: newSolids });
     dispatch({ type: 'SET_TRASH', payload: newTrash });

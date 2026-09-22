@@ -163,23 +163,29 @@ function decideNotifications(family, state, nowMs) {
     return { toSend: [], nextState: notifState };
   }
 
-  // 1) 수유 경과(배고픔) 알림 — 조건을 만족하는 동안 설정된 간격으로 반복
+  // 1) 수유 경과(배고픔) 알림 — 조건을 만족하는 동안 설정된 간격으로 반복.
+  // 단, 두 가지 안전장치를 둔다 — 반복 상한(HUNGER_MAX_REPEATS)과 24시간 sanity 체크.
+  // 둘 다 없으면, 가족이 앱을 그만 쓴 뒤에도(젖 뗌·기기 교체 등) 예전 토큰이 fcmTokens에
+  // 남아 있는 한 하루 최대 192번(5분 스케줄 기준)까지 "배고파요" 알림이 무한히 나갈 수 있었다.
+  const HUNGER_MAX_REPEATS = 6;
   if (state.lastFeedTime && !state.activeFeedStart && settings.feedAlertH > 0) {
     const elapsed = nowMs - new Date(state.lastFeedTime).getTime();
-    if (elapsed >= settings.feedAlertH * HOUR) {
+    // 24시간 넘게 지난 수유는 "배고프다"가 아니라 "앱을 안 쓴다"는 뜻으로 보고 건너뛴다.
+    if (elapsed >= settings.feedAlertH * HOUR && elapsed < 24 * HOUR) {
       const repeatMs = (settings.hungerRepeatMin > 0 ? settings.hungerRepeatMin : 5) * MIN;
       const prev = notifState.hunger;
       const keyChanged = !prev || prev.lastKey !== state.lastFeedTime;
+      const repeatCount = keyChanged ? 0 : (prev.repeatCount || 0);
       const dueForRepeat = keyChanged || !prev.lastSentAt || nowMs - prev.lastSentAt >= repeatMs;
-      if (dueForRepeat) {
+      if (dueForRepeat && repeatCount < HUNGER_MAX_REPEATS) {
         out.push({
           key: 'hunger',
           title: '보듬 🌿',
           body: pick(HUNGER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
-        nextState.hunger = { lastKey: state.lastFeedTime, lastSentAt: nowMs };
+        nextState.hunger = { lastKey: state.lastFeedTime, lastSentAt: nowMs, repeatCount: repeatCount + 1 };
       } else {
-        nextState.hunger = prev;
+        nextState.hunger = prev || { lastKey: state.lastFeedTime, repeatCount };
       }
     }
   }
@@ -350,6 +356,14 @@ exports.checkNotifications = onSchedule(
     schedule: 'every 5 minutes',
     timeZone: 'Asia/Seoul',
     region: 'asia-northeast3',
+    // 가족 문서 전체를 한 번에 읽어서(필터 없음) Promise.all로 전부 동시에 처리하기 때문에,
+    // 가족 수가 늘면 gen2 기본값(256 MiB/60초)으로는 메모리 초과(SIGKILL)로 죽어서
+    // 그 사이클에 전 가족이 알림을 못 받는 문제가 있었다. 넉넉한 메모리·타임아웃으로 여유를 둔다.
+    memory: '1GiB',
+    timeoutSeconds: 540,
+    // maxInstances:1이 중요하다 — 이게 없으면 이전 실행이 늦게 끝났을 때 다음 스케줄이 겹쳐 돌면서
+    // 같은 가족에게 알림이 두 번씩 나갈 수 있다.
+    maxInstances: 1,
   },
   async () => {
     const snap = await db.collection(COLLECTION).get();

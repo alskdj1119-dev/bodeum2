@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
-import { fmtFull, elapsedStr, groupByDay } from '../../lib/helpers';
+import { fmtFull, elapsedStr, groupByDay, capTrash } from '../../lib/helpers';
 import WeightValueChart from '../charts/WeightValueChart';
 import SimpleValueChart from '../charts/SimpleValueChart';
 import WHOPercentileChart from '../charts/WHOPercentileChart';
@@ -45,7 +45,7 @@ export default function GrowthPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'weights' };
     const newW = (db.weights || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     dispatch({ type: 'SET_WEIGHTS', payload: newW });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, weights: newW, trash: newTrash });
@@ -59,7 +59,7 @@ export default function GrowthPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'heights' };
     const newList = (db.heights || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     dispatch({ type: 'SET_HEIGHTS', payload: newList });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, heights: newList, trash: newTrash });
@@ -73,7 +73,7 @@ export default function GrowthPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'headCircs' };
     const newList = (db.headCircs || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     dispatch({ type: 'SET_HEAD_CIRCS', payload: newList });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, headCircs: newList, trash: newTrash });

@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmtFull, elapsedStr, groupByDay, diaperColor, useNowTick,
+  fmtFull, elapsedStr, groupByDay, diaperColor, useNowTick, capTrash,
   DIAPER_TYPE_LABEL as TD, DIAPER_COLOR_LABEL as TC, DIAPER_CONSISTENCY_LABEL as TCS,
 } from '../../lib/helpers';
 
@@ -28,7 +28,7 @@ export default function DiaperPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'diapers' };
     const newDiapers = db.diapers.filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     const newDB = { ...db, diapers: newDiapers, trash: newTrash };
     dispatch({ type: 'SET_DIAPERS', payload: newDiapers });
     dispatch({ type: 'SET_TRASH', payload: newTrash });

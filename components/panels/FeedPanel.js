@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, directFeedDurationMs, feedColor, useNowTick,
+  fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, directFeedDurationMs, feedColor, useNowTick, capTrash,
   FEED_TYPE_LABEL as TF, FEED_SUBTYPE_LABEL as TSU, FEED_SIDE_LABEL as TS,
 } from '../../lib/helpers';
 
@@ -43,7 +43,7 @@ export default function FeedPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'feeds' };
     const newFeeds = db.feeds.filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     const newDB = { ...db, feeds: newFeeds, trash: newTrash };
     dispatch({ type: 'SET_FEEDS', payload: newFeeds });
     dispatch({ type: 'SET_TRASH', payload: newTrash });

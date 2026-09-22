@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
-import { fmtFull, elapsedStr, groupByDay, kstDate, kstMidnightMsFromDateStr, kstTodayStartMs, TEMP_METHOD_LABEL as METHOD_LABEL } from '../../lib/helpers';
+import { fmtFull, elapsedStr, groupByDay, kstDate, kstMidnightMsFromDateStr, kstTodayStartMs, TEMP_METHOD_LABEL as METHOD_LABEL, capTrash } from '../../lib/helpers';
 import TeethChart from '../charts/TeethChart';
 
 // ──────────────────────────── 공통 상수 ────────────────────────────
@@ -68,7 +68,7 @@ export default function HealthPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'temps' };
     const newTemps = (db.temps || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     dispatch({ type: 'SET_TEMPS', payload: newTemps });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, temps: newTemps, trash: newTrash });
@@ -82,7 +82,7 @@ export default function HealthPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'visits' };
     const newVisits = (db.visits || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     dispatch({ type: 'SET_VISITS', payload: newVisits });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, visits: newVisits, trash: newTrash });
@@ -96,7 +96,7 @@ export default function HealthPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'symptoms' };
     const newSymptoms = (db.symptoms || []).filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     dispatch({ type: 'SET_SYMPTOMS', payload: newSymptoms });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
     await saveDB({ ...db, symptoms: newSymptoms, trash: newTrash });

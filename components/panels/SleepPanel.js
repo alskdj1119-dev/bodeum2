@@ -1,7 +1,7 @@
 'use client';
 import { useApp } from '../../lib/store';
 import {
-  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, sleepColor, useNowTick, sleepDurationMs,
+  fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, sleepColor, useNowTick, sleepDurationMs, capTrash,
   SLEEP_PLACE_LABEL as PL,
 } from '../../lib/helpers';
 import SleepBarChart from '../charts/SleepBarChart';
@@ -41,7 +41,7 @@ export default function SleepPanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: 'sleeps' };
     const newSleeps = db.sleeps.filter(x => x.id !== id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     const newDB = { ...db, sleeps: newSleeps, trash: newTrash };
     dispatch({ type: 'SET_SLEEPS', payload: newSleeps });
     dispatch({ type: 'SET_TRASH', payload: newTrash });

@@ -4,7 +4,7 @@ import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
-  diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs,
+  diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -320,7 +320,7 @@ export default function HomePanel() {
     if (!item) return;
     const trashItem = { ...item, _deletedAt: new Date().toISOString(), _type: conf.key };
     const newList = list.filter(x => x.id !== e.raw.id);
-    const newTrash = [trashItem, ...(db.trash || [])];
+    const newTrash = capTrash([trashItem, ...(db.trash || [])]);
     const newDB = { ...db, [conf.key]: newList, trash: newTrash };
     dispatch({ type: conf.action, payload: newList });
     dispatch({ type: 'SET_TRASH', payload: newTrash });
