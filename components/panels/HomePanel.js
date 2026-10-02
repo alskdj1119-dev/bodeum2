@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
-  agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, timerStr, directFeedDurationMs,
+  agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
@@ -164,7 +164,7 @@ export default function HomePanel() {
   }
 
   // Last events
-  const sortedFeeds = [...feeds].filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time));
+  const sortedFeeds = [...feeds].filter(f => f.end || f.time).sort((a,b) => new Date(feedStartTime(b)) - new Date(feedStartTime(a)));
   const lastFeed = sortedFeeds[0];
   const lastDiaper = [...diapers].sort((a,b) => new Date(b.time) - new Date(a.time))[0];
   const lastSleep = [...sleeps].filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start))[0];
@@ -271,7 +271,7 @@ export default function HomePanel() {
     return { color: ELAPSED_TIER_STYLE[tier].border, fontWeight: 700 };
   }
 
-  const feedTier = elapsedTier(lastFeed ? (lastFeed.start || lastFeed.time) : null);
+  const feedTier = elapsedTier(lastFeed ? feedStartTime(lastFeed) : null);
   const diaperTier = elapsedTier(lastDiaper ? lastDiaper.time : null);
 
   // Recent timeline
@@ -484,8 +484,8 @@ export default function HomePanel() {
             <div className="slbl">수유</div>
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(lastFeed.start || lastFeed.time) : '—'}</div>
-          <div className="ssub">{lastFeed ? fmtFull(lastFeed.start || lastFeed.time) : '기록 없음'}</div>
+          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(feedStartTime(lastFeed)) : '—'}</div>
+          <div className="ssub">{lastFeed ? fmtFull(feedStartTime(lastFeed)) : '기록 없음'}</div>
         </div>
         <div className={`sc${diaperTier ? ' blink-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : tierCardStyle(diaperTier)}>
           <div className="sr">

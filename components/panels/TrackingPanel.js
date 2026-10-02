@@ -1,6 +1,6 @@
 'use client';
 import { useApp } from '../../lib/store';
-import { agoStr } from '../../lib/helpers';
+import { agoStr, feedStartTime } from '../../lib/helpers';
 
 // 2단계 네비게이션 재편 — 수유/기저귀/수면을 "트래킹" 탭 하나로 묶는 허브 화면.
 // 각 항목을 누르면 기존 수유/기저귀/수면 상세 화면(FeedPanel/DiaperPanel/SleepPanel)으로 이동한다.
@@ -11,7 +11,7 @@ export default function TrackingPanel() {
   const sleeps = filterByActiveBaby(db.sleeps);
   const solids = filterByActiveBaby(db.solids || []);
 
-  const lastFeed = [...feeds].filter(f => f.end || f.time).sort((a,b) => new Date(b.start||b.time) - new Date(a.start||a.time))[0];
+  const lastFeed = [...feeds].filter(f => f.end || f.time).sort((a,b) => new Date(feedStartTime(b)) - new Date(feedStartTime(a)))[0];
   const lastDiaper = [...diapers].sort((a,b) => new Date(b.time) - new Date(a.time))[0];
   const lastSleep = [...sleeps].filter(s => s.end).sort((a,b) => new Date(b.start) - new Date(a.start))[0];
   const lastSolid = [...solids].sort((a,b) => new Date(b.time) - new Date(a.time))[0];
@@ -19,7 +19,7 @@ export default function TrackingPanel() {
   const ITEMS = [
     {
       id: 'feed', label: '수유 트래커',
-      sub: lastFeed ? `직전 ${agoStr(lastFeed.start || lastFeed.time)}` : '기록 없음',
+      sub: lastFeed ? `직전 ${agoStr(feedStartTime(lastFeed))}` : '기록 없음',
       wash: 'var(--fw)', color: 'var(--cf)',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

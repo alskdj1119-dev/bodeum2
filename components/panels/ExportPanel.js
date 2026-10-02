@@ -12,8 +12,9 @@ import { ALL_TEETH, normalizeToothInfo } from '../charts/TeethChart';
 const RECORD_TYPE_LABEL = { treatment: '치료', note: '특이사항', extracted: '발치' };
 const VACCINE_NAME = {
   hepb1: 'B형간염 1차', bcg: 'BCG (결핵)', hepb2: 'B형간염 2차', dtap1: 'DTaP 1차', ipv1: 'IPV (폴리오) 1차',
-  hib1: 'Hib 1차', pcv1: '폐렴구균 1차', rota1: '로타바이러스 1차', hepb3: 'B형간염 3차', dtap3: 'DTaP 3차',
-  hib3: 'Hib 3차', pcv3: '폐렴구균 3차', hepa1: 'A형간염 1차', mmr1: 'MMR 1차', var: '수두', je1: '일본뇌염 1차',
+  hib1: 'Hib 1차', pcv1: '폐렴구균 1차', rota1: '로타바이러스 1차', dtap2: 'DTaP 2차', ipv2: 'IPV (폴리오) 2차',
+  hib2: 'Hib 2차', pcv2: '폐렴구균 2차', rota2: '로타바이러스 2차', hepb3: 'B형간염 3차', dtap3: 'DTaP 3차',
+  hib3: 'Hib 3차', pcv3: '폐렴구균 3차', rota3: '로타바이러스 3차 (해당 제품만)', hepa1: 'A형간염 1차', mmr1: 'MMR 1차', var: '수두', je1: '일본뇌염 1차',
 };
 const VACCINE_STATUS_LABEL = { done: '접종완료', skip: '미접종', before: '접종이전' };
 
