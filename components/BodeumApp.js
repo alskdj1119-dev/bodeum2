@@ -4,7 +4,6 @@ import { useApp } from '../lib/store';
 import SetupScreen from './SetupScreen';
 import Header from './Header';
 import NavBar from './NavBar';
-import QuickAddFab from './QuickAddFab';
 import Toast from './Toast';
 import HomePanel from './panels/HomePanel';
 import FeedPanel from './panels/FeedPanel';
@@ -254,7 +253,6 @@ export default function BodeumApp() {
       </div>
 
       <NavBar />
-      <QuickAddFab />
 
       {openModal === 'feed' && <FeedModal />}
       {openModal === 'feedSideChoice' && <FeedSideChoiceModal />}

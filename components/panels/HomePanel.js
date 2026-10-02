@@ -111,6 +111,15 @@ export default function HomePanel() {
   // 배너 안 3개 카드(수유/기저귀/수면)를 "직전 24시간" 기준으로 볼지 "당일" 기준으로 볼지
   const [sumMode, setSumMode] = useState('recent24h');
 
+  // 우측 상단 "+" 버튼 — 탭하면 수유/기저귀/수면/잘 부탁해 메모 선택 메뉴가 펼쳐짐.
+  // (한때 하단 네비 위 전역 플로팅 버튼으로 옮겼다가, 드래그 가능한 큰 버튼이 화면을
+  //  지저분하게 만든다는 피드백으로 원래의 홈 화면 우측 상단 고정 버튼으로 되돌림)
+  const [quickOpen, setQuickOpen] = useState(false);
+  function openQuick(modal) {
+    setQuickOpen(false);
+    setEditId(null); setEditType(null); setOpenModal(modal);
+  }
+
   // "최근 기록" 카드 — 오른쪽 위 × 버튼을 누르면 삭제 확인 팝오버가 뜬다.
   // 팝오버는 한 번에 하나만 열리며, 다른 카드의 ×를 누르면 열려있던 팝오버는 닫히고 새로 열린다.
   const [confirmDeleteKey, setConfirmDeleteKey] = useState(null);
@@ -331,9 +340,46 @@ export default function HomePanel() {
 
   return (
     <>
-      <h1 className="daytitle" style={{ fontSize: encourageFontSize(encouragePhrase) + 'px', wordBreak:'keep-all', whiteSpace:'pre-line', marginBottom:'16px' }}>
-        {encouragePhrase}
-      </h1>
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:'16px', gap:'10px' }}>
+        <h1 className="daytitle" style={{ fontSize: encourageFontSize(encouragePhrase) + 'px', wordBreak:'keep-all', whiteSpace:'pre-line', marginBottom:0, flex:1 }}>
+          {encouragePhrase}
+        </h1>
+        <div style={{ display:'flex', alignItems:'flex-start', gap:'10px', flexShrink:0 }}>
+          <div style={{ position:'relative' }}>
+            <button
+              className={`qplus${quickOpen ? ' open' : ''}`}
+              aria-label="빠른 기록"
+              onClick={() => setQuickOpen(v => !v)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            {quickOpen && (
+              <>
+                <div style={{ position:'fixed', inset:0, zIndex:19 }} onClick={() => setQuickOpen(false)} />
+                <div className="qmenu">
+                  <button onClick={() => openQuick('feed')}>
+                    <span className="mico f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></span>
+                    수유
+                  </button>
+                  <button onClick={() => openQuick('diaper')}>
+                    <span className="mico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></span>
+                    기저귀
+                  </button>
+                  <button onClick={() => openQuick('sleep')}>
+                    <span className="mico s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+                    수면
+                  </button>
+                  <div className="qmenu-sep" />
+                  <button onClick={() => openQuick('handoffNote')}>
+                    <span className="mico n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+                    잘 부탁해 메모
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       <HandoffNoteCard />
 
