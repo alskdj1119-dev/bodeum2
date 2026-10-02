@@ -7,7 +7,7 @@ import { useApp } from '../lib/store';
 // 모든 탭에서 공통으로 보이도록 BodeumApp 최상단(NavBar 옆)에서 렌더링한다.
 // 위치는 화면 폭 대비 비율(0~1)로 로컬에 저장 — 기기가 바뀌어도 자연스럽게 맞는다.
 const POS_KEY = 'bodeum_fab_pos_ratio_v1';
-const BTN_SIZE = 42; // .qplus 크기와 일치
+const BTN_SIZE = 84; // .qplus 크기와 일치 (2배로 키운 뒤의 값 — 드래그 가능 범위 계산용)
 const MENU_WIDTH = 150; // app/globals.css .qmenu.fab-menu 의 width 와 일치 — 버튼 중앙 기준으로 펼쳐짐
 const CONTAINER_MAX = 430; // .app-root/.bnav의 max-width와 일치
 const MARGIN = 14; // 화면 끝에 완전히 붙지 않도록 두는 여백
@@ -15,7 +15,7 @@ const DRAG_THRESHOLD = 6; // 이 이상 움직여야 "드래그"로 보고, 아�
 
 function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
 
-// 버튼은 42px 이지만, 눌렀을 때 펼쳐지는 메뉴는 132px 폭으로 버튼 중앙에 겹쳐서 뜬다.
+// 버튼은 84px 이지만, 눌렀을 때 펼쳐지는 메뉴는 132px 폭으로 버튼 중앙에 겹쳐서 뜬다.
 // 그래서 이동 가능 범위는 버튼이 아니라 "펼쳐진 메뉴"가 화면 밖으로 나가지 않는 범위로 잡아야 한다.
 function getBounds(containerW) {
   const half = MENU_WIDTH / 2;
