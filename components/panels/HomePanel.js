@@ -190,7 +190,8 @@ export default function HomePanel() {
   const feedMl = feed24.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
 
   // "오늘 N건 기록했어요" 배너 — 24시간 롤링이 아니라 달력상 "오늘"(KST 자정 이후) 기준 총 건수
-  const todayFeedCount = feeds.filter(f => new Date(f.start || f.time).getTime() >= todayStartMs).length;
+  // 직수+보충수유를 묶은 세션은 한 건으로 센다 (groupId가 있는 보충수유 기록은 제외).
+  const todayFeedCount = feeds.filter(f => !f.groupId && new Date(f.start || f.time).getTime() >= todayStartMs).length;
   const todayDiaperCount = diapers.filter(d => new Date(d.time).getTime() >= todayStartMs).length;
   const todaySleepCount = sleeps.filter(s => s.end && new Date(s.start).getTime() >= todayStartMs).length;
   const todayCount = todayFeedCount + todayDiaperCount + todaySleepCount;

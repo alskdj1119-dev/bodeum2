@@ -183,6 +183,9 @@ export default function StatsPanel() {
   const intToday = avgIntervalMin(feedToday);
   const intYest  = avgIntervalMin(feedYest);
   const intRange = avgIntervalMin(feedRange);
+  // 수유 "횟수"는 직수+보충수유를 묶은 세션을 한 건으로 센다 (ml 합계는 그대로 전부 더함).
+  const feedTodayCount = feedToday.filter(f => !f.groupId).length;
+  const feedYestCount  = feedYest.filter(f => !f.groupId).length;
 
   // 기간 일별 수유 횟수 + ml
   const feedByDay = daysN.map(d => {
@@ -208,8 +211,8 @@ export default function StatsPanel() {
         { label: '일 평균', count: avgFeedCountN, ml: avgFeedMlN, interval: null },
       ]
     : [
-        { label: '오늘', count: feedToday.length, ml: mlToday, interval: intToday },
-        { label: '어제', count: feedYest.length,  ml: mlYest,  interval: intYest },
+        { label: '오늘', count: feedTodayCount, ml: mlToday, interval: intToday },
+        { label: '어제', count: feedYestCount,  ml: mlYest,  interval: intYest },
         { label: '7일 평균', count: avgFeedCountN, ml: avgFeedMlN, interval: intRange },
       ];
 
