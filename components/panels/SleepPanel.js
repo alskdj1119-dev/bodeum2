@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import {
   fmt, fmtFull, elapsedStr, durStr, groupByDay, timerStr, sleepColor, useNowTick, sleepDurationMs, capTrash,
@@ -11,6 +12,15 @@ export default function SleepPanel() {
     db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast,
     sleepTimerMs, stopActiveSleep, pauseActiveSleep, resumeActiveSleep, filterByActiveBaby,
   } = useApp();
+  // 기록 카드 × 삭제 확인 팝오버 — 홈 화면 "최근 기록"과 동일한 디자인/동작.
+  const [confirmDeleteKey, setConfirmDeleteKey] = useState(null);
+  function toggleDeleteConfirm(key, e) {
+    e.stopPropagation();
+    setConfirmDeleteKey(prev => (prev === key ? null : key));
+  }
+  function closeDeleteConfirm() {
+    setConfirmDeleteKey(null);
+  }
   const sleeps = filterByActiveBaby(db.sleeps);
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
 
@@ -93,22 +103,32 @@ export default function SleepPanel() {
               const place = s.place ? PL[s.place] : '';
               const sc = sleepColor(s.start);
               return (
-                <div key={s.id} className="ec" onClick={() => openEdit(s)} style={{ background: sc.bg }}>
-                  <div className="edot" style={{ background: sc.dot }}></div>
-                  <div className="emain">
-                    <div className="epri">{dur}</div>
-                    <div className="esec">{timeRange}{place ? ' · ' + place : ''}</div>
-                  </div>
-                  <div className="etime">{fmtFull(s.start)}<br/><span className="eago">{elapsedStr(s.start)}</span></div>
-                  <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 수면 기록을 삭제하시겠어요?')) delSleep(s.id); }}>
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <div key={s.id} className="rwrap">
+                  <button className="delx" onClick={e => toggleDeleteConfirm(s.id, e)} aria-label="기록 삭제">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
+                  {confirmDeleteKey === s.id && (
+                    <div className="delpop" onClick={ev => ev.stopPropagation()}>
+                      <div className="delpop-text">이 수면 기록을 삭제하시겠어요?</div>
+                      <button className="btn-delete" onClick={() => { delSleep(s.id); closeDeleteConfirm(); }}>삭제</button>
+                      <button className="btn-cancel" onClick={closeDeleteConfirm}>취소</button>
+                    </div>
+                  )}
+                  <div className="ec" onClick={() => openEdit(s)} style={{ background: sc.bg }}>
+                    <div className="edot" style={{ background: sc.dot }}></div>
+                    <div className="emain">
+                      <div className="epri">{dur}</div>
+                      <div className="esec">{timeRange}{place ? ' · ' + place : ''}</div>
+                    </div>
+                    <div className="etime">{fmtFull(s.start)}<br/><span className="eago">{elapsedStr(s.start)}</span></div>
+                  </div>
                 </div>
               );
             })}
           </div>
         ))
       )}
+      {confirmDeleteKey && <div className="deldim" onClick={closeDeleteConfirm} />}
     </>
   );
 }

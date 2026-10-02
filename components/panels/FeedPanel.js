@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useApp } from '../../lib/store';
 import {
   fmt, fmtFull, durStr, elapsedStr, groupByDay, timerStr, feedAmountMl, directFeedDurationMs, feedColor, useNowTick, capTrash,
@@ -7,6 +8,16 @@ import {
 
 export default function FeedPanel() {
   const { db, dispatch, saveDB, setOpenModal, setEditId, setEditType, showToast, feedTimerMs, stopActiveFeed, pauseActiveFeed, resumeActiveFeed, filterByActiveBaby, activeBabyId, babies } = useApp();
+  // 기록 카드 × 삭제 확인 팝오버 — 홈 화면 "최근 기록"과 동일한 디자인/동작.
+  // 한 번에 하나만 열리며, 다른 카드의 ×를 누르면 열려있던 팝오버는 닫히고 새로 열린다.
+  const [confirmDeleteKey, setConfirmDeleteKey] = useState(null);
+  function toggleDeleteConfirm(key, e) {
+    e.stopPropagation();
+    setConfirmDeleteKey(prev => (prev === key ? null : key));
+  }
+  function closeDeleteConfirm() {
+    setConfirmDeleteKey(null);
+  }
   // 화면에는 지금 보고 있는 아이의 기록만 — 실제 삭제/저장은 항상 db.feeds(전체) 기준으로 해서
   // 다른 아이의 기록이 실수로 사라지지 않게 한다 (아래 delFeed 참고).
   const feeds = filterByActiveBaby(db.feeds);
@@ -109,22 +120,32 @@ export default function FeedPanel() {
               const detail = feedDetails(f);
               const fc = feedColor(f);
               return (
-                <div key={f.id} className="ec" onClick={() => openEdit(f)} style={{ background: fc.bg }}>
-                  <div className="edot" style={{ background: fc.dot }}></div>
-                  <div className="emain">
-                    <div className="epri">{feedLabel(f)}</div>
-                    <div className="esec">{timeRange}{detail ? ' · ' + detail : ''}</div>
-                  </div>
-                  <div className="etime">{fmtFull(t)}<br/><span className="eago">{elapsedStr(t)}</span></div>
-                  <button className="edel" onClick={e => { e.stopPropagation(); if (window.confirm('이 수유 기록을 삭제하시겠어요?')) delFeed(f.id); }}>
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <div key={f.id} className="rwrap">
+                  <button className="delx" onClick={e => toggleDeleteConfirm(f.id, e)} aria-label="기록 삭제">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
+                  {confirmDeleteKey === f.id && (
+                    <div className="delpop" onClick={ev => ev.stopPropagation()}>
+                      <div className="delpop-text">이 수유 기록을 삭제하시겠어요?</div>
+                      <button className="btn-delete" onClick={() => { delFeed(f.id); closeDeleteConfirm(); }}>삭제</button>
+                      <button className="btn-cancel" onClick={closeDeleteConfirm}>취소</button>
+                    </div>
+                  )}
+                  <div className="ec" onClick={() => openEdit(f)} style={{ background: fc.bg }}>
+                    <div className="edot" style={{ background: fc.dot }}></div>
+                    <div className="emain">
+                      <div className="epri">{feedLabel(f)}</div>
+                      <div className="esec">{timeRange}{detail ? ' · ' + detail : ''}</div>
+                    </div>
+                    <div className="etime">{fmtFull(t)}<br/><span className="eago">{elapsedStr(t)}</span></div>
+                  </div>
                 </div>
               );
             })}
           </div>
         ))
       )}
+      {confirmDeleteKey && <div className="deldim" onClick={closeDeleteConfirm} />}
     </>
   );
 }
