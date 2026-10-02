@@ -37,6 +37,9 @@
   --font-display:'Pretendard',system-ui,sans-serif;
   --up:#2F6FED;--down:#E5484D;
   --warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);
+  /* 하단 "빠른 기록 +" 버튼(.qplus) 전용 — 보라색(--sage) 대신 배경(--surf)과 같은 계열의
+     색으로 "진하게"만 차이를 주기 위한 토큰. 라이트 모드는 배경이 밝으니 검정을 섞어 어둡게. */
+  --fab-bg:color-mix(in srgb, var(--surf) 30%, black);--fab-ink:#fff;
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#18150F;--surf:#18150F;--surf2:#18150F;--ink:#EDE8E1;--muted:#8A8278;
@@ -56,9 +59,12 @@
   --r-btn:100px;--r-input:16px;
   --up:#5B93F5;--down:#FF6B6F;
   --warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);
+  /* 다크 모드는 배경이 거의 검정이라 검정을 섞으면 구분이 안 되므로, 반대로 흰색을 섞어
+     배경보다 밝은 회색이 되도록 한다 (같은 배경 계열 색이되 "밝기"로 차이를 줌). */
+  --fab-bg:color-mix(in srgb, var(--surf) 35%, white);--fab-ink:#18150F;
 }}
-:root[data-theme="dark"]{--bg:#18150F;--surf:#18150F;--surf2:#18150F;--ink:#EDE8E1;--muted:#8A8278;--nm-dark:#0F0C08;--nm-light:#2C271F;--nm-blur:6px;--nm-dist:4px;--cw:#7FAF91;--ww:rgba(127,175,145,.13);--sage:#7FAF91;--s-wash:rgba(127,175,145,.13);--cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;--fw:rgba(127,175,145,.13);--dw:rgba(196,154,107,.12);--sw:rgba(120,153,184,.12);--cs-day:#9AB6D8;--cs-night:#4A6690;--sw-day:rgba(154,182,216,.16);--sw-night:rgba(74,102,144,.16);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);--cn:#D4A468;--nw:rgba(212,164,104,.16);--cv:#6FA8A8;--vw:rgba(111,168,168,.16);--cy:#D08A85;--yw:rgba(208,138,133,.16);--bdr:rgba(237,232,225,.10);--btn-bdr:rgba(237,232,225,.10);--sh: 0 0 var(--nm-blur) var(--nm-light);--sh-inset: inset 0 0 var(--nm-blur) var(--nm-dark);--sh-sm: 0 0 14px var(--nm-light);--sh-xs: 0 0 6px var(--nm-light);--r-btn:100px;--r-input:16px;--up:#5B93F5;--down:#FF6B6F;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}
-:root[data-theme="light"]{--bg:#F7F2E9;--surf:#F7F2E9;--surf2:#F7F2E9;--ink:#2E2A22;--muted:#9C9284;--nm-dark:#E4DCC9;--nm-light:#FFFFFF;--nm-blur:4px;--nm-dist:2px;--cw:#5E9E8D;--ww:rgba(94,158,141,.12);--sage:#7660A2;--s-wash:#EDE7F6;--cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;--fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);--cs-day:#9C8BC4;--cs-night:#5B4A85;--sw-day:rgba(156,139,196,.13);--sw-night:rgba(91,74,133,.13);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--cn:#C08A3D;--nw:rgba(192,138,61,.13);--cv:#4A8C99;--vw:rgba(74,140,153,.12);--cy:#B5615C;--yw:rgba(181,97,92,.12);--bdr:rgba(0,0,0,0);--btn-bdr:rgba(0,0,0,0);--sh: var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset: inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm: 6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);--sh-xs: 0 0 5px var(--nm-dark);--r-btn:100px;--r-input:16px;--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);}
+:root[data-theme="dark"]{--bg:#18150F;--surf:#18150F;--surf2:#18150F;--ink:#EDE8E1;--muted:#8A8278;--nm-dark:#0F0C08;--nm-light:#2C271F;--nm-blur:6px;--nm-dist:4px;--cw:#7FAF91;--ww:rgba(127,175,145,.13);--sage:#7FAF91;--s-wash:rgba(127,175,145,.13);--cf:#7FAF91;--cd:#C49A6B;--cs:#7899B8;--fw:rgba(127,175,145,.13);--dw:rgba(196,154,107,.12);--sw:rgba(120,153,184,.12);--cs-day:#9AB6D8;--cs-night:#4A6690;--sw-day:rgba(154,182,216,.16);--sw-night:rgba(74,102,144,.16);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,.16);--cn:#D4A468;--nw:rgba(212,164,104,.16);--cv:#6FA8A8;--vw:rgba(111,168,168,.16);--cy:#D08A85;--yw:rgba(208,138,133,.16);--bdr:rgba(237,232,225,.10);--btn-bdr:rgba(237,232,225,.10);--sh: 0 0 var(--nm-blur) var(--nm-light);--sh-inset: inset 0 0 var(--nm-blur) var(--nm-dark);--sh-sm: 0 0 14px var(--nm-light);--sh-xs: 0 0 6px var(--nm-light);--r-btn:100px;--r-input:16px;--up:#5B93F5;--down:#FF6B6F;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);--fab-bg:color-mix(in srgb, var(--surf) 35%, white);--fab-ink:#18150F;}
+:root[data-theme="light"]{--bg:#F7F2E9;--surf:#F7F2E9;--surf2:#F7F2E9;--ink:#2E2A22;--muted:#9C9284;--nm-dark:#E4DCC9;--nm-light:#FFFFFF;--nm-blur:4px;--nm-dist:2px;--cw:#5E9E8D;--ww:rgba(94,158,141,.12);--sage:#7660A2;--s-wash:#EDE7F6;--cf:#5B8CB5;--cd:#946D6D;--cs:#8B7BAA;--fw:rgba(91,140,181,.13);--dw:rgba(148,109,109,.12);--sw:rgba(139,123,170,.12);--cs-day:#9C8BC4;--cs-night:#5B4A85;--sw-day:rgba(156,139,196,.13);--sw-night:rgba(91,74,133,.13);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.14);--cn:#C08A3D;--nw:rgba(192,138,61,.13);--cv:#4A8C99;--vw:rgba(74,140,153,.12);--cy:#B5615C;--yw:rgba(181,97,92,.12);--bdr:rgba(0,0,0,0);--btn-bdr:rgba(0,0,0,0);--sh: var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset: inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm: 6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);--sh-xs: 0 0 5px var(--nm-dark);--r-btn:100px;--r-input:16px;--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);--fab-bg:color-mix(in srgb, var(--surf) 30%, black);--fab-ink:#fff;}
 
 /* ── 아이 성별별 강조색 자동 전환 ─────────────────────────────
    수유/기저귀/수면처럼 "종류"를 구분해야 하는 색(--cf/--cd/--cs/--cw)은 그대로 두고,
@@ -261,11 +267,12 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 
 /* ── HOME: 우측 상단 "+" 빠른 기록 버튼 ── */
 /* 홈 탭 하단의 "빠른 기록 +" 버튼 — 배경(var(--surf))과 거의 같은 색이라 잘 안 보인다는
-   피드백으로, 테마의 --sage 색상에 검정을 섞어(color-mix) 배경보다 항상 눈에 띄게 진한
-   색을 쓰고(라이트/다크 모드 모두 --sage 값 자체가 테마별로 바뀌니 자동으로 맞춰짐),
-   아이콘도 그 진한 배경 위에서 잘 보이도록 흰색으로 바꿈. 크기는 기존 대비 2배로 키움
-   (QuickAddFab.js의 BTN_SIZE/드래그 가능 범위 계산용 상수도 같이 84로 맞춰야 함).*/
-.qplus{position:relative;flex-shrink:0;width:84px;height:84px;border-radius:50%;background:color-mix(in srgb, var(--sage) 75%, black);border:none;color:#fff;box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1)}
+   피드백으로, 보라색(--sage)이 아니라 배경과 같은 계열의 색을 "밝기"만 다르게 써서 구분
+   되도록 함(--fab-bg/--fab-ink, :root에서 테마별로 정의). 라이트 모드는 배경이 밝으니
+   검정을 섞어 어둡게, 다크 모드는 배경이 거의 검정이라 반대로 흰색을 섞어 더 밝게 —
+   두 경우 다 "배경보다 또렷이 구분되는 밝기 차이"를 만드는 같은 원리. 크기는 기존 대비
+   2배로 키움(QuickAddFab.js의 BTN_SIZE/드래그 가능 범위 계산용 상수도 같이 84로 맞춰야 함).*/
+.qplus{position:relative;flex-shrink:0;width:84px;height:84px;border-radius:50%;background:var(--fab-bg);border:none;color:var(--fab-ink);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1)}
 .qplus:active{transform:scale(.9);box-shadow:var(--sh-inset)}
 .qplus svg{width:36px;height:36px;transition:transform .2s}
 .qplus.open svg{transform:rotate(45deg)}
