@@ -30,6 +30,7 @@ import ExportPanel from './panels/ExportPanel';
 import FeedModal from './modals/FeedModal';
 import FeedSideChoiceModal from './modals/FeedSideChoiceModal';
 import SupplementPromptModal from './modals/SupplementPromptModal';
+import FeedGroupModal from './modals/FeedGroupModal';
 import DiaperModal from './modals/DiaperModal';
 import SleepModal from './modals/SleepModal';
 import WeightModal from './modals/WeightModal';
@@ -258,6 +259,7 @@ export default function BodeumApp() {
       {openModal === 'feed' && <FeedModal />}
       {openModal === 'feedSideChoice' && <FeedSideChoiceModal />}
       {openModal === 'supplementPrompt' && <SupplementPromptModal />}
+      {openModal === 'feedGroup' && <FeedGroupModal />}
       {openModal === 'diaper' && <DiaperModal />}
       {openModal === 'sleep' && <SleepModal />}
       {openModal === 'solid' && <SolidModal />}

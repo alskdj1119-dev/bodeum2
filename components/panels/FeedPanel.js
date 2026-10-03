@@ -58,10 +58,10 @@ function SingleFeedRow({ f, onEdit, onDelete, confirmDeleteKey, toggleDeleteConf
   );
 }
 
-// 직수 뒤에 보충수유를 이어서 한 "묶음" — 평소엔 합쳐진 요약 카드 하나로 보이다가,
-// 탭하면 안에 들어있는 각 기록(직수/보충)이 펼쳐져서 개별적으로 수정·삭제할 수 있다.
-function FeedGroupCard({ item, onEdit, onDeleteSingle, onDeleteGroup, confirmDeleteKey, toggleDeleteConfirm, closeDeleteConfirm }) {
-  const [open, setOpen] = useState(false);
+// 직수 뒤에 보충수유를 이어서 한 "묶음" — 합쳐진 요약 카드 하나로 보이고,
+// 탭하면 FeedGroupModal 팝업이 열려서 묶인 기록 둘 다를 한 화면에서 보고
+// 각각 수정/삭제하거나 세션 전체를 삭제할 수 있다.
+function FeedGroupCard({ item, onOpenGroup, onDeleteGroup, confirmDeleteKey, toggleDeleteConfirm, closeDeleteConfirm }) {
   const { members, id: groupKey } = item;
   const earliestStart = feedStartTime(members[0]);
   const latestEnd = members.reduce((max, m) => (m.end && (!max || new Date(m.end) > new Date(max))) ? m.end : max, null);
@@ -82,27 +82,17 @@ function FeedGroupCard({ item, onEdit, onDeleteSingle, onDeleteGroup, confirmDel
           <button className="btn-cancel" onClick={closeDeleteConfirm}>취소</button>
         </div>
       )}
-      <div className="ec" onClick={() => setOpen(o => !o)} style={{ background: fc.bg }}>
+      <div className="ec" onClick={() => onOpenGroup(members[0].id)} style={{ background: fc.bg }}>
         <div className="edot" style={{ background: fc.dot }}></div>
         <div className="emain">
           <div className="epri">
             {groupFeedTypeLabel(members)}
             <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500 }}> · {members.length}건 묶음</span>
           </div>
-          <div className="esec">{timeRange}{combinedDetail ? ' · ' + combinedDetail : ''}{open ? ' · 접기 ▲' : ' · 펼쳐보기 ▾'}</div>
+          <div className="esec">{timeRange}{combinedDetail ? ' · ' + combinedDetail : ''}</div>
         </div>
         <div className="etime">{fmtFull(earliestStart)}<br/><span className="eago">{elapsedStr(earliestStart)}</span></div>
       </div>
-      {open && (
-        <div style={{ marginLeft: 14, marginTop: 8, borderLeft: '2px solid var(--bdr)', paddingLeft: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {members.map(m => (
-            <SingleFeedRow
-              key={m.id} f={m} onEdit={onEdit} onDelete={onDeleteSingle}
-              confirmDeleteKey={confirmDeleteKey} toggleDeleteConfirm={toggleDeleteConfirm} closeDeleteConfirm={closeDeleteConfirm}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -151,6 +141,13 @@ export default function FeedPanel() {
   function openNew() {
     setEditId(null); setEditType(null);
     setOpenModal('feed');
+  }
+
+  // 묶인 수유 세션 카드를 탭하면 FeedGroupModal이 열려 두 기록을 한 화면에서 보여준다.
+  function openGroup(parentId) {
+    setEditId(parentId);
+    setEditType('feedGroup');
+    setOpenModal('feedGroup');
   }
 
   function delFeed(id) {
@@ -218,7 +215,7 @@ export default function FeedPanel() {
             <div className="daylbl">{day}</div>
             {items.map(item => item.isGroup ? (
               <FeedGroupCard
-                key={item.id} item={item} onEdit={openEdit} onDeleteSingle={delFeed} onDeleteGroup={delFeedGroup}
+                key={item.id} item={item} onOpenGroup={openGroup} onDeleteGroup={delFeedGroup}
                 confirmDeleteKey={confirmDeleteKey} toggleDeleteConfirm={toggleDeleteConfirm} closeDeleteConfirm={closeDeleteConfirm}
               />
             ) : (
