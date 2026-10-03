@@ -195,19 +195,21 @@ export default function StatsPanel() {
       return t >= start && t < end;
     });
   });
-  const feedCountByDay = feedByDay.map(arr => arr.length);
+  // "횟수"는 묶인 세션(직수+보충수유)을 한 건으로 센다 (ml 합계는 그대로 전부 더함).
+  const feedCountByDay = feedByDay.map(arr => arr.filter(f => !f.groupId).length);
   const feedMlByDay    = feedByDay.map(arr => Math.round(totalMl(arr)));
   const maxFeedDay = Math.max(...feedCountByDay, 1);
+  const feedRangeCount = feedRange.filter(f => !f.groupId).length;
 
   // "평균"은 그대로 rangeDays로 나누면 기록을 안 한 날 때문에 평균이 낮아 보이므로,
   // 실제로 기록이 있었던 날짜 수로만 나눈다 (예: 7일 중 5일만 기록했으면 5로 나눔).
   const feedActiveDays = feedCountByDay.filter(c => c > 0).length;
-  const avgFeedCountN = feedActiveDays > 0 ? Math.round(feedRange.length / feedActiveDays * 10) / 10 : null;
+  const avgFeedCountN = feedActiveDays > 0 ? Math.round(feedRangeCount / feedActiveDays * 10) / 10 : null;
   const avgFeedMlN    = feedActiveDays > 0 ? Math.round(totalMl(feedRange) / feedActiveDays) : null;
 
   const feedStatItems = isCustom
     ? [
-        { label: '합계', count: feedRange.length, ml: mlRange, interval: intRange },
+        { label: '합계', count: feedRangeCount, ml: mlRange, interval: intRange },
         { label: '일 평균', count: avgFeedCountN, ml: avgFeedMlN, interval: null },
       ]
     : [

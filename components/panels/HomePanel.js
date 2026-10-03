@@ -210,6 +210,8 @@ export default function HomePanel() {
   const sumFeedList = sumMode === 'day' ? feedToday : feed24;
   const sumDiaperList = sumMode === 'day' ? diaperToday : diaper24;
   const sumSleepList = sumMode === 'day' ? sleepToday : sleep24;
+  // 수유 "횟수"는 묶인 세션(직수+보충수유)을 한 건으로 센다 — ml 합계(sumFeedMl)는 그대로 전부 더함.
+  const sumFeedCount = sumFeedList.filter(f => !f.groupId).length;
   const sumFeedMl = sumMode === 'day' ? feedMlToday : feedMl;
   const sumSleepMs = sumMode === 'day' ? sleepMsToday : sleepMs;
   const sumDiaperWet = sumMode === 'day' ? diaperWetToday : diaperWet24;
@@ -300,12 +302,12 @@ export default function HomePanel() {
   // Recent timeline
   const all = [];
   // 직수 뒤에 보충수유를 이어서 한 기록은 트래킹 > 수유와 동일하게 여기서도 하나로
-  // 합쳐서 보여준다 (수정/삭제는 트래킹 탭에서 개별로 — 여긴 보기 전용 요약).
+  // 합쳐서 보여준다 — 탭하면 FeedGroupModal이 열려서 묶인 기록 둘 다를 보여준다.
   groupFeedsForDisplay(feeds).forEach(item => {
     if (item.isGroup) {
       const members = item.members;
       const sub = members.map(m => `${TF[m.type] || ''} ${feedAmtDurStr(m)}`.trim()).filter(Boolean).join(' + ');
-      all.push({ t: 'f', time: item.time, label: `수유 — ${groupFeedTypeLabel(members)} (${members.length}건)`, sub, raw: members[0] });
+      all.push({ t: 'f', time: item.time, label: `수유 — ${groupFeedTypeLabel(members)} (${members.length}건)`, sub, raw: members[0], group: true });
     } else {
       const f = item.feed;
       all.push({ t: 'f', time: f.start || f.time, label: '수유 — ' + (TF[f.type] || ''), sub: feedAmtDurStr(f), raw: f });
@@ -326,7 +328,10 @@ export default function HomePanel() {
   // 최근 기록 클릭 → 수정 팝업
   function handleRecentClick(e) {
     if (!e.raw) return;
-    if (e.t === 'f') openEditFeed(e.raw);
+    if (e.t === 'f') {
+      if (e.group) { setEditId(e.raw.id); setEditType('feedGroup'); setOpenModal('feedGroup'); }
+      else openEditFeed(e.raw);
+    }
     else if (e.t === 'd') openEditDiaper(e.raw);
     else if (e.t === 's') openEditSleep(e.raw);
   }
@@ -520,8 +525,8 @@ export default function HomePanel() {
             <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)' }}>
               <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode(sumMode); setDetail24('feed'); }}>
                 <div className="sr"><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
-                <div className="sval" style={{ fontSize:'15px' }}>{sumFeedMl > 0 ? `총 ${sumFeedMl}ml` : `${sumFeedList.length}회`}</div>
-                <div className="ssub">{sumFeedList.length > 0 ? `${sumFeedList.length}회 수유` : '기록 없음'}</div>
+                <div className="sval" style={{ fontSize:'15px' }}>{sumFeedMl > 0 ? `총 ${sumFeedMl}ml` : `${sumFeedCount}회`}</div>
+                <div className="ssub">{sumFeedCount > 0 ? `${sumFeedCount}회 수유` : '기록 없음'}</div>
               </div>
               <div className="sc" onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode(sumMode); setDetail24('diaper'); }}>
                 <div className="sr"><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>

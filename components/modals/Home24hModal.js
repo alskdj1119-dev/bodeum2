@@ -88,7 +88,9 @@ function RatioWidget({ title, items, showMl, onToggle, hasMl }) {
 // dayList가 주어지면(기간이 하루를 넘는 경우) 일자별 그래프를, 아니면 기존 시간대별 그래프를 보여준다.
 function FeedDetail({ records, onEdit, dayList }) {
   const totalMl = records.reduce((acc, f) => acc + feedEffectiveMl(f), 0);
-  const count = records.length;
+  // "수유 횟수"는 직수+보충수유를 묶은 세션을 한 건으로 센다 (ml 합계는 그대로 전부 더함).
+  // 아래 유형별 비율/시간대별 분포는 반대로 실제 급여 이벤트(직수/보충 각각) 기준으로 보여준다.
+  const count = records.filter(f => !f.groupId).length;
   const avgMl = count > 0 && totalMl > 0 ? Math.round(totalMl / count) : 0;
   const days = dayList && dayList.length > 0 ? dayList.length : 1;
   const mlList = records.map(f => feedEffectiveMl(f)).filter(v => v > 0);
@@ -372,9 +374,18 @@ export default function Home24hModal({ type, initialDate, initialMode, records: 
   }
 
   function editFeed(f) {
-    setEditId(f.id);
-    setEditType('feeds');
-    setOpenModal('feed');
+    // 묶인 수유 세션(직수+보충수유)의 어느 쪽을 탭해도, 트래킹/최근기록과 동일하게
+    // 둘 다 보여주는 FeedGroupModal이 열리도록 한다.
+    const isParentOfGroup = db.feeds.some(x => x.groupId === f.id);
+    if (f.groupId || isParentOfGroup) {
+      setEditId(f.groupId || f.id);
+      setEditType('feedGroup');
+      setOpenModal('feedGroup');
+    } else {
+      setEditId(f.id);
+      setEditType('feeds');
+      setOpenModal('feed');
+    }
     handleClose();
   }
   function editDiaper(d) {
