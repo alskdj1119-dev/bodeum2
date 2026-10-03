@@ -5,7 +5,7 @@ import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
-  groupFeedsForDisplay, groupFeedTypeLabel,
+  groupFeedsForDisplay, groupFeedTypeLabel, feedColor, diaperColor,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -310,18 +310,20 @@ export default function HomePanel() {
   const all = [];
   // 직수 뒤에 보충수유를 이어서 한 기록은 트래킹 > 수유와 동일하게 여기서도 하나로
   // 합쳐서 보여준다 — 탭하면 FeedGroupModal이 열려서 묶인 기록 둘 다를 보여준다.
+  // 트래킹 탭과 동일한 색상 체계(feedColor/diaperColor/sleepColor)를 그대로 써서
+  // "최근 기록"에서도 종류별로 색이 구분되도록 한다.
   groupFeedsForDisplay(feeds).forEach(item => {
     if (item.isGroup) {
       const members = item.members;
       const sub = members.map(m => `${TF[m.type] || ''} ${feedAmtDurStr(m)}`.trim()).filter(Boolean).join(' + ');
-      all.push({ t: 'f', time: item.time, label: `수유 — ${groupFeedTypeLabel(members)} (${members.length}건)`, sub, raw: members[0], group: true });
+      all.push({ t: 'f', time: item.time, label: `수유 — ${groupFeedTypeLabel(members)} (${members.length}건)`, sub, raw: members[0], group: true, color: feedColor(members[0]) });
     } else {
       const f = item.feed;
-      all.push({ t: 'f', time: f.start || f.time, label: '수유 — ' + (TF[f.type] || ''), sub: feedAmtDurStr(f), raw: f });
+      all.push({ t: 'f', time: f.start || f.time, label: '수유 — ' + (TF[f.type] || ''), sub: feedAmtDurStr(f), raw: f, color: feedColor(f) });
     }
   });
-  diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d }));
-  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', dotCls: sleepDotClass(s.start), time: s.start, label: '수면', sub: durStr(sleepDurationMs(s)), raw: s }));
+  diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d, color: diaperColor(d.type) }));
+  sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', dotCls: sleepDotClass(s.start), time: s.start, label: '수면', sub: durStr(sleepDurationMs(s)), raw: s, color: sleepColor(s.start) }));
   all.sort((a, b) => new Date(b.time) - new Date(a.time));
   const recent = all.slice(0, 10);
 
@@ -605,7 +607,7 @@ export default function HomePanel() {
                   </div>
                 )}
                 <div className="rcard" onClick={() => handleRecentClick(e)}>
-                  <div className={`rico ${e.dotCls || e.t}`}>{recentIcon(e.t)}</div>
+                  <div className="rico" style={e.color ? { background: e.color.bg, color: e.color.dot } : undefined}>{recentIcon(e.t)}</div>
                   <div className="rbody">
                     <div className="rti">{e.label}</div>
                     {e.sub && <div className="rsub">{e.sub}</div>}
