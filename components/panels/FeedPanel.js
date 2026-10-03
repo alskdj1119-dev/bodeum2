@@ -28,14 +28,20 @@ function feedDetails(f) {
 }
 
 // 기록 카드 하나(단독 기록이든, 묶음 안의 한 구성원이든 동일하게 사용) — × 눌러서
-// 삭제 확인 팝오버를 띄우는 방식은 홈 화면 "최근 기록"과 동일.
-function SingleFeedRow({ f, onEdit, onDelete, confirmDeleteKey, toggleDeleteConfirm, closeDeleteConfirm }) {
+// 삭제 확인 팝오버를 띄우는 방식은 홈 화면 "최근 기록"과 동일. onMerge가 주어지면(= 아직
+// 묶이지 않은 완료된 기록) × 왼쪽에 "합치기" 배지도 함께 보여준다.
+function SingleFeedRow({ f, onEdit, onDelete, onMerge, confirmDeleteKey, toggleDeleteConfirm, closeDeleteConfirm }) {
   const t = f.start || f.time;
   const timeRange = (f.start && f.end) ? `${fmt(f.start)} → ${fmt(f.end)}` : fmt(t);
   const detail = feedDetails(f);
   const fc = feedColor(f);
   return (
     <div className="rwrap">
+      {onMerge && (
+        <button className="mergex" onClick={e => { e.stopPropagation(); onMerge(f.id); }} aria-label="다른 기록과 합치기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+      )}
       <button className="delx" onClick={e => toggleDeleteConfirm(f.id, e)} aria-label="기록 삭제">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -150,6 +156,13 @@ export default function FeedPanel() {
     setOpenModal('feedGroup');
   }
 
+  // "합치기" 배지 — 자동 제안을 놓쳤거나 "아니요"를 누른 기록을 나중에 수동으로 묶는다.
+  function openMerge(id) {
+    setEditId(id);
+    setEditType('feedMergeSource');
+    setOpenModal('feedMerge');
+  }
+
   function delFeed(id) {
     const item = db.feeds.find(x => x.id === id);
     if (!item) return;
@@ -220,7 +233,7 @@ export default function FeedPanel() {
               />
             ) : (
               <SingleFeedRow
-                key={item.id} f={item.feed} onEdit={openEdit} onDelete={delFeed}
+                key={item.id} f={item.feed} onEdit={openEdit} onDelete={delFeed} onMerge={openMerge}
                 confirmDeleteKey={confirmDeleteKey} toggleDeleteConfirm={toggleDeleteConfirm} closeDeleteConfirm={closeDeleteConfirm}
               />
             ))}

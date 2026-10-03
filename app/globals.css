@@ -343,6 +343,10 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .delx{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--surf);color:var(--muted);border:none;box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1);z-index:2}
 .delx:active{transform:scale(.88);box-shadow:var(--sh-inset)}
 .delx svg{width:11px;height:11px}
+/* "합치기" 배지 — ×(.delx) 바로 왼쪽에 같은 크기로, 묶이지 않은 단독 수유 기록에만 보인다. */
+.mergex{position:absolute;top:-7px;right:19px;width:22px;height:22px;border-radius:50%;background:var(--surf);color:var(--sage);border:none;box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.34,1.56,.64,1);z-index:2}
+.mergex:active{transform:scale(.88);box-shadow:var(--sh-inset)}
+.mergex svg{width:12px;height:12px}
 /* 삭제 확인 팝오버 — "+" 빠른 기록 메뉴(.qmenu)와 같은 자리·애니메이션으로 × 아래에 뜬다.
    버튼끼리 간격이 좁아(14px) --sh-sm(그림자 퍼짐 18px)을 쓰면 서로 침범하므로 반드시
    카드용 --sh/--sh-inset(퍼짐이 gap보다 작음)를 쓴다. */
