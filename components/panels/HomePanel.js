@@ -606,8 +606,8 @@ export default function HomePanel() {
                     <button className="btn-cancel" onClick={closeDeleteConfirm}>취소</button>
                   </div>
                 )}
-                <div className="rcard" onClick={() => handleRecentClick(e)}>
-                  <div className="rico" style={e.color ? { background: e.color.bg, color: e.color.dot } : undefined}>{recentIcon(e.t)}</div>
+                <div className="rcard" onClick={() => handleRecentClick(e)} style={e.color ? { background: e.color.bg } : undefined}>
+                  <div className="rico" style={e.color ? { background: e.color.dot, color: '#fff' } : undefined}>{recentIcon(e.t)}</div>
                   <div className="rbody">
                     <div className="rti">{e.label}</div>
                     {e.sub && <div className="rsub">{e.sub}</div>}
