@@ -5,6 +5,7 @@ import {
   agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
+  groupFeedsForDisplay, groupFeedTypeLabel,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
 } from '../../lib/helpers';
 import Home24hModal from '../modals/Home24hModal';
@@ -284,17 +285,31 @@ export default function HomePanel() {
   const feedTier = elapsedTier(lastFeed ? feedStartTime(lastFeed) : null);
   const diaperTier = elapsedTier(lastDiaper ? lastDiaper.time : null);
 
-  // Recent timeline
-  const all = [];
-  feeds.forEach(f => {
-    const t = f.start || f.time;
+  // 수유 기록 한 건의 "준비량/섭취량 · 소요시간" 텍스트 — 단독 기록과 묶음 안의
+  // 구성원 표시 양쪽에서 재사용한다.
+  function feedAmtDurStr(f) {
     const fAmt = feedAmountMl(f);
     const amtStr = f.consumedAmount != null && fAmt != null ? `준비 ${fAmt}ml / 섭취 ${f.consumedAmount}ml`
       : f.consumedAmount != null ? `섭취 ${f.consumedAmount}ml`
       : fAmt ? `${fAmt}ml` : '';
     const durMs = directFeedDurationMs(f);
     const durTxt = durMs > 0 ? ' · ' + durStr(durMs) : '';
-    all.push({ t: 'f', time: t, label: '수유 — ' + (TF[f.type] || ''), sub: amtStr + durTxt, raw: f });
+    return amtStr + durTxt;
+  }
+
+  // Recent timeline
+  const all = [];
+  // 직수 뒤에 보충수유를 이어서 한 기록은 트래킹 > 수유와 동일하게 여기서도 하나로
+  // 합쳐서 보여준다 (수정/삭제는 트래킹 탭에서 개별로 — 여긴 보기 전용 요약).
+  groupFeedsForDisplay(feeds).forEach(item => {
+    if (item.isGroup) {
+      const members = item.members;
+      const sub = members.map(m => `${TF[m.type] || ''} ${feedAmtDurStr(m)}`.trim()).filter(Boolean).join(' + ');
+      all.push({ t: 'f', time: item.time, label: `수유 — ${groupFeedTypeLabel(members)} (${members.length}건)`, sub, raw: members[0] });
+    } else {
+      const f = item.feed;
+      all.push({ t: 'f', time: f.start || f.time, label: '수유 — ' + (TF[f.type] || ''), sub: feedAmtDurStr(f), raw: f });
+    }
   });
   diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d }));
   sleeps.filter(s => s.end).forEach(s => all.push({ t: 's', dotCls: sleepDotClass(s.start), time: s.start, label: '수면', sub: durStr(sleepDurationMs(s)), raw: s }));
