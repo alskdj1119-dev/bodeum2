@@ -242,6 +242,13 @@ export default function HomePanel() {
     setEditType('feeds');
     setOpenModal('feed');
   }
+  // "합치기" 배지 — 트래킹 > 수유와 동일하게, 아직 묶이지 않은 완료된 수유 기록을
+  // 나중에 다른 기록과 수동으로 묶을 수 있게 한다.
+  function openMergeFeed(id) {
+    setEditId(id);
+    setEditType('feedMergeSource');
+    setOpenModal('feedMerge');
+  }
   function openEditDiaper(d) {
     if (!d) return;
     setEditId(d.id);
@@ -582,6 +589,11 @@ export default function HomePanel() {
             const key = `${e.t}-${e.raw ? e.raw.id : i}`;
             return (
               <div key={key} className="rwrap">
+                {e.t === 'f' && !e.group && e.raw && e.raw.end && (
+                  <button className="mergex" onClick={ev => { ev.stopPropagation(); openMergeFeed(e.raw.id); }} aria-label="다른 기록과 합치기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  </button>
+                )}
                 <button className="delx" onClick={ev => toggleDeleteConfirm(key, ev)} aria-label="기록 삭제">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
