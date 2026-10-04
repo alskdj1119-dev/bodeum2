@@ -23,7 +23,7 @@ function dayStartOf(ms) {
   return kstMidnightMs(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate());
 }
 
-// [startMs, endMs]를 조회 구간으로 자르고, KST 자정마다 쪼개 "그날 0~24시" 기준 [시작시, 끝시] 배열로 변환.
+// [startMs, endMs]를 조회 구간으로 자르고, KST 자정마다 쪼개 "그날 0~24시" 기준 [시작시, 끝시, 전날부터 이어짐 여부] 배열로 변환.
 function toDaySegments(startMs, endMs, winStart, winEnd) {
   const a0 = Math.max(startMs, winStart), b0 = Math.min(endMs, winEnd);
   if (!(b0 > a0)) return [];
@@ -33,7 +33,7 @@ function toDaySegments(startMs, endMs, winStart, winEnd) {
     const ds = dayStartOf(cur);
     const de = ds + DAY;
     const segEnd = Math.min(b0, de);
-    out.push([(cur - ds) / HOUR, (segEnd - ds) / HOUR]);
+    out.push([(cur - ds) / HOUR, (segEnd - ds) / HOUR, startMs < ds]); // 3번째: 그날 0시 이전에 시작돼 이어진 구간인지
     cur = segEnd;
   }
   return out;
@@ -52,6 +52,23 @@ function arcPaths(h1, h2, R) {
     const e = Math.min(h2, s + 12);
     const [x1, y1] = polar(s, R), [x2, y2] = polar(e, R);
     parts.push(`M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`);
+    s = e;
+  }
+  return parts;
+}
+
+// 수면 "전날부터 이어진 구간" 표시용 — 두께가 있는 호를 닫힌 도형으로 그려서 점선 테두리 + 연한 채움을 줄 수 있게 한다.
+function ringPaths(h1, h2, R, half = 6) {
+  const parts = [];
+  let s = h1;
+  while (s < h2 - 1e-6) {
+    const e = Math.min(h2, s + 12);
+    const [ox1, oy1] = polar(s, R + half), [ox2, oy2] = polar(e, R + half);
+    const [ix1, iy1] = polar(s, R - half), [ix2, iy2] = polar(e, R - half);
+    parts.push(
+      `M ${ox1.toFixed(2)} ${oy1.toFixed(2)} A ${R + half} ${R + half} 0 0 1 ${ox2.toFixed(2)} ${oy2.toFixed(2)} ` +
+      `L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${R - half} ${R - half} 0 0 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`
+    );
     s = e;
   }
   return parts;
@@ -105,6 +122,11 @@ export default function DailyReportPanel() {
   const feedsIn = feeds.filter(f => f.end || f.time).filter(f => inWin(new Date(feedStartTime(f)).getTime()));
   const feedCount = feedsIn.filter(f => !f.groupId).length; // 묶음(직수+보충)은 1회
   const feedMl = feedsIn.reduce((a, f) => a + feedEffectiveMl(f), 0);
+  // 평균 수유 간격(수유텀) — 묶음은 1회로 보고, 기간 안 수유 "시작 시각"끼리의 간격을 평균낸다.
+  // (7일 모드는 밤사이 간격도 포함해서 하루 전체의 실제 텀을 반영. 2회 미만이면 계산 불가)
+  const feedStartsMs = feedsIn.filter(f => !f.groupId).map(f => new Date(feedStartTime(f)).getTime()).sort((a, b) => a - b);
+  const feedGapMs = feedStartsMs.length >= 2 ? (feedStartsMs[feedStartsMs.length - 1] - feedStartsMs[0]) / (feedStartsMs.length - 1) : null;
+  const gapText = feedGapMs != null ? ` · 평균 수유간격 ${fmtDur(feedGapMs)}` : '';
   const sleepsIn = sleeps.filter(s => s.end).filter(s => inWin(new Date(s.start).getTime()));
   const sleepMs = sleepsIn.reduce((a, s) => a + sleepDurationMs(s), 0);
   const diapersIn = diapers.filter(d => inWin(new Date(d.time).getTime()));
@@ -130,6 +152,7 @@ export default function DailyReportPanel() {
   });
   const diaperDots = diapers.filter(d => inWin(new Date(d.time).getTime())).map(d => (new Date(d.time).getTime() - dayStartOf(new Date(d.time).getTime())) / HOUR);
 
+  const hasContinued = sleepSegs.some(seg => seg[2]);
   const segOpacity = isWeek ? 0.4 : 1;
   const dotOpacity = isWeek ? 0.7 : 1;
 
@@ -157,8 +180,8 @@ export default function DailyReportPanel() {
 
   const feedTitle = `수유 ${isWeek ? '총 ' : ''}${feedCount}회`;
   const feedSub = isWeek
-    ? `총 ${fmtMl(feedMl)} · 하루 평균 ${avg1(feedCount / effDays)}회, ${fmtMl(feedMl / effDays)}`
-    : `총 수유량 ${fmtMl(feedMl)}`;
+    ? `총 ${fmtMl(feedMl)} · 하루 평균 ${avg1(feedCount / effDays)}회, ${fmtMl(feedMl / effDays)}${gapText}`
+    : `총 수유량 ${fmtMl(feedMl)}${gapText}`;
   const sleepTitle = `수면 ${isWeek ? '총 ' : ''}${sleepsIn.length}회`;
   const sleepSub = isWeek
     ? `총 ${fmtDur(sleepMs)} · 하루 평균 ${fmtDur(sleepMs / effDays)}`
@@ -217,9 +240,14 @@ export default function DailyReportPanel() {
               const [x, y] = polar(h, R_DIAPER);
               return <circle key={'d' + i} cx={x} cy={y} r="3.6" fill="#f0b673" opacity={dotOpacity} />;
             })}
-            {sleepSegs.flatMap(([a, b], i) => arcPaths(a, b, R_SLEEP).map((d, j) => (
-              <path key={`s${i}-${j}`} d={d} fill="none" stroke="#9aa6f0" strokeWidth="12" strokeLinecap="round" opacity={segOpacity} />
-            )))}
+            {sleepSegs.flatMap(([a, b, cont], i) => cont
+              ? ringPaths(a, b, R_SLEEP).map((d, j) => (
+                <path key={`s${i}-${j}`} d={d} fill="#9aa6f0" fillOpacity="0.28" stroke="#9aa6f0" strokeWidth="1.1"
+                  strokeDasharray="2.2 2" strokeLinejoin="round" opacity={segOpacity} />
+              ))
+              : arcPaths(a, b, R_SLEEP).map((d, j) => (
+                <path key={`s${i}-${j}`} d={d} fill="none" stroke="#9aa6f0" strokeWidth="12" strokeLinecap="round" opacity={segOpacity} />
+              )))}
             {feedSegs.flatMap(([a, b], i) => arcPaths(a, b, R_FEED).map((d, j) => (
               <path key={`f${i}-${j}`} d={d} fill="none" stroke="#8fcbab" strokeWidth="12" strokeLinecap="round" opacity={segOpacity} />
             )))}
@@ -238,6 +266,7 @@ export default function DailyReportPanel() {
             <div className="rpt-legend">
               <div><span className="rpt-dot" style={{ background: '#f0b673' }} />기저귀</div>
               <div><span className="rpt-bar" style={{ background: '#9aa6f0' }} />수면</div>
+              {hasContinued && <div><span className="rpt-bar rpt-bar-cont" />전날부터 이어진 수면</div>}
               <div><span className="rpt-bar" style={{ background: '#8fcbab' }} />수유</div>
             </div>
             {clockHint && <div className="rpt-hint">{clockHint}</div>}
