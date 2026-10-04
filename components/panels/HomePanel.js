@@ -319,7 +319,7 @@ export default function HomePanel() {
       all.push({ t: 'f', time: item.time, label: `수유 — ${groupFeedTypeLabel(members)} (${members.length}건)`, sub, raw: members[0], group: true, color: feedColor(members[0]) });
     } else {
       const f = item.feed;
-      all.push({ t: 'f', time: f.start || f.time, label: '수유 — ' + (TF[f.type] || ''), sub: feedAmtDurStr(f), raw: f, color: feedColor(f) });
+      all.push({ t: 'f', time: feedStartTime(f), label: '수유 — ' + (TF[f.type] || ''), sub: feedAmtDurStr(f), raw: f, color: feedColor(f) });
     }
   });
   diapers.forEach(d => all.push({ t: 'd', time: d.time, label: '기저귀 — ' + (TD[d.type] || ''), sub: d.note || '', raw: d, color: diaperColor(d.type) }));

@@ -16,8 +16,11 @@ function WDial({ value, onChange, min = 0, max = 9 }) {
     const el = colRef.current;
     if (!el) return;
     const idx = items.indexOf(value);
-    if (idx >= 0) el.scrollTop = idx * ITEM_H;
-  }, []);
+    // value가 바깥에서 바뀌었을 때(직전 체중 자동 세팅, 수정 모드 값 로딩)도 다이얼이 따라가도록
+    // value가 바뀔 때마다 맞춰준다. 사용자가 직접 스크롤 중일 땐 이미 같은 칸이라 건드리지 않는다.
+    const curIdx = Math.min(Math.round(el.scrollTop / ITEM_H), items.length - 1);
+    if (idx >= 0 && curIdx !== idx) el.scrollTop = idx * ITEM_H;
+  }, [value]);
 
   function onScroll() {
     const el = colRef.current;
@@ -42,7 +45,7 @@ function WDial({ value, onChange, min = 0, max = 9 }) {
 export default function WeightModal() {
   const {
     db, dispatch, saveDB, showToast,
-    setOpenModal, editId, setEditId, setEditType, uid, activeBabyId,
+    setOpenModal, editId, setEditId, setEditType, uid, activeBabyId, filterByActiveBaby,
   } = useApp();
 
   const isEdit = !!editId;
@@ -67,7 +70,19 @@ export default function WeightModal() {
       setD4(dec % 10);
       setTime(existing.time ? toLocal(existing.time) : nowISO());
     } else {
-      setD0(0); setD1(3); setD2(5); setD3(0); setD4(0);
+      // 새 기록: 직전(가장 최근) 체중으로 다이얼을 미리 맞춰둔다 — 처음부터 숫자를 하나씩
+      // 돌려 맞추지 않아도 되고, 몸무게는 보통 직전 값과 크게 다르지 않기 때문.
+      // 직전 기록이 없을 때만 예전 기본값(3.500kg)을 쓴다.
+      const mine = (filterByActiveBaby ? filterByActiveBaby(db.weights || []) : (db.weights || []))
+        .filter(w => w && w.time && parseFloat(w.kg) > 0);
+      const last = mine.sort((a, b) => new Date(b.time) - new Date(a.time))[0];
+      const lastKg = last ? parseFloat(last.kg) : 3.5;
+      const grams = Math.min(39999, Math.max(0, Math.round(lastKg * 1000)));
+      setD0(Math.floor(grams / 10000));
+      setD1(Math.floor(grams / 1000) % 10);
+      setD2(Math.floor(grams / 100) % 10);
+      setD3(Math.floor(grams / 10) % 10);
+      setD4(grams % 10);
       setTime(nowISO());
     }
   }, [editId]);
