@@ -24,6 +24,7 @@ import NotifHistoryPanel from './panels/NotifHistoryPanel';
 import StatsPanel from './panels/StatsPanel';
 import HealthPanel from './panels/HealthPanel';
 import TrackingPanel from './panels/TrackingPanel';
+import DailyReportPanel from './panels/DailyReportPanel';
 import GrowthPanel from './panels/GrowthPanel';
 import SolidPanel from './panels/SolidPanel';
 import ExportPanel from './panels/ExportPanel';
@@ -48,12 +49,12 @@ import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
 import { activeFeedElapsedMs, activeSleepElapsedMs } from '../lib/helpers';
 
-const PANELS = ['home', 'tracking', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'myRoleSettings'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'myRoleSettings'];
+const PANELS = ['home', 'tracking', 'report', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'myRoleSettings'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'report', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'myRoleSettings'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
-  feed: 'tracking', diaper: 'tracking', sleep: 'tracking', solid: 'tracking',
+  report: 'tracking', feed: 'tracking', diaper: 'tracking', sleep: 'tracking', solid: 'tracking',
   stats: 'settings',
   settings: 'home',
   changelog: 'settings', requests: 'settings', trash: 'settings',
@@ -233,6 +234,7 @@ export default function BodeumApp() {
       <div className="content">
         <div className="panel" ref={panelRef('home')}><HomePanel /></div>
         <div className="panel" ref={panelRef('tracking')}><TrackingPanel /></div>
+        <div className="panel" ref={panelRef('report')}><DailyReportPanel /></div>
         <div className="panel" ref={panelRef('feed')}><FeedPanel /></div>
         <div className="panel" ref={panelRef('diaper')}><DiaperPanel /></div>
         <div className="panel" ref={panelRef('sleep')}><SleepPanel /></div>

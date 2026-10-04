@@ -18,6 +18,16 @@ export default function TrackingPanel() {
 
   const ITEMS = [
     {
+      id: 'report', label: '일일 리포트',
+      sub: '하루·7일 기록을 원형 시계로 한눈에',
+      wash: 'var(--s-wash)', color: 'var(--sage)',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><polyline points="12 3 12 12 17 15"/>
+        </svg>
+      ),
+    },
+    {
       id: 'feed', label: '수유 트래커',
       sub: lastFeed ? `직전 ${agoStr(feedStartTime(lastFeed))}` : '기록 없음',
       wash: 'var(--fw)', color: 'var(--cf)',
