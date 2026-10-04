@@ -9,23 +9,31 @@ const TAB_ACTIVE_COLOR = {
   health:   'var(--cw)',
   growth:   'var(--cw)',
 };
+// 선택된 메뉴 알약의 배경 — 글자색과 같은 계열의 옅은 색.
+const TAB_ACTIVE_WASH = {
+  home:     'var(--s-wash)',
+  tracking: 'var(--s-wash)',
+  health:   'var(--ww)',
+  growth:   'var(--ww)',
+};
 
+// 아이콘: 선 두께 1.7 + 선택 시 안쪽이 은은하게 채워지는 .fl 레이어(globals.css). 성장은 막대그래프 대신 새싹.
 const TABS = [
   {
     id: 'home', label: '홈',
-    icon: <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    icon: <svg viewBox="0 0 24 24"><path className="fl" d="M5 11 12 5l7 6v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18.5z"/><path d="M5 11 12 5l7 6v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18.5z"/></svg>
   },
   {
     id: 'tracking', label: '트래킹',
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    icon: <svg viewBox="0 0 24 24"><circle className="fl" cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>
   },
   {
     id: 'health', label: '건강',
-    icon: <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    icon: <svg viewBox="0 0 24 24"><path className="fl" d="M12 19.5s-7-4.2-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.3c0 5-7 9.2-7 9.2z"/><path d="M12 19.5s-7-4.2-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.3c0 5-7 9.2-7 9.2z"/></svg>
   },
   {
     id: 'growth', label: '성장',
-    icon: <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    icon: <svg viewBox="0 0 24 24"><path d="M12 20v-9"/><path className="fl" d="M12 11c0-3-2.2-5-5.5-5 0 3.3 2.2 5 5.5 5z"/><path d="M12 11c0-3-2.2-5-5.5-5 0 3.3 2.2 5 5.5 5z"/><path className="fl" d="M12 14c0-2.5 1.9-4.3 5-4.3 0 2.9-1.9 4.3-5 4.3z"/><path d="M12 14c0-2.5 1.9-4.3 5-4.3 0 2.9-1.9 4.3-5 4.3z"/></svg>
   },
 ];
 
@@ -43,11 +51,11 @@ export default function NavBar() {
           key={tab.id}
           id={`nav-${tab.id}`}
           className={`nb${effectiveTab === tab.id ? ' active' : ''}`}
-          style={effectiveTab === tab.id ? { color: TAB_ACTIVE_COLOR[tab.id] } : {}}
+          style={effectiveTab === tab.id ? { color: TAB_ACTIVE_COLOR[tab.id], background: TAB_ACTIVE_WASH[tab.id] } : {}}
           onClick={() => goTab(tab.id, tab.id === 'home' ? 'back' : 'forward')}
         >
           {tab.icon}
-          {tab.label}
+          <span>{tab.label}</span>
         </button>
       ))}
     </nav>

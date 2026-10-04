@@ -115,14 +115,18 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .panel.animating{transition:transform .28s cubic-bezier(.4,0,.2,1), opacity .22s ease}
 
 /* ── BOTTOM NAV ── */
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surf);box-shadow:0 -10px 24px var(--nm-dark);display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom,0)}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 7px;border:none;background:none;cursor:pointer;color:color-mix(in srgb, var(--muted) 55%, var(--ink));font-family:var(--sans);font-size:9px;font-weight:400;transition:color .15s, transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent}
-.nb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nb.active{color:var(--sage);position:relative}
-.nb.active::before{content:'';position:absolute;top:2px;left:50%;transform:translateX(-50%);width:40px;height:28px;border-radius:14px;box-shadow:var(--sh-inset);z-index:-1}
-.nb:active{transform:scale(.82)}
+/* 하단 메뉴 — 플로팅 캡슐: 화면에서 살짝 떠 있는 둥근 바. 선택한 메뉴만 글자가 펼쳐지고 나머지는 아이콘만 보인다. */
+.bnav{position:fixed;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:402px;background:var(--surf);border-radius:30px;box-shadow:var(--sh-sm);display:flex;gap:4px;padding:6px;z-index:40}
+.nb{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;height:46px;min-width:0;border:none;border-radius:23px;background:none;cursor:pointer;color:color-mix(in srgb, var(--muted) 55%, var(--ink));font-family:var(--sans);font-size:12.5px;font-weight:800;letter-spacing:-.01em;transition:flex .28s cubic-bezier(.4,0,.2,1), background .2s, color .15s, transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent}
+.nb span{display:none;white-space:nowrap}
+.nb svg{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.nb svg .fl{fill:currentColor;fill-opacity:0;stroke:none;transition:fill-opacity .2s}
+.nb.active{flex:2.3;background:var(--s-wash)}
+.nb.active span{display:inline}
+.nb.active svg .fl{fill-opacity:.28}
+.nb:active{transform:scale(.94)}
 .nb.tab-bounce{animation:tab-bounce .3s cubic-bezier(.34,1.56,.64,1)}
-@keyframes tab-bounce{0%{transform:scale(1)}40%{transform:scale(.75)}100%{transform:scale(1)}}
+@keyframes tab-bounce{0%{transform:scale(1)}40%{transform:scale(.88)}100%{transform:scale(1)}}
 
 /* ── BACK BUTTON ── */
 .backbtn{background:none;border:none;padding:4px 8px 4px 0;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:4px;font-family:var(--sans);font-size:14px;font-weight:500;-webkit-tap-highlight-color:transparent;transition:transform .12s, opacity .15s}
