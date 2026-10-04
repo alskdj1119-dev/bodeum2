@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useApp } from '../lib/store';
 
 // 2단계 네비게이션 재편 — 7탭(홈/수유/기저귀/수면/건강/통계/설정) → 4탭(홈/트래킹/건강/성장).
@@ -41,11 +42,45 @@ const TABS = [
 const TAB_GROUP = { report: 'tracking', feed: 'tracking', diaper: 'tracking', sleep: 'tracking', solid: 'tracking' };
 
 export default function NavBar() {
-  const { activeTab, goTab } = useApp();
+  const { activeTab, goTab, setOpenModal, setEditId, setEditType } = useApp();
   const effectiveTab = TAB_GROUP[activeTab] || activeTab;
+  // 기록 추가 "+" — 한 손으로 누르기 쉽게 하단 메뉴바 맨 왼쪽(홈 앞)에 고정. 모든 화면에서 보인다.
+  const [quickOpen, setQuickOpen] = useState(false);
+  function openQuick(modal) {
+    setQuickOpen(false);
+    setEditId(null); setEditType(null); setOpenModal(modal);
+  }
 
   return (
+    <>
+    {/* 메뉴바 뒤로 지나가는 기록들이 흐릿하게 비치도록 하단에 깔리는 반투명 블러 */}
+    <div className="bnav-bg" aria-hidden="true" />
+    {quickOpen && <div className="qfix-dim" onClick={() => setQuickOpen(false)} />}
     <nav className="bnav">
+      {quickOpen && (
+        <div className="qmenu qmenu-up">
+          <button onClick={() => openQuick('feed')}>
+            <span className="mico f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></span>
+            수유
+          </button>
+          <button onClick={() => openQuick('diaper')}>
+            <span className="mico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></span>
+            기저귀
+          </button>
+          <button onClick={() => openQuick('sleep')}>
+            <span className="mico s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+            수면
+          </button>
+          <div className="qmenu-sep" />
+          <button onClick={() => openQuick('handoffNote')}>
+            <span className="mico n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+            잘 부탁해 메모
+          </button>
+        </div>
+      )}
+      <button className={`nb-plus${quickOpen ? ' open' : ''}`} aria-label="기록 추가" onClick={() => setQuickOpen(v => !v)}>
+        <svg viewBox="0 0 24 24"><line x1="12" y1="6" x2="12" y2="18"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
+      </button>
       {TABS.map(tab => (
         <button
           key={tab.id}
@@ -59,5 +94,6 @@ export default function NavBar() {
         </button>
       ))}
     </nav>
+    </>
   );
 }

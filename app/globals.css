@@ -117,6 +117,14 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 /* ── BOTTOM NAV ── */
 /* 하단 메뉴 — 플로팅 캡슐: 화면에서 살짝 떠 있는 둥근 바. 선택한 메뉴만 글자가 펼쳐지고 나머지는 아이콘만 보인다. */
 .bnav{position:fixed;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:402px;background:var(--surf);border-radius:30px;box-shadow:var(--sh-sm);display:flex;gap:4px;padding:6px;z-index:40}
+.bnav-bg{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:calc(86px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb, var(--bg) 62%, transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 38%);mask-image:linear-gradient(to bottom,transparent 0,#000 38%);pointer-events:none;z-index:38}
+.qfix-dim{position:fixed;inset:0;z-index:39}
+.nb-plus{flex:none;width:46px;height:46px;border:none;border-radius:50%;background:var(--sage);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--sh-sm);transition:transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent}
+.nb-plus:active{transform:scale(.92)}
+.nb-plus svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;transition:transform .2s}
+.nb-plus.open svg{transform:rotate(45deg)}
+.qmenu.qmenu-up{width:152px;top:auto;right:auto;bottom:calc(100% + 10px);left:2px;transform-origin:bottom left;animation:qup .2s cubic-bezier(.2,.8,.3,1.3)}
+@keyframes qup{from{opacity:0;transform:scale(.85) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .nb{flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;height:46px;min-width:0;border:none;border-radius:23px;background:none;cursor:pointer;color:color-mix(in srgb, var(--muted) 55%, var(--ink));font-family:var(--sans);font-size:12.5px;font-weight:800;letter-spacing:-.01em;transition:flex .28s cubic-bezier(.4,0,.2,1), background .2s, color .15s, transform .12s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent}
 .nb span{display:none;white-space:nowrap}
 .nb svg{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
