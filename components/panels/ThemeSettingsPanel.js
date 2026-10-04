@@ -2,24 +2,19 @@
 import { useApp } from '../../lib/store';
 
 // 설정 > 테마 — 앱 전체 색상 팔레트를 고른다.
-// 기본: 크림 + 보라 / 포레스트: 숲색 + 민트 · 인디고 · 앰버 / 샌드: 진한 베이지 카드 + 민트.
+// 샌드(기본): 진한 베이지 카드 + 민트 / 포레스트: 숲색 + 민트 · 인디고 · 앰버.
 // 모든 팔레트가 라이트·다크를 둘 다 지원하고, 아이 성별(남/여)에 따른 강조색도 팔레트마다 따로 갖고 있다.
 // 라이트/다크는 아래 "화면 모드"가 팔레트와 별개로 정한다. 선택은 이 기기(localStorage)에만 저장된다.
 const PALETTES = [
   {
-    id: 'default', name: '기본', desc: '크림 바탕 + 보라 포인트 (지금 쓰는 테마)',
-    light: { bg: '#F7F2E9', card: '#FFFFFF', dots: ['#7660A2', '#5B8CB5', '#946D6D'] },
-    dark: { bg: '#18150F', card: '#2C271F', dots: ['#7FAF91', '#7899B8', '#C49A6B'] },
+    id: 'sand', name: '샌드', desc: '진한 베이지 카드 + 민트 포인트 (기본)',
+    light: { bg: '#F7F2E9', card: '#EBE1CE', dots: ['#4F9A7A', '#7A86D6', '#D98F3C'] },
+    dark: { bg: '#1A1612', card: '#262019', dots: ['#78B89A', '#8F9BE6', '#E8A55A'] },
   },
   {
     id: 'forest', name: '포레스트', desc: '숲색 계열 + 민트 · 인디고 · 앰버 포인트',
     light: { bg: '#F1F5F1', card: '#E3ECE5', dots: ['#4B9E7C', '#7280D6', '#D9913F'] },
     dark: { bg: '#131915', card: '#1E2621', dots: ['#8FCBAB', '#9AA6F0', '#F0B673'] },
-  },
-  {
-    id: 'sand', name: '샌드', desc: '진한 베이지 카드 + 민트 포인트',
-    light: { bg: '#F7F2E9', card: '#EBE1CE', dots: ['#4F9A7A', '#7A86D6', '#D98F3C'] },
-    dark: { bg: '#1A1612', card: '#262019', dots: ['#78B89A', '#8F9BE6', '#E8A55A'] },
   },
 ];
 

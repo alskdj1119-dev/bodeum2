@@ -28,7 +28,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ko">
+    <html lang="ko" data-palette="sand" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
