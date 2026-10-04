@@ -534,54 +534,36 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .rpt-foot{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:10.5px;opacity:.5}
 
 /* ── 테마 팔레트 (설정 > 테마) ────────────────────────────────
-   기본 팔레트는 위의 :root / 다크모드 블록 그대로이고, 아래 두 팔레트는 <html data-palette="..."> 일 때만
-   전체 색 토큰을 통째로 덮어쓴다. store.js가 팔레트 선택 시 data-theme(forest=dark, sand=light)도 같이 맞추고
-   data-gender는 제거해서(성별별 강조색 비활성) 이 블록들이 항상 마지막에 이기도록 한다.
-   그림자 토큰(--sh 등)도 반드시 같이 다시 정의할 것 — 다크모드 블록이 이미 값을 박아두기 때문. */
-:root[data-palette="forest"]{
-  --bg:#131915;--surf:#1E2621;--surf2:#27322B;--ink:#EEF3EE;--muted:#8A9A90;
-  --nm-dark:#0A0F0C;--nm-light:#27322B;--nm-blur:6px;--nm-dist:4px;
-  --cw:#8FCBAB;--ww:rgba(143,203,171,.14);
-  --sage:#5DAA88;--s-wash:rgba(93,170,136,.18);
-  --cf:#8FCBAB;--cd:#F0B673;--cs:#9AA6F0;
-  --fw:rgba(143,203,171,.15);--dw:rgba(240,182,115,.15);--sw:rgba(154,166,240,.15);
-  --cs-day:#B3BCF5;--cs-night:#7480D4;--sw-day:rgba(179,188,245,.16);--sw-night:rgba(116,128,212,.18);
-  --cd-wet:#E9C95A;--dw-wet:rgba(233,201,90,.16);
-  --cn:#E2A27A;--nw:rgba(226,162,122,.16);
-  --cv:#6FB8B0;--vw:rgba(111,184,176,.16);--cy:#E08A85;--yw:rgba(224,138,133,.16);
-  --bdr:rgba(255,255,255,.07);--btn-bdr:rgba(255,255,255,.07);
-  --sh:0 2px 8px rgba(0,0,0,.30);
-  --sh-inset:inset 0 2px 5px rgba(0,0,0,.45);
-  --sh-sm:0 3px 10px rgba(0,0,0,.35);
-  --sh-xs:0 1px 4px rgba(0,0,0,.35);
-  --up:#6FA0FF;--down:#FF7478;
-  --warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);
-}
-:root[data-palette="sand"]{
-  --bg:#F7F2E9;--surf:#EBE1CE;--surf2:#E3D7C0;--ink:#2E2A22;--muted:#8F8575;
-  --nm-dark:#D8CBB2;--nm-light:#FFFFFF;--nm-blur:4px;--nm-dist:2px;
-  --cw:#4F9A7A;--ww:rgba(79,154,122,.14);
-  --sage:#4F9A7A;--s-wash:rgba(79,154,122,.15);
-  --cf:#4F9A7A;--cd:#D98F3C;--cs:#7A86D6;
-  --fw:rgba(79,154,122,.16);--dw:rgba(217,143,60,.16);--sw:rgba(122,134,214,.16);
-  --cs-day:#8F9AE0;--cs-night:#5663B8;--sw-day:rgba(143,154,224,.16);--sw-night:rgba(86,99,184,.15);
-  --cd-wet:#C9A227;--dw-wet:rgba(201,162,39,.16);
-  --cn:#C4845A;--nw:rgba(196,132,90,.15);
-  --cv:#4A8C99;--vw:rgba(74,140,153,.12);--cy:#B5615C;--yw:rgba(181,97,92,.12);
-  --bdr:rgba(0,0,0,0);--btn-bdr:rgba(0,0,0,0);
-  --sh:var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);
-  --sh-inset:inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);
-  --sh-sm:6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);
-  --sh-xs:0 0 5px var(--nm-dark);
-  --up:#2F6FED;--down:#E5484D;
-  --warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);
-}
+   기본 팔레트는 위의 :root / 다크모드 / 성별 블록 그대로이고, forest·sand는 <html data-palette="..."> 일 때만
+   색 토큰을 통째로 덮어쓴다. 각 팔레트마다 라이트(기본 블록) · 다크(data-theme="dark" 또는 시스템이 다크일 때) ·
+   성별 강조색(boy/girl × 라이트/다크)을 모두 갖고 있다. 라이트/다크는 팔레트와 별개로 설정의 "화면 모드"가 정한다.
+   그림자 토큰(--sh 등)도 반드시 같이 다시 정의할 것 — 기본 다크모드 블록이 이미 값을 박아두기 때문.
+   특이도(specificity) 주의: 다크=(0,3,0), 성별=(0,3~4,0)이라 기본 블록의 같은 종류 규칙보다 항상 뒤에 와야 이긴다. */
+:root[data-palette="forest"]{--bg:#F1F5F1;--surf:#E3ECE5;--surf2:#D8E3DB;--ink:#1F2A24;--muted:#768A7E;--nm-dark:#C9D6CD;--nm-light:#FFFFFF;--nm-blur:4px;--nm-dist:2px;--cw:#4B9E7C;--ww:rgba(75,158,124,0.14);--sage:#3E8E6B;--s-wash:rgba(62,142,107,0.16);--cf:#4B9E7C;--cd:#D9913F;--cs:#7280D6;--fw:rgba(75,158,124,0.15);--dw:rgba(217,145,63,0.15);--sw:rgba(114,128,214,0.15);--cs-day:#8895E0;--cs-night:#5662B8;--sw-day:rgba(136,149,224,0.16);--sw-night:rgba(86,98,184,0.17);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,0.16);--cn:#C4845A;--nw:rgba(196,132,90,0.16);--cv:#4A8C99;--vw:rgba(74,140,153,0.14);--cy:#B5615C;--yw:rgba(181,97,92,0.14);--bdr:rgba(0,0,0,0);--btn-bdr:rgba(0,0,0,0);--sh:var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset:inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm:6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);--sh-xs:0 0 5px var(--nm-dark);--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);}
+:root[data-palette="forest"][data-theme="dark"]{--bg:#131915;--surf:#1E2621;--surf2:#27322B;--ink:#EEF3EE;--muted:#8A9A90;--nm-dark:#0A0F0C;--nm-light:#27322B;--nm-blur:6px;--nm-dist:4px;--cw:#8FCBAB;--ww:rgba(143,203,171,0.14);--sage:#5DAA88;--s-wash:rgba(93,170,136,0.16);--cf:#8FCBAB;--cd:#F0B673;--cs:#9AA6F0;--fw:rgba(143,203,171,0.16);--dw:rgba(240,182,115,0.16);--sw:rgba(154,166,240,0.16);--cs-day:#B3BCF5;--cs-night:#7480D4;--sw-day:rgba(179,188,245,0.16);--sw-night:rgba(116,128,212,0.17);--cd-wet:#E9C95A;--dw-wet:rgba(233,201,90,0.16);--cn:#E2A27A;--nw:rgba(226,162,122,0.16);--cv:#6FB8B0;--vw:rgba(111,184,176,0.14);--cy:#E08A85;--yw:rgba(224,138,133,0.14);--bdr:rgba(255,255,255,.07);--btn-bdr:rgba(255,255,255,.07);--sh:0 2px 8px rgba(0,0,0,.30);--sh-inset:inset 0 2px 5px rgba(0,0,0,.45);--sh-sm:0 3px 10px rgba(0,0,0,.35);--sh-xs:0 1px 4px rgba(0,0,0,.35);--up:#6FA0FF;--down:#FF7478;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}
+@media(prefers-color-scheme:dark){:root[data-palette="forest"]:not([data-theme="light"]){--bg:#131915;--surf:#1E2621;--surf2:#27322B;--ink:#EEF3EE;--muted:#8A9A90;--nm-dark:#0A0F0C;--nm-light:#27322B;--nm-blur:6px;--nm-dist:4px;--cw:#8FCBAB;--ww:rgba(143,203,171,0.14);--sage:#5DAA88;--s-wash:rgba(93,170,136,0.16);--cf:#8FCBAB;--cd:#F0B673;--cs:#9AA6F0;--fw:rgba(143,203,171,0.16);--dw:rgba(240,182,115,0.16);--sw:rgba(154,166,240,0.16);--cs-day:#B3BCF5;--cs-night:#7480D4;--sw-day:rgba(179,188,245,0.16);--sw-night:rgba(116,128,212,0.17);--cd-wet:#E9C95A;--dw-wet:rgba(233,201,90,0.16);--cn:#E2A27A;--nw:rgba(226,162,122,0.16);--cv:#6FB8B0;--vw:rgba(111,184,176,0.14);--cy:#E08A85;--yw:rgba(224,138,133,0.14);--bdr:rgba(255,255,255,.07);--btn-bdr:rgba(255,255,255,.07);--sh:0 2px 8px rgba(0,0,0,.30);--sh-inset:inset 0 2px 5px rgba(0,0,0,.45);--sh-sm:0 3px 10px rgba(0,0,0,.35);--sh-xs:0 1px 4px rgba(0,0,0,.35);--up:#6FA0FF;--down:#FF7478;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}}
+:root[data-palette="forest"][data-gender="boy"]{--sage:#3D7DD8;--s-wash:rgba(61,125,216,.13);}
+:root[data-palette="forest"][data-theme="dark"][data-gender="boy"]{--sage:#6FA8F0;--s-wash:rgba(111,168,240,.18);}
+@media(prefers-color-scheme:dark){:root[data-palette="forest"]:not([data-theme="light"])[data-gender="boy"]{--sage:#6FA8F0;--s-wash:rgba(111,168,240,.18);}}
+:root[data-palette="forest"][data-gender="girl"]{--sage:#D9678F;--s-wash:rgba(217,103,143,.13);}
+:root[data-palette="forest"][data-theme="dark"][data-gender="girl"]{--sage:#EF8FB0;--s-wash:rgba(239,143,176,.18);}
+@media(prefers-color-scheme:dark){:root[data-palette="forest"]:not([data-theme="light"])[data-gender="girl"]{--sage:#EF8FB0;--s-wash:rgba(239,143,176,.18);}}
+:root[data-palette="sand"]{--bg:#F7F2E9;--surf:#EBE1CE;--surf2:#E3D7C0;--ink:#2E2A22;--muted:#8F8575;--nm-dark:#D8CBB2;--nm-light:#FFFFFF;--nm-blur:4px;--nm-dist:2px;--cw:#4F9A7A;--ww:rgba(79,154,122,0.14);--sage:#4F9A7A;--s-wash:rgba(79,154,122,0.16);--cf:#4F9A7A;--cd:#D98F3C;--cs:#7A86D6;--fw:rgba(79,154,122,0.15);--dw:rgba(217,143,60,0.15);--sw:rgba(122,134,214,0.15);--cs-day:#8F9AE0;--cs-night:#5663B8;--sw-day:rgba(143,154,224,0.16);--sw-night:rgba(86,99,184,0.17);--cd-wet:#C9A227;--dw-wet:rgba(201,162,39,0.16);--cn:#C4845A;--nw:rgba(196,132,90,0.16);--cv:#4A8C99;--vw:rgba(74,140,153,0.14);--cy:#B5615C;--yw:rgba(181,97,92,0.14);--bdr:rgba(0,0,0,0);--btn-bdr:rgba(0,0,0,0);--sh:var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-inset:inset var(--nm-dist) var(--nm-dist) var(--nm-blur) var(--nm-dark), inset calc(var(--nm-dist) * -1) calc(var(--nm-dist) * -1) var(--nm-blur) var(--nm-light);--sh-sm:6px 6px 12px var(--nm-dark), -6px -6px 12px var(--nm-light);--sh-xs:0 0 5px var(--nm-dark);--up:#2F6FED;--down:#E5484D;--warn:#C97A1F;--warn-wash:rgba(201,122,31,.14);--alert:#E5484D;--alert-wash:rgba(229,72,77,.13);}
+:root[data-palette="sand"][data-theme="dark"]{--bg:#1A1612;--surf:#262019;--surf2:#31281F;--ink:#EFE6D8;--muted:#9A8E7C;--nm-dark:#0F0C09;--nm-light:#31281F;--nm-blur:6px;--nm-dist:4px;--cw:#78B89A;--ww:rgba(120,184,154,0.14);--sage:#6FB596;--s-wash:rgba(111,181,150,0.16);--cf:#78B89A;--cd:#E8A55A;--cs:#8F9BE6;--fw:rgba(120,184,154,0.16);--dw:rgba(232,165,90,0.16);--sw:rgba(143,155,230,0.16);--cs-day:#A9B3F0;--cs-night:#6B78CC;--sw-day:rgba(169,179,240,0.16);--sw-night:rgba(107,120,204,0.17);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,0.16);--cn:#D4A468;--nw:rgba(212,164,104,0.16);--cv:#6FA8A8;--vw:rgba(111,168,168,0.14);--cy:#D08A85;--yw:rgba(208,138,133,0.14);--bdr:rgba(255,255,255,.07);--btn-bdr:rgba(255,255,255,.07);--sh:0 2px 8px rgba(0,0,0,.30);--sh-inset:inset 0 2px 5px rgba(0,0,0,.45);--sh-sm:0 3px 10px rgba(0,0,0,.35);--sh-xs:0 1px 4px rgba(0,0,0,.35);--up:#6FA0FF;--down:#FF7478;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}
+@media(prefers-color-scheme:dark){:root[data-palette="sand"]:not([data-theme="light"]){--bg:#1A1612;--surf:#262019;--surf2:#31281F;--ink:#EFE6D8;--muted:#9A8E7C;--nm-dark:#0F0C09;--nm-light:#31281F;--nm-blur:6px;--nm-dist:4px;--cw:#78B89A;--ww:rgba(120,184,154,0.14);--sage:#6FB596;--s-wash:rgba(111,181,150,0.16);--cf:#78B89A;--cd:#E8A55A;--cs:#8F9BE6;--fw:rgba(120,184,154,0.16);--dw:rgba(232,165,90,0.16);--sw:rgba(143,155,230,0.16);--cs-day:#A9B3F0;--cs-night:#6B78CC;--sw-day:rgba(169,179,240,0.16);--sw-night:rgba(107,120,204,0.17);--cd-wet:#D9BB55;--dw-wet:rgba(217,187,85,0.16);--cn:#D4A468;--nw:rgba(212,164,104,0.16);--cv:#6FA8A8;--vw:rgba(111,168,168,0.14);--cy:#D08A85;--yw:rgba(208,138,133,0.14);--bdr:rgba(255,255,255,.07);--btn-bdr:rgba(255,255,255,.07);--sh:0 2px 8px rgba(0,0,0,.30);--sh-inset:inset 0 2px 5px rgba(0,0,0,.45);--sh-sm:0 3px 10px rgba(0,0,0,.35);--sh-xs:0 1px 4px rgba(0,0,0,.35);--up:#6FA0FF;--down:#FF7478;--warn:#E2A23D;--warn-wash:rgba(226,162,61,.16);--alert:#FF6B6F;--alert-wash:rgba(255,107,111,.14);}}
+:root[data-palette="sand"][data-gender="boy"]{--sage:#3D7DD8;--s-wash:rgba(61,125,216,.13);}
+:root[data-palette="sand"][data-theme="dark"][data-gender="boy"]{--sage:#6FA8F0;--s-wash:rgba(111,168,240,.18);}
+@media(prefers-color-scheme:dark){:root[data-palette="sand"]:not([data-theme="light"])[data-gender="boy"]{--sage:#6FA8F0;--s-wash:rgba(111,168,240,.18);}}
+:root[data-palette="sand"][data-gender="girl"]{--sage:#D9678F;--s-wash:rgba(217,103,143,.13);}
+:root[data-palette="sand"][data-theme="dark"][data-gender="girl"]{--sage:#EF8FB0;--s-wash:rgba(239,143,176,.18);}
+@media(prefers-color-scheme:dark){:root[data-palette="sand"]:not([data-theme="light"])[data-gender="girl"]{--sage:#EF8FB0;--s-wash:rgba(239,143,176,.18);}}
 
 /* ── 설정 > 테마 화면 ── */
 .thm-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surf);border:1.5px solid transparent;border-radius:var(--r);padding:12px 14px;margin-bottom:10px;box-shadow:var(--sh);cursor:pointer;font-family:var(--sans);color:var(--ink);-webkit-tap-highlight-color:transparent}
 .thm-card.on{border-color:var(--sage)}
-.thm-prev{width:64px;height:48px;border-radius:12px;flex:none;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
-.thm-prev i{position:absolute;display:block}
+.thm-prev{width:76px;height:46px;border-radius:12px;flex:none;display:flex;overflow:hidden;box-shadow:0 0 0 1px rgba(128,128,128,.28)}
+.thm-half{flex:1;position:relative}
+.thm-half i{position:absolute;display:block}
 .thm-name{font-size:14px;font-weight:800}
 .thm-desc{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
 .thm-chk{margin-left:auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);flex:none;display:flex;align-items:center;justify-content:center}

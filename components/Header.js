@@ -4,7 +4,7 @@ import { useApp } from '../lib/store';
 import { kstDate } from '../lib/helpers';
 
 export default function Header({ onBack, showBack, title, activeTab }) {
-  const { syncState, toggleTheme, theme, palette, goTab } = useApp();
+  const { syncState, toggleTheme, theme, goTab } = useApp();
   const [dateStr, setDateStr] = useState('');
   const isDark = theme === 'dark';
 
@@ -57,7 +57,6 @@ export default function Header({ onBack, showBack, title, activeTab }) {
             </svg>
           </button>
         )}
-        {palette === 'default' && (
         <button className="theme-btn" onClick={toggleTheme} title="다크모드 전환">
           {isDark ? (
             <svg viewBox="0 0 24 24">
@@ -75,7 +74,6 @@ export default function Header({ onBack, showBack, title, activeTab }) {
             <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           )}
         </button>
-        )}
         <div className={dotClass} title={syncState}></div>
         <span className="hdrdate">{dateStr}</span>
       </div>
