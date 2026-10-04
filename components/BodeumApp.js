@@ -69,6 +69,8 @@ const BACK_TARGET = {
   themeSettings: 'settings',
 };
 
+const TOP_ORDER = ['home', 'tracking', 'health', 'growth'];
+
 export default function BodeumApp() {
   const {
     familyCode, db,
@@ -133,7 +135,7 @@ export default function BodeumApp() {
       PANELS.forEach(p => {
         const el = panelRefs.current[p];
         if (el) {
-          el.classList.remove('active','animating','slide-out-right','slide-out-left','slide-in-from-left','slide-in-from-right');
+          el.classList.remove('active','animating','slide-out-right','slide-out-left','slide-in-from-left','slide-in-from-right','peer-in-right','peer-in-left','peer-out-left','peer-out-right');
           el.style.display = 'none';
         }
       });
@@ -147,7 +149,15 @@ export default function BodeumApp() {
     prevEl.classList.add('active');
     curEl.classList.remove('active');
 
-    if (dir === 'forward') {
+    // 하단 메뉴 4개(홈/트래킹/건강/성장)끼리 이동할 땐 화면 전체가 밀려 들어오는 대신,
+    // 메뉴 순서에 따라 좌우로 살짝 흐르며 겹쳐지는(크로스페이드) 가벼운 전환을 쓴다.
+    // 상세 화면으로 들어가고 나올 땐 기존처럼 오른쪽에서 밀려 들어오는 "푸시" 전환.
+    const ci = TOP_ORDER.indexOf(cur), pi = TOP_ORDER.indexOf(prev);
+    if (ci >= 0 && pi >= 0) {
+      const toRight = ci > pi;
+      curEl.classList.add(toRight ? 'peer-in-right' : 'peer-in-left');
+      prevEl.classList.add(toRight ? 'peer-out-left' : 'peer-out-right');
+    } else if (dir === 'forward') {
       curEl.classList.add('slide-in-from-right');
       prevEl.classList.add('slide-out-left');
     } else {
@@ -161,13 +171,16 @@ export default function BodeumApp() {
     curEl.classList.add('animating');
     prevEl.classList.add('animating');
 
+    // 들어오는 화면: 시작 위치 클래스(slide-in-*/peer-in-*)를 떼고 active를 붙여야 transition이 목표 위치로 움직인다.
+    // (두 클래스가 같이 있으면 CSS 우선순위상 시작 위치가 이겨서 애니메이션 없이 끝에 툭 나타났었다.)
+    curEl.classList.remove('slide-in-from-right', 'slide-in-from-left', 'peer-in-right', 'peer-in-left');
     curEl.classList.add('active');
 
     const cleanup = setTimeout(() => {
       PANELS.forEach(p => {
         const el = panelRefs.current[p];
         if (!el) return;
-        el.classList.remove('animating','slide-out-right','slide-out-left','slide-in-from-left','slide-in-from-right');
+        el.classList.remove('animating','slide-out-right','slide-out-left','slide-in-from-left','slide-in-from-right','peer-in-right','peer-in-left','peer-out-left','peer-out-right');
         if (p !== cur) {
           el.classList.remove('active');
           el.style.display = 'none';

@@ -112,7 +112,36 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .panel.slide-out-left{transform:translateX(-30%);opacity:0;pointer-events:none}
 .panel.slide-in-from-left{transform:translateX(-30%);opacity:0}
 .panel.slide-in-from-right{transform:translateX(100%);opacity:0}
-.panel.animating{transition:transform .28s cubic-bezier(.4,0,.2,1), opacity .22s ease}
+.panel.animating{transition:transform .34s cubic-bezier(.32,.72,0,1), opacity .26s ease}
+/* 하단 메뉴 간 이동 — 순서 방향으로 살짝만 흐르며 크로스페이드 */
+.panel.peer-in-right{transform:translateX(36px);opacity:0}
+.panel.peer-in-left{transform:translateX(-36px);opacity:0}
+.panel.peer-out-left{transform:translateX(-36px);opacity:0;pointer-events:none}
+.panel.peer-out-right{transform:translateX(36px);opacity:0;pointer-events:none}
+.panel.animating.peer-in-right,.panel.animating.peer-in-left,.panel.animating.peer-out-left,.panel.animating.peer-out-right{transition:transform .32s cubic-bezier(.22,1,.36,1), opacity .24s ease}
+/* 화면이 나타날 때 안쪽 카드·행이 위로 살짝 떠오르며 차례로 등장. fill-mode가 backwards라 끝난 뒤엔 transform이 남지 않는다(fixed 팝오버 보호). */
+@keyframes rise-in{from{opacity:0;transform:translateY(14px)}}
+.panel>*{animation:rise-in .46s cubic-bezier(.22,1,.36,1) backwards}
+.panel>*:nth-child(1){animation-delay:.03s}
+.panel>*:nth-child(2){animation-delay:.07s}
+.panel>*:nth-child(3){animation-delay:.11s}
+.panel>*:nth-child(4){animation-delay:.15s}
+.panel>*:nth-child(5){animation-delay:.19s}
+.panel>*:nth-child(6){animation-delay:.23s}
+.panel>*:nth-child(7){animation-delay:.27s}
+.panel>*:nth-child(n+8){animation-delay:.3s}
+/* 눌렀을 때 살짝 눌리는 느낌 */
+.settmenu{transition:opacity .15s, transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .15s}
+.settmenu:active{transform:scale(.975)}
+/* 시트 뒷배경 페이드 */
+.mbg.open{animation:mbg-in .22s ease both}
+@keyframes mbg-in{from{background:rgba(0,0,0,0)}}
+.mbg.closing{animation:mbg-out .22s ease both}
+@keyframes mbg-out{to{background:rgba(0,0,0,0)}}
+/* 원형 리포트 시계 — 부드럽게 커지며 등장 */
+.rpt-clockwrap>svg{animation:clock-in .7s cubic-bezier(.22,1,.36,1) .12s backwards;transform-origin:center}
+@keyframes clock-in{from{opacity:0;transform:scale(.9) rotate(-8deg)}}
+@media (prefers-reduced-motion:reduce){.panel>*,.mbg.open,.mbg.closing,.rpt-clockwrap>svg{animation:none!important}.panel.animating{transition-duration:.01s!important}}
 
 /* ── BOTTOM NAV ── */
 /* 하단 메뉴 — 플로팅 캡슐: 화면에서 살짝 떠 있는 둥근 바. 선택한 메뉴만 글자가 펼쳐지고 나머지는 아이콘만 보인다. */
