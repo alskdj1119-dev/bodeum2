@@ -60,6 +60,19 @@ export default function SettingsPanel() {
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
 
+      <button className="settmenu" onClick={() => goTab('themeSettings', 'forward')}>
+        <div className="settmenu-ico" style={{ background: 'var(--s-wash)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="var(--sage)" stroke="none"/>
+          </svg>
+        </div>
+        <div className="settmenu-inf">
+          <div className="settmenu-title">테마</div>
+          <div className="settmenu-sub">앱 전체 색상 · 기본 / 포레스트 / 샌드</div>
+        </div>
+        <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+
       <button className="settmenu" onClick={() => goTab('cardColorSettings', 'forward')}>
         <div className="settmenu-ico" style={{ background: 'var(--warn-wash)' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
