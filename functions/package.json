@@ -2,7 +2,7 @@
   "name": "bodeum-functions",
   "description": "보듬 알림 스케줄러 — 수유/기저귀/수면 경과를 주기적으로 확인해 푸시(FCM)를 발송",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "scripts": {
