@@ -15,11 +15,14 @@ import HandoffNoteCard from '../HandoffNoteCard';
 // 항상 같은 박자로 깜빡이도록 — 각 요소가 마운트되는 순간의 실제 시각(Date.now())을 기준으로
 // 음수 animation-delay를 계산해서 모두 같은 벽시계 위상에 맞춘다.
 const BLINK_PERIOD_MS = 1800;
-function useBlinkDelay() {
+// "직전" 수유/기저귀 카드의 경과시간 단계 색 깜빡임은 훨씬 느린 "브리딩"(숨쉬듯 천천히) — 주기 6초.
+// (타이머 배너는 기존 1.8초 그대로). globals.css의 .breath-live 주기(6s)와 반드시 같아야 위상이 맞는다.
+const BREATH_PERIOD_MS = 6000;
+function useBlinkDelay(period = BLINK_PERIOD_MS) {
   const [delay, setDelay] = useState('0ms');
   useEffect(() => {
-    setDelay(`${-(Date.now() % BLINK_PERIOD_MS)}ms`);
-  }, []);
+    setDelay(`${-(Date.now() % period)}ms`);
+  }, [period]);
   return delay;
 }
 
@@ -104,8 +107,8 @@ export default function HomePanel() {
   // 블링크 동기화용 delay — 각 대상별로 자신이 마운트된 시점 기준으로 계산됨
   const feedTimerBlinkDelay = useBlinkDelay();
   const sleepTimerBlinkDelay = useBlinkDelay();
-  const feedTierBlinkDelay = useBlinkDelay();
-  const diaperTierBlinkDelay = useBlinkDelay();
+  const feedTierBlinkDelay = useBlinkDelay(BREATH_PERIOD_MS);
+  const diaperTierBlinkDelay = useBlinkDelay(BREATH_PERIOD_MS);
 
   // "오늘 N건 기록했어요" 배너 — 평소엔 접혀 있다가 탭하면 직전 24시간 상세가 펼쳐짐
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -513,7 +516,7 @@ export default function HomePanel() {
       {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
       <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
-        <div className={`sc${feedTier ? ' blink-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : tierCardStyle(feedTier)}>
+        <div className={`sc${feedTier ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : tierCardStyle(feedTier)}>
           <div className="sr">
             <div className="slbl">수유</div>
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
@@ -521,7 +524,7 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(feedStartTime(lastFeed)) : '—'}</div>
           <div className="ssub">{lastFeed ? fmtFull(feedStartTime(lastFeed)) : '기록 없음'}</div>
         </div>
-        <div className={`sc${diaperTier ? ' blink-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : tierCardStyle(diaperTier)}>
+        <div className={`sc${diaperTier ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : tierCardStyle(diaperTier)}>
           <div className="sr">
             <div className="slbl">기저귀</div>
             <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
