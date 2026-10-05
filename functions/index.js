@@ -127,14 +127,23 @@ function isQuietTime(settings, nowMs) {
 
 // family.feeds/diapers/sleeps 배열에서 알림 판단에 필요한 값들을 뽑아낸다.
 // (기존 클라이언트의 BodeumApp.js "Notify SW on db change" 로직과 동일)
-function extractState(family) {
-  const feeds = family.feeds || [];
-  const diapers = family.diapers || [];
-  const sleeps = family.sleeps || [];
+// babyId를 주면 그 아이의 기록만 사용한다(babyId 없는 예전 기록은 첫 번째 아이 것으로 간주).
+function extractState(family, babyId) {
+  const babies = Array.isArray(family.babies) ? family.babies : [];
+  const firstId = babies[0] && babies[0].id;
+  const mine = (list) => {
+    const arr = Array.isArray(list) ? list : [];
+    if (!babyId) return arr;
+    return arr.filter((x) => (x.babyId || firstId) === babyId);
+  };
+  const feeds = mine(family.feeds);
+  const diapers = mine(family.diapers);
+  const sleeps = mine(family.sleeps);
 
+  // 수유 경과 알림은 홈 "직전" 카드와 같게 '수유 시작 시각' 기준으로 잰다.
   const endedFeeds = feeds
-    .filter((f) => f.end)
-    .sort((a, b) => (b.end || b.start || '').localeCompare(a.end || a.start || ''));
+    .filter((f) => f.end && f.start)
+    .sort((a, b) => (b.start || '').localeCompare(a.start || ''));
   const lastFeed = endedFeeds[0];
   const activeFeed = feeds.find((f) => f.start && !f.end);
 
@@ -144,7 +153,7 @@ function extractState(family) {
   const activeSleep = sleeps.find((s) => s.start && !s.end);
 
   return {
-    lastFeedTime: lastFeed ? lastFeed.end || lastFeed.start : null,
+    lastFeedTime: lastFeed ? lastFeed.start : null,
     activeFeedStart: activeFeed ? activeFeed.start : null,
     lastDiaperTime: lastDiaper ? lastDiaper.time : null,
     activeSleepStart: activeSleep ? activeSleep.start : null,
@@ -152,10 +161,12 @@ function extractState(family) {
 }
 
 // 판단된 알림들을 계산한다. 반환값: [{ key, title, body }]
-function decideNotifications(family, state, nowMs) {
+// prevState: 이 아이(또는 단일 아이 가족)의 이전 알림 상태, babyName: 알림 문구에 쓸 이름
+function decideNotifications(family, state, nowMs, prevState, babyName, tagSuffix) {
   const settings = { ...DEFAULT_SETTINGS, ...(family.notifSettings || {}) };
-  const notifState = family.notifState || {};
-  const name = getFirstName(family.babyName);
+  const notifState = prevState || {};
+  const name = getFirstName(babyName);
+  const sfx = tagSuffix || '';
   const out = [];
   const nextState = {};
 
@@ -180,6 +191,7 @@ function decideNotifications(family, state, nowMs) {
       if (dueForRepeat && repeatCount < HUNGER_MAX_REPEATS) {
         out.push({
           key: 'hunger',
+          tag: 'hunger' + sfx,
           title: '보듬 🌿',
           body: pick(HUNGER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
@@ -199,6 +211,7 @@ function decideNotifications(family, state, nowMs) {
       if (!alreadySent) {
         out.push({
           key: 'feedTimer',
+          tag: 'feedTimer' + sfx,
           title: '보듬 🌿',
           body: pick(FEED_TIMER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
@@ -218,6 +231,7 @@ function decideNotifications(family, state, nowMs) {
       if (!alreadySent) {
         out.push({
           key: 'sleepTimer',
+          tag: 'sleepTimer' + sfx,
           title: '보듬 🌿',
           body: pick(SLEEP_TIMER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
@@ -237,6 +251,7 @@ function decideNotifications(family, state, nowMs) {
       if (!alreadySent) {
         out.push({
           key: 'diaper',
+          tag: 'diaper' + sfx,
           title: '보듬 🌿',
           body: pick(DIAPER_MESSAGES)(addGa(name), name, elapsedLabel(elapsed)),
         });
@@ -255,8 +270,27 @@ async function sendToFamily(docSnap) {
   const tokens = family.fcmTokens || [];
 
   const nowMs = Date.now();
-  const state = extractState(family);
-  const { toSend, nextState } = decideNotifications(family, state, nowMs);
+  // 아이가 2명 이상이면 아이별로 따로 계산(문구에 그 아이 이름, 알림 상태도 아이별로 저장).
+  // 0~1명이면 예전과 같이 가족 전체 기록 기준.
+  const babies = Array.isArray(family.babies) ? family.babies : [];
+  const toSend = [];
+  let nextState;
+  if (babies.length >= 2) {
+    const prevAll = family.notifState || {};
+    const prevPer = prevAll.perBaby || {};
+    const nextPer = {};
+    for (const b of babies) {
+      const r = decideNotifications(family, extractState(family, b.id), nowMs, prevPer[b.id], b.name, '_' + b.id);
+      toSend.push(...r.toSend);
+      nextPer[b.id] = r.nextState;
+    }
+    nextState = { ...prevAll, perBaby: nextPer };
+  } else {
+    const nm = (babies[0] && babies[0].name) || family.babyName;
+    const r = decideNotifications(family, extractState(family), nowMs, family.notifState, nm, '');
+    toSend.push(...r.toSend);
+    nextState = r.nextState;
+  }
 
   // "잘 부탁해 메모" 다시보기 예약 시간이 지난 게 있으면 다시 대기중 상태로 돌리고
   // (앱을 안 열어도 알 수 있게) 리마인더 푸시를 보낸다. 이 체크는 tokens가 비어 있어도
@@ -281,7 +315,7 @@ async function sendToFamily(docSnap) {
     for (const notif of toSend) {
       const res = await messaging.sendEachForMulticast({
         tokens,
-        data: { title: notif.title, body: notif.body, tag: notif.key },
+        data: { title: notif.title, body: notif.body, tag: notif.tag || notif.key },
         webpush: { headers: { Urgency: 'high' } },
       });
       res.responses.forEach((r, i) => {

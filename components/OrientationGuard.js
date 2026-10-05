@@ -9,7 +9,7 @@ import { timerStr } from '../lib/helpers';
 //   (안드로이드 등 screen.orientation.lock을 지원하는 환경에서는 세로 고정도 함께 시도)
 // - 수유/수면 타이머가 진행 중이면, 안내 문구 대신 그 타이머를 화면 꽉 채워서 크게 보여준다.
 export default function OrientationGuard() {
-  const { db, feedTimerMs, sleepTimerMs } = useApp();
+  const { db, feedTimerMs, sleepTimerMs, filterByActiveBaby } = useApp();
   const [isLandscape, setIsLandscape] = useState(false);
 
   useEffect(() => {
@@ -44,8 +44,8 @@ export default function OrientationGuard() {
 
   if (!isLandscape) return null;
 
-  const activeFeed = db.feeds.find(f => f.start && !f.end);
-  const activeSleep = db.sleeps.find(s => s.start && !s.end);
+  const activeFeed = filterByActiveBaby(db.feeds).find(f => f.start && !f.end);
+  const activeSleep = filterByActiveBaby(db.sleeps).find(s => s.start && !s.end);
 
   if (activeFeed) {
     return (

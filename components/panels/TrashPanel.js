@@ -73,9 +73,10 @@ function itemSummary(item) {
 }
 
 export default function TrashPanel() {
-  const { db, dispatch, saveDB, showToast } = useApp();
+  const { db, dispatch, saveDB, showToast, filterByActiveBaby } = useApp();
   useNowTick(); // 목록의 "OO분 전" 경과시간이 시간이 지나도 갱신되도록
-  const trash = db.trash || [];
+  // 지금 보고 있는 아이의 삭제 기록만 보여준다(다른 아이 것은 건드리지 않음)
+  const trash = filterByActiveBaby(db.trash || []);
 
   const sorted = [...trash].sort((a, b) => new Date(b._deletedAt) - new Date(a._deletedAt));
 
@@ -99,7 +100,7 @@ export default function TrashPanel() {
     if (!window.confirm('이 기록을 복원하시겠어요?')) return;
 
     const { _deletedAt, _type, ...original } = trashItem;
-    const newTrash = trash.filter(x => !(x.id === trashItem.id && x._type === _type && x._deletedAt === _deletedAt));
+    const newTrash = (db.trash || []).filter(x => !(x.id === trashItem.id && x._type === _type && x._deletedAt === _deletedAt));
     const collection = db[_type] || [];
     const restored = [original, ...collection];
     const newDB = { ...db, [_type]: restored, trash: newTrash };
@@ -127,8 +128,10 @@ export default function TrashPanel() {
 
   async function clearAll() {
     if (!window.confirm('삭제 기록을 모두 비울까요?\n복원할 수 없어요.')) return;
-    const newDB = { ...db, trash: [] };
-    dispatch({ type: 'SET_TRASH', payload: [] });
+    const mineIds = new Set(trash);
+    const rest = (db.trash || []).filter(x => !mineIds.has(x));
+    const newDB = { ...db, trash: rest };
+    dispatch({ type: 'SET_TRASH', payload: rest });
     await saveDB(newDB);
     showToast('삭제 기록을 비웠어요');
   }
