@@ -197,6 +197,7 @@ input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:tex
 .dtp-btn .dtp-placeholder{color:var(--muted)}
 .dtp-btn svg{flex-shrink:0;color:var(--muted)}
 .dtp-pop{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:50;background:var(--surf);border-radius:var(--r);box-shadow:var(--sh);padding:14px;font-family:var(--sans) !important}
+.panel .dtp-pop{scroll-margin-bottom:112px}
 .dtp-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .dtp-cal-title{font-family:var(--sans) !important;font-size:14px;font-weight:700;color:var(--ink)}
 .dtp-cal-nav{display:flex;gap:4px}

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
-import { nowISO, toLocal, fromLocal, DIAPER_COLOR_LABEL, DIAPER_CONSISTENCY_LABEL } from '../../lib/helpers';
+import { nowISO, toLocal, fromLocal, DIAPER_COLOR_LABEL, DIAPER_CONSISTENCY_LABEL, authorFromRole } from '../../lib/helpers';
 
 const DTYPE_OPTIONS = [
   { code: 'wet',    label: '소변' },
@@ -22,20 +22,15 @@ const RASH_OPTIONS = [
   { code: '',    label: '없음' },
   { code: 'yes', label: '발진 있음' },
 ];
-const AUTHOR_OPTIONS = [
-  { code: '', label: '—' },
-  { code: 'mom', label: '엄마' },
-  { code: 'dad', label: '아빠' },
-  { code: 'other', label: '기타' },
-];
 
 export default function DiaperModal() {
   const {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid, activeBabyId,
+    uid, activeBabyId, myRole,
   } = useApp();
+  const autoAuthor = authorFromRole(myRole);
 
   const isEdit = !!editId;
   const existing = isEdit ? db.diapers.find(d => d.id === editId) : null;
@@ -46,7 +41,7 @@ export default function DiaperModal() {
   const [consistency, setConsistency] = useState('');
   const [rash, setRash] = useState('');
   const [note, setNote] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState(autoAuthor);
 
   useEffect(() => {
     if (existing) {
@@ -64,7 +59,7 @@ export default function DiaperModal() {
       setConsistency('');
       setRash('');
       setNote('');
-      setAuthor('');
+      setAuthor(autoAuthor);
     }
   }, [editId]);
 
@@ -158,16 +153,6 @@ export default function DiaperModal() {
               {RASH_OPTIONS.map(opt => (
                 <button key={opt.code || 'none'} className={`sbtn${rash === opt.code ? ' on' : ''}`}
                   onClick={() => setRash(opt.code)}>{opt.label}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="fld">
-            <div className="flbl">기록자</div>
-            <div className="seg">
-              {AUTHOR_OPTIONS.map(opt => (
-                <button key={opt.code || 'none'} className={`sbtn${author === opt.code ? ' on' : ''}`}
-                  onClick={() => setAuthor(opt.code)}>{opt.label}</button>
               ))}
             </div>
           </div>

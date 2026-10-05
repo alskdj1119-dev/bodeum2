@@ -269,7 +269,8 @@ export default function HealthPanel() {
                   background: 'var(--surf)',
                   borderRadius: 12,
                   marginBottom: 8,
-                  overflow: 'hidden',
+                  // overflow:hidden을 두면 "접종 완료일자" 달력 팝업이 카드 아래쪽에서 잘린다 → 두지 않고,
+                  // 둥근 모서리가 필요한 하단 버튼 줄에만 따로 둥글게 처리한다.
                   opacity: (status === 'before' && isPastPeriod) ? 0.5 : 1,
                   boxShadow: 'var(--sh-sm)',
                 }}>
@@ -288,7 +289,7 @@ export default function HealthPanel() {
                       {statusOpt.label}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', borderTop: '1px solid var(--bdr)' }}>
+                  <div style={{ display: 'flex', borderTop: '1px solid var(--bdr)', overflow: 'hidden', borderRadius: status === 'done' ? 0 : '0 0 12px 12px' }}>
                     {STATUS_OPTS.map((opt, oi) => (
                       <button key={opt.code} onClick={() => setVaccine(v.code, opt.code)} style={{
                         flex: 1, padding: '7px 0', fontSize: 11,

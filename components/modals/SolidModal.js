@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
-import { nowISO, toLocal, fromLocal, SOLID_REACTION_LABEL } from '../../lib/helpers';
+import { nowISO, toLocal, fromLocal, SOLID_REACTION_LABEL, authorFromRole } from '../../lib/helpers';
 
 const REACTION_OPTIONS = [
   { code: '',        label: '미기록' },
@@ -12,20 +12,15 @@ const REACTION_OPTIONS = [
   { code: 'refused',  label: SOLID_REACTION_LABEL.refused },
   { code: 'allergy',  label: SOLID_REACTION_LABEL.allergy },
 ];
-const AUTHOR_OPTIONS = [
-  { code: '', label: '—' },
-  { code: 'mom', label: '엄마' },
-  { code: 'dad', label: '아빠' },
-  { code: 'other', label: '기타' },
-];
 
 export default function SolidModal() {
   const {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid, activeBabyId,
+    uid, activeBabyId, myRole,
   } = useApp();
+  const autoAuthor = authorFromRole(myRole);
 
   const isEdit = !!editId;
   const existing = isEdit ? (db.solids || []).find(s => s.id === editId) : null;
@@ -35,7 +30,7 @@ export default function SolidModal() {
   const [amount, setAmount] = useState('');
   const [reaction, setReaction] = useState('');
   const [note, setNote] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState(autoAuthor);
 
   useEffect(() => {
     if (existing) {
@@ -51,7 +46,7 @@ export default function SolidModal() {
       setAmount('');
       setReaction('');
       setNote('');
-      setAuthor('');
+      setAuthor(autoAuthor);
     }
   }, [editId]);
 
@@ -118,16 +113,6 @@ export default function SolidModal() {
               {REACTION_OPTIONS.map(opt => (
                 <button key={opt.code || 'none'} className={`sbtn${reaction === opt.code ? ' on' : ''}`}
                   onClick={() => setReaction(opt.code)}>{opt.label}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="fld">
-            <div className="flbl">기록자</div>
-            <div className="seg">
-              {AUTHOR_OPTIONS.map(opt => (
-                <button key={opt.code || 'none'} className={`sbtn${author === opt.code ? ' on' : ''}`}
-                  onClick={() => setAuthor(opt.code)}>{opt.label}</button>
               ))}
             </div>
           </div>

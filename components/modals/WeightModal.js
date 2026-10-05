@@ -52,40 +52,35 @@ export default function WeightModal() {
   const existing = isEdit ? db.weights.find(w => w.id === editId) : null;
 
   // 5 independent digit dials: d0=tens, d1=units, d2-d4=decimal 3 places
-  const [d0, setD0] = useState(0); // 0-3
-  const [d1, setD1] = useState(3); // 0-9
-  const [d2, setD2] = useState(5); // 0-9
-  const [d3, setD3] = useState(0); // 0-9
-  const [d4, setD4] = useState(0); // 0-9
-  const [time, setTime] = useState(() => nowISO());
-
-  useEffect(() => {
+  // 초기값은 "첫 렌더"부터 정확히 계산해서 넣는다. (마운트 뒤 effect로 setState하면, 다이얼이 마운트 때
+  // 기본값 위치로 스크롤하며 쏘는 scroll 이벤트가 새로 세팅한 값을 도로 덮어써서 일부 자리만 맞춰지는 문제가 있었다.)
+  //  - 수정: 그 기록의 체중
+  //  - 새 기록: 직전(가장 최근) 체중 — 처음부터 숫자를 하나씩 돌려 맞추지 않아도 되도록. 기록이 없으면 3.500kg.
+  const [init] = useState(() => {
+    let kgVal = 3.5;
     if (existing) {
-      const kg = parseFloat(existing.kg) || 3.5;
-      setD0(Math.floor(kg / 10));
-      setD1(Math.floor(kg) % 10);
-      const dec = Math.round((kg - Math.floor(kg)) * 1000);
-      setD2(Math.floor(dec / 100));
-      setD3(Math.floor((dec % 100) / 10));
-      setD4(dec % 10);
-      setTime(existing.time ? toLocal(existing.time) : nowISO());
+      kgVal = parseFloat(existing.kg) || 3.5;
     } else {
-      // 새 기록: 직전(가장 최근) 체중으로 다이얼을 미리 맞춰둔다 — 처음부터 숫자를 하나씩
-      // 돌려 맞추지 않아도 되고, 몸무게는 보통 직전 값과 크게 다르지 않기 때문.
-      // 직전 기록이 없을 때만 예전 기본값(3.500kg)을 쓴다.
       const mine = (filterByActiveBaby ? filterByActiveBaby(db.weights || []) : (db.weights || []))
         .filter(w => w && w.time && parseFloat(w.kg) > 0);
-      const last = mine.sort((a, b) => new Date(b.time) - new Date(a.time))[0];
-      const lastKg = last ? parseFloat(last.kg) : 3.5;
-      const grams = Math.min(39999, Math.max(0, Math.round(lastKg * 1000)));
-      setD0(Math.floor(grams / 10000));
-      setD1(Math.floor(grams / 1000) % 10);
-      setD2(Math.floor(grams / 100) % 10);
-      setD3(Math.floor(grams / 10) % 10);
-      setD4(grams % 10);
-      setTime(nowISO());
+      const last = [...mine].sort((a, b) => new Date(b.time) - new Date(a.time))[0];
+      if (last) kgVal = parseFloat(last.kg);
     }
-  }, [editId]);
+    const grams = Math.min(39999, Math.max(0, Math.round(kgVal * 1000)));
+    return {
+      d0: Math.floor(grams / 10000),
+      d1: Math.floor(grams / 1000) % 10,
+      d2: Math.floor(grams / 100) % 10,
+      d3: Math.floor(grams / 10) % 10,
+      d4: grams % 10,
+    };
+  });
+  const [d0, setD0] = useState(init.d0); // 0-3
+  const [d1, setD1] = useState(init.d1); // 0-9
+  const [d2, setD2] = useState(init.d2); // 0-9
+  const [d3, setD3] = useState(init.d3); // 0-9
+  const [d4, setD4] = useState(init.d4); // 0-9
+  const [time, setTime] = useState(() => (existing && existing.time ? toLocal(existing.time) : nowISO()));
 
   const kg = (d0 * 10 + d1 + d2 / 10 + d3 / 100 + d4 / 1000).toFixed(3);
 

@@ -3,18 +3,12 @@ import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
-import { nowISO, toLocal, fromLocal } from '../../lib/helpers';
+import { nowISO, toLocal, fromLocal, authorFromRole } from '../../lib/helpers';
 
 const PLACE_OPTIONS = [
   { code: 'crib',    label: '침대' },
   { code: 'arms',    label: '품' },
   { code: 'cushion', label: '원형쿠션' },
-];
-const AUTHOR_OPTIONS = [
-  { code: '', label: '—' },
-  { code: 'mom', label: '엄마' },
-  { code: 'dad', label: '아빠' },
-  { code: 'other', label: '기타' },
 ];
 
 export default function SleepModal() {
@@ -22,8 +16,9 @@ export default function SleepModal() {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid, activeBabyId,
+    uid, activeBabyId, myRole,
   } = useApp();
+  const autoAuthor = authorFromRole(myRole);
 
   const isEdit = !!editId;
   const existing = isEdit ? db.sleeps.find(s => s.id === editId) : null;
@@ -32,7 +27,7 @@ export default function SleepModal() {
   const [end, setEnd] = useState('');
   const [place, setPlace] = useState('crib');
   const [note, setNote] = useState('');
-  const [author, setAuthor] = useState('');
+  const [author, setAuthor] = useState(autoAuthor);
 
   useEffect(() => {
     if (existing) {
@@ -46,7 +41,7 @@ export default function SleepModal() {
       setEnd('');
       setPlace('crib');
       setNote('');
-      setAuthor('');
+      setAuthor(autoAuthor);
     }
   }, [editId]);
 
@@ -133,16 +128,6 @@ export default function SleepModal() {
               {PLACE_OPTIONS.map(opt => (
                 <button key={opt.code} className={`sbtn${place === opt.code ? ' on' : ''}`}
                   onClick={() => setPlace(opt.code)}>{opt.label}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="fld">
-            <div className="flbl">기록자</div>
-            <div className="seg">
-              {AUTHOR_OPTIONS.map(opt => (
-                <button key={opt.code || 'none'} className={`sbtn${author === opt.code ? ' on' : ''}`}
-                  onClick={() => setAuthor(opt.code)}>{opt.label}</button>
               ))}
             </div>
           </div>

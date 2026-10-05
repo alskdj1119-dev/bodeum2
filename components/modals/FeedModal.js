@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
-import { toLocal, fromLocal, directFeedMlFromMs } from '../../lib/helpers';
+import { toLocal, fromLocal, directFeedMlFromMs, authorFromRole } from '../../lib/helpers';
 
 // Color scheme per feed type
 const FEED_COLOR = {
@@ -12,20 +12,15 @@ const FEED_COLOR = {
   bottle:         { main: 'var(--cd)', bg: 'var(--dw)' },  // warm   — 분유
 };
 
-const AUTHOR_OPTIONS = [
-  { code: '', label: '—' },
-  { code: 'mom', label: '엄마' },
-  { code: 'dad', label: '아빠' },
-  { code: 'other', label: '기타' },
-];
 
 export default function FeedModal() {
   const {
     db, dispatch, saveDB, showToast,
     setOpenModal,
     editId, setEditId, setEditType,
-    uid, activeBabyId,
+    uid, activeBabyId, myRole,
   } = useApp();
+  const autoAuthor = authorFromRole(myRole);
 
   const isEdit = !!editId;
   const existing = isEdit ? db.feeds.find(f => f.id === editId) : null;
@@ -36,7 +31,7 @@ export default function FeedModal() {
   const [amount, setAmount] = useState('');
   const [consumedAmount, setConsumedAmount] = useState('');
   const [note, setNote] = useState('');
-  const [author, setAuthor] = useState('mom');
+  const [author, setAuthor] = useState(autoAuthor);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   // 직수(직접 수유) 수정 화면에서 왼쪽/오른쪽 각각의 시작·종료 시간을 따로 확인/수정하기 위한 상태.
@@ -83,7 +78,7 @@ export default function FeedModal() {
       setAmount('');
       setConsumedAmount('');
       setNote('');
-      setAuthor('mom');
+      setAuthor(autoAuthor);
       setStart('');
       setEnd('');
       setLeftStart(''); setLeftEnd(''); setRightStart(''); setRightEnd('');
@@ -263,25 +258,6 @@ export default function FeedModal() {
               <div className="flbl">섭취량 (ml)</div>
               <input className="finp" type="number" value={consumedAmount}
                 onChange={e => setConsumedAmount(e.target.value)} placeholder="예: 100" />
-            </div>
-          )}
-
-          {/* Author — 직수 새 기록: 엄마 고정 표시, 그 외: 선택 가능 */}
-          {isDirectBreast && !isEdit ? (
-            <div className="fld">
-              <div className="flbl">기록자</div>
-              <div style={{ padding:'8px 0', fontSize:'14px', color:'var(--ink)', fontWeight:500 }}>엄마 (고정)</div>
-            </div>
-          ) : (
-            <div className="fld">
-              <div className="flbl">기록자</div>
-              <div className="seg">
-                {AUTHOR_OPTIONS.map(opt => (
-                  <button key={opt.code || 'none'} className={`sbtn${author === opt.code ? ' on' : ''}`}
-                    style={author === opt.code ? { background: fc.main, borderColor: fc.main } : {}}
-                    onClick={() => setAuthor(opt.code)}>{opt.label}</button>
-                ))}
-              </div>
             </div>
           )}
 
