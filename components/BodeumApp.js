@@ -15,7 +15,7 @@ import FeedSettingsPanel from './panels/FeedSettingsPanel';
 import CardColorSettingsPanel from './panels/CardColorSettingsPanel';
 import RecalcFeedsPanel from './panels/RecalcFeedsPanel';
 import FamilyCodePanel from './panels/FamilyCodePanel';
-import MyRoleSettingsPanel from './panels/MyRoleSettingsPanel';
+import OnboardingGate from './OnboardingGate';
 import NotifSettingsPanel from './panels/NotifSettingsPanel';
 import ChangelogPanel from './panels/ChangelogPanel';
 import RequestsPanel from './panels/RequestsPanel';
@@ -50,8 +50,8 @@ import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
 import { activeFeedElapsedMs, activeSleepElapsedMs } from '../lib/helpers';
 
-const PANELS = ['home', 'tracking', 'report', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'myRoleSettings', 'themeSettings'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'report', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'myRoleSettings', 'themeSettings'];
+const PANELS = ['home', 'tracking', 'report', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'themeSettings'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'report', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'themeSettings'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
@@ -65,7 +65,6 @@ const BACK_TARGET = {
   export: 'settings',
   recalcFeeds: 'feedSettings',
   notifHistory: 'home',
-  myRoleSettings: 'settings',
   themeSettings: 'settings',
 };
 
@@ -77,6 +76,7 @@ export default function BodeumApp() {
     setSleepTimerMs,
     openModal,
     filterByActiveBaby, activeBabyId,
+    babies, myRole, roleLoaded, syncReady,
   } = useApp();
 
   const panelRefs = useRef({});
@@ -229,6 +229,12 @@ export default function BodeumApp() {
 
   if (!familyCode) return <SetupScreen />;
 
+  // 처음 설정 — 서버 데이터와 로컬 역할을 모두 읽어온 뒤에도 아이가 없거나 역할이 없으면 필수 입력 화면을 띄운다.
+  const gateReady = roleLoaded && syncReady;
+  const needsBaby = gateReady && babies.length === 0;
+  const needsRole = gateReady && !myRole;
+  const showGate = needsBaby || needsRole;
+
   return (
     <div className="app-root" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <Header showBack={showBack} onBack={handleBack} activeTab={activeTab} />
@@ -249,7 +255,6 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('cardColorSettings')}><CardColorSettingsPanel /></div>
         <div className="panel" ref={panelRef('export')}><ExportPanel /></div>
         <div className="panel" ref={panelRef('familyCode')}><FamilyCodePanel /></div>
-        <div className="panel" ref={panelRef('myRoleSettings')}><MyRoleSettingsPanel /></div>
         <div className="panel" ref={panelRef('themeSettings')}><ThemeSettingsPanel /></div>
         <div className="panel" ref={panelRef('notifSettings')}><NotifSettingsPanel /></div>
         <div className="panel" ref={panelRef('changelog')}><ChangelogPanel /></div>
@@ -281,6 +286,7 @@ export default function BodeumApp() {
       {openModal === 'activeTimerEdit' && <ActiveTimerEditModal />}
       {openModal === 'handoffNote' && <HandoffNoteModal />}
 
+      {showGate && <OnboardingGate needsBaby={needsBaby} needsRole={needsRole} />}
       <Toast />
 
       <OrientationGuard />

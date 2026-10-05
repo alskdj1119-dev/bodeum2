@@ -48,6 +48,8 @@ export default function SleepModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    // 내 역할을 고르지 않았으면 새 기록을 저장하지 않는다 (수정은 허용).
+    if (!isEdit && !myRole) { showToast('설정 > 아이 정보에서 내 역할을 먼저 선택해주세요'); return; }
     if (!start) { showToast('시작 시간을 입력해주세요'); return; }
     // 종료 시간이 시작 시간보다 빠르면(=시작이 미래) 저장하지 않고 경고
     // ("YYYY-MM-DDTHH:mm" 형식이라 문자열 비교로 시간 순서 비교가 가능함)

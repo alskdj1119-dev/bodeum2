@@ -66,6 +66,8 @@ export default function DiaperModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    // 내 역할을 고르지 않았으면 새 기록을 저장하지 않는다 (수정은 허용).
+    if (!isEdit && !myRole) { showToast('설정 > 아이 정보에서 내 역할을 먼저 선택해주세요'); return; }
     if (!time) { showToast('시간을 입력해주세요'); return; }
     const newDiapers = [...db.diapers];
     if (isEdit) {

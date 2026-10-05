@@ -14,7 +14,7 @@ export default function HandoffNoteModal() {
 
   function goSetMyRole() {
     close();
-    goTab('myRoleSettings', 'forward');
+    goTab('babyInfo', 'forward');
   }
 
   async function send() {

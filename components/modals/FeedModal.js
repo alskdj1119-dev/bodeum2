@@ -99,6 +99,8 @@ export default function FeedModal() {
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
   async function save() {
+    // 내 역할을 고르지 않았으면 새 기록을 저장하지 않는다 (수정은 허용).
+    if (!isEdit && !myRole) { showToast('설정 > 아이 정보에서 내 역할을 먼저 선택해주세요'); return; }
     // 준비량(수유량)은 직수를 제외하고 필수값
     if (!isDirectBreast && !amount) {
       showToast('준비량(ml)을 입력해주세요');

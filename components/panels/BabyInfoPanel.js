@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
+import RolePicker from '../RolePicker';
 
 const GENDER_OPTS = [
   { code: '',     label: '미설정' },
@@ -12,7 +13,7 @@ const GENDER_OPTS = [
 const emptyForm = { id: null, name: '', prenatal: '', birthDate: '', birthTime: '', birthWeight: '', gender: '' };
 
 export default function BabyInfoPanel() {
-  const { baby, babies, activeBabyId, saveBaby, switchBaby, deleteBaby, showToast } = useApp();
+  const { baby, babies, activeBabyId, saveBaby, switchBaby, deleteBaby, showToast, myRole, saveMyRole } = useApp();
 
   const [form, setForm] = useState(emptyForm);
   // 사용자가 폼을 직접 수정했으면(다른 아이 편집 중이면) 활성 아이 변경에 폼을 덮어쓰지 않음
@@ -75,6 +76,13 @@ export default function BabyInfoPanel() {
       <div className="loghdr">
         <span className="logtitle">아이 정보</span>
       </div>
+
+      {/* 내 역할 — 이 기기를 쓰는 사람. 기록할 때 기록자로 자동 저장되고, "잘 부탁해 메모"를 주고받을 때도 쓰인다. */}
+      <p className="seclbl" style={{ marginBottom: 8 }}>내 역할</p>
+      <RolePicker value={myRole} onChange={(r) => { saveMyRole(r); showToast('내 역할을 바꿨어요'); }} />
+      <p style={{ fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.55, margin: '10px 2px 22px' }}>
+        이 기기를 쓰는 사람의 역할이에요. 기록할 때 기록자로 자동 저장되고, "잘 부탁해 메모"도 이 역할로 주고받아요.
+      </p>
 
       {babies.length > 0 && (
         <>
