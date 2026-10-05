@@ -16,8 +16,8 @@ import HandoffNoteCard from '../HandoffNoteCard';
 // 음수 animation-delay를 계산해서 모두 같은 벽시계 위상에 맞춘다.
 const BLINK_PERIOD_MS = 1800;
 // "직전" 수유/기저귀 카드의 경과시간 단계 색 깜빡임은 훨씬 느린 "브리딩"(숨쉬듯 천천히) — 주기 6초.
-// (타이머 배너는 기존 1.8초 그대로). globals.css의 .breath-live 주기(6s)와 반드시 같아야 위상이 맞는다.
-const BREATH_PERIOD_MS = 6000;
+// (타이머 배너는 기존 1.8초 그대로). globals.css의 .breath-live 주기(4.5s)와 반드시 같아야 위상이 맞는다.
+const BREATH_PERIOD_MS = 4500;
 function useBlinkDelay(period = BLINK_PERIOD_MS) {
   const [delay, setDelay] = useState('0ms');
   useEffect(() => {
