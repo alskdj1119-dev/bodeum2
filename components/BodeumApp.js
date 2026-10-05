@@ -29,6 +29,7 @@ import ThemeSettingsPanel from './panels/ThemeSettingsPanel';
 import GrowthPanel from './panels/GrowthPanel';
 import SolidPanel from './panels/SolidPanel';
 import ExportPanel from './panels/ExportPanel';
+import LegalPanel from './panels/LegalPanel';
 import FeedModal from './modals/FeedModal';
 import FeedSideChoiceModal from './modals/FeedSideChoiceModal';
 import SupplementPromptModal from './modals/SupplementPromptModal';
@@ -50,8 +51,8 @@ import ToothDetailModal from './modals/ToothDetailModal';
 import OrientationGuard from './OrientationGuard';
 import { activeFeedElapsedMs, activeSleepElapsedMs } from '../lib/helpers';
 
-const PANELS = ['home', 'tracking', 'report', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'themeSettings'];
-const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'report', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'themeSettings'];
+const PANELS = ['home', 'tracking', 'report', 'feed', 'diaper', 'sleep', 'solid', 'health', 'growth', 'stats', 'settings', 'changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'export', 'themeSettings', 'privacy', 'terms'];
+const SUB_PANELS = ['changelog', 'requests', 'trash', 'notifHistory', 'babyInfo', 'notifSettings', 'familyCode', 'feedSettings', 'recalcFeeds', 'cardColorSettings', 'report', 'feed', 'diaper', 'sleep', 'solid', 'stats', 'settings', 'export', 'themeSettings', 'privacy', 'terms'];
 // 각 서브 패널에서 뒤로가기(버튼/스와이프) 시 돌아갈 곳.
 // notifHistory는 홈 화면 종 모양 아이콘으로 들어오므로 홈으로, 나머지 설정 하위 화면은 설정으로 돌아간다.
 const BACK_TARGET = {
@@ -66,6 +67,7 @@ const BACK_TARGET = {
   recalcFeeds: 'feedSettings',
   notifHistory: 'home',
   themeSettings: 'settings',
+  privacy: 'settings', terms: 'settings',
 };
 
 export default function BodeumApp() {
@@ -261,6 +263,8 @@ export default function BodeumApp() {
         <div className="panel" ref={panelRef('requests')}><RequestsPanel /></div>
         <div className="panel" ref={panelRef('stats')}><StatsPanel /></div>
         <div className="panel" ref={panelRef('health')}><HealthPanel /></div>
+        <div className="panel" ref={panelRef('privacy')}><LegalPanel kind="privacy" /></div>
+        <div className="panel" ref={panelRef('terms')}><LegalPanel kind="terms" /></div>
         <div className="panel" ref={panelRef('trash')}><TrashPanel /></div>
         <div className="panel" ref={panelRef('notifHistory')}><NotifHistoryPanel /></div>
       </div>
