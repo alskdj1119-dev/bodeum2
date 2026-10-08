@@ -557,19 +557,19 @@ export default function HomePanel() {
         </div>
         <div className="sumdiv" style={{ marginBottom: 8 }}></div>
         <div style={{ display:'flex', alignItems:'stretch', gap: 8 }}>
-          <div className="sc" onClick={() => openEditFeed(lastFeed)} style={{ flex: 1, padding: '8px 8px 6px', background: 'var(--fw)' }}>
+          <div className={`sc${feedTier ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ flex: 1, padding: '8px 8px 6px', background: 'var(--fw)', ...(feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : {}) }}>
             <div className="sr" style={{ marginBottom: 2 }}>
               <div className="slbl">수유</div>
-              <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+              <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
             </div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
+            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip', ...(tierValStyle(feedTier) || {}) }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
             {lastFeed && nextFeedLabel && (
-              <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip', marginTop: 2, color:'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
+              <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip', marginTop: 2, color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
             )}
           </div>
-          <div className="sc" onClick={() => openEditDiaper(lastDiaper)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', background: 'var(--dw)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
-            <div className="slbl">기저귀</div>
+          <div className={`sc${diaperTier ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', background: 'var(--dw)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, ...(diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : {}) }}>
+            <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
+            <div className="slbl" style={diaperTier ? { color: ELAPSED_TIER_STYLE[diaperTier].border } : undefined}>기저귀</div>
           </div>
           <div className="sc" onClick={() => openEditSleep(lastSleep)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', background: 'var(--sw)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
