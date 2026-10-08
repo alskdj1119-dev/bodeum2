@@ -1,18 +1,52 @@
 rules_version = '2';
+
+// 보듬(bodeum-next) Firestore 보안 규칙.
+//
+// 지금 이 앱은 클라이언트 쪽에 Firebase Auth가 전혀 없다(로그인 화면 없음, 가족 코드만으로 접속).
+// 그래서 request.auth 기반의 "제대로 된" 규칙을 당장 걸면 앱이 아예 동작하지 않는다.
+// 이 파일은 그 상태에서 지금 당장 걸 수 있는 최소한의 안전장치만 건다:
+//   - families 컬렉션 전체를 한 번에 긁어가는 list(컬렉션 쿼리)를 차단한다.
+//     (가족 코드를 "알고" 그 코드로 직접 문서를 get() 하는 건 여전히 허용 — 지금 앱의 유일한 접근 방식이라
+//      이걸 막으면 앱이 못 쓴다. 진짜 해법은 익명 인증 + members 배열 기반 규칙으로, 이건 별도 작업.)
+//   - 수유·기저귀 같은 기록은 families/{code}/feeds/{id} 하위 문서다.
+//     가족 코드를 아는 기기만 그 가족 기록 하위 문서를 읽고 쓴다. 가족 목록 자체는 여전히 막는다.
+//   - bodeum_requests(건의사항 게시판)는 원래부터 "전체를 목록으로 보여주는" 기능이라 list를 막으면
+//     게시판 자체가 깨진다. 여기는 지금 이대로 열어둔다 — 다른 가족의 familyCode가 문서 안에 같이
+//     저장/노출되는 문제는 별도 항목(정밀 진단 "이번 주" 목록)에서 데이터 자체를 안 담도록 고쳐야 한다.
+//   - 그 외 컬렉션(정의되지 않은 것들)은 전부 기본 거부.
+//
+// TODO(보안 2단계): Firebase 익명 인증 도입 + families/{code}에 members:[uid] 필드를 두고
+// request.auth.uid in resource.data.members 기반으로 read/write를 제한한다. 사용자에게 보이는
+// 로그인 UX 없이도(익명 인증은 화면이 없다) 지금 UX를 그대로 유지하면서 실제 접근 제어가 가능해진다.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 로그인이 없고 가족 코드가 문서 ID다. 기록은 가족 문서 아래 하위 컬렉션에 둔다.
+
     match /families/{code} {
-      allow read, write: if true;
+      // get()은 허용 — 가족 코드를 정확히 아는 클라이언트만 그 문서 하나에 접근한다(현재 앱의 유일한 흐름).
+      allow get: if true;
+      allow write: if true;
+      // list(컬렉션 쿼리로 전체를 훑는 것)는 항상 차단 — 코드를 몰라도 전체를 덤프해가는 걸 막는다.
+      allow list: if false;
+
+      // 기록 하위 문서. 이 가족 코드를 아는 경우에만 그 가족의 기록 목록을 본다.
       match /{collection}/{docId} {
-        allow read, write: if true;
+        allow get, list, write: if true;
       }
     }
-    match /bodeum_requests/{id} {
+
+    match /bodeum_requests/{requestId} {
+      // 건의사항 게시판은 원래 전체 목록을 보여주는 기능이라 list까지 지금은 열어둔다.
       allow read, write: if true;
+
+      // 댓글 서브컬렉션(bodeum_requests/{id}/comments)도 동일하게 열어둔다.
       match /comments/{commentId} {
         allow read, write: if true;
       }
+    }
+
+    // 위에서 명시적으로 다루지 않은 나머지 전부는 기본적으로 거부한다.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
