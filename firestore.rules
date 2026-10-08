@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 로그인이 없고 가족 코드가 문서 ID다. 기록은 가족 문서 아래 하위 컬렉션에 둔다.
+    match /families/{code} {
+      allow read, write: if true;
+      match /{collection}/{docId} {
+        allow read, write: if true;
+      }
+    }
+    match /bodeum_requests/{id} {
+      allow read, write: if true;
+      match /comments/{commentId} {
+        allow read, write: if true;
+      }
+    }
+  }
+}

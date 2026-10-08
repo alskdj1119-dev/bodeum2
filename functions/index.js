@@ -129,6 +129,13 @@ function isQuietTime(settings, nowMs) {
 // (기존 클라이언트의 BodeumApp.js "Notify SW on db change" 로직과 동일)
 // babyId를 주면 그 아이의 기록만 사용한다(babyId 없는 예전 기록은 첫 번째 아이 것으로 간주).
 function extractState(family, babyId) {
+  if (family.recordsMigrated) {
+    const summary = family.recordSummary && family.recordSummary.byBaby;
+    const babies = Array.isArray(family.babies) ? family.babies : [];
+    const key = babyId || (babies[0] && babies[0].id) || '_all';
+    const picked = summary && (summary[key] || (!babyId && Object.values(summary)[0]));
+    return picked || { lastFeedTime: null, activeFeedStart: null, lastDiaperTime: null, activeSleepStart: null };
+  }
   const babies = Array.isArray(family.babies) ? family.babies : [];
   const firstId = babies[0] && babies[0].id;
   const mine = (list) => {
