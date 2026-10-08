@@ -39,10 +39,6 @@ function elapsedKo(iso) {
   const min = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
   return Math.floor(min / 60) + '시간 ' + p2(min % 60) + '분 경과';
 }
-function clockKo(iso) {
-  const d = kstDate(new Date(iso).getTime());
-  return p2(d.getUTCHours()) + '시 ' + p2(d.getUTCMinutes()) + '분';
-}
 function clockKoTight(iso) {
   const d = kstDate(new Date(iso).getTime());
   return p2(d.getUTCHours()) + '시' + p2(d.getUTCMinutes()) + '분';
@@ -555,14 +551,13 @@ export default function HomePanel() {
 
       {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
-      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px', alignItems:'start' }}>
+      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
         <div className={`sc${feedTier ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : tierCardStyle(feedTier)}>
           <div className="sr">
             <div className="slbl">수유</div>
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
           <div className="sval" style={{ fontSize:'11px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
-          <div className="ssub">{lastFeed ? clockKo(feedStartTime(lastFeed)) : '기록 없음'}</div>
           {lastFeed && (
             <div className="ssub" style={{ color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 600, whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', lineHeight: 1.35 }}>
               다음 예상 :<br />{nextFeedLabel}
@@ -575,7 +570,6 @@ export default function HomePanel() {
             <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
           </div>
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(diaperTier) }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
-          <div className="ssub">{lastDiaper ? clockKo(lastDiaper.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditSleep(lastSleep)}>
           <div className="sr">
@@ -583,7 +577,6 @@ export default function HomePanel() {
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
           </div>
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap' }}>{lastSleep ? agoShort(lastSleep.start) : '—'}</div>
-          <div className="ssub">{lastSleep ? durStr(sleepDurationMs(lastSleep)) : '기록 없음'}</div>
         </div>
       </div>
 
