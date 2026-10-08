@@ -327,7 +327,7 @@ export default function HomePanel() {
     const alertH = Number(notifSettings && notifSettings.feedAlertH);
     const interval = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : (alertH > 0 ? alertH : 3) * 3600000;
     const hm = clockKoTight(new Date(starts[starts.length - 1] + interval).toISOString());
-    return '다음 예상 : ' + hm;
+    return hm;
   })();
 
   // 수유 기록 한 건의 "준비량/섭취량 · 소요시간" 텍스트 — 단독 기록과 묶음 안의
@@ -564,7 +564,9 @@ export default function HomePanel() {
           <div className="sval" style={{ fontSize:'11px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
           <div className="ssub">{lastFeed ? clockKo(feedStartTime(lastFeed)) : '기록 없음'}</div>
           {lastFeed && (
-            <div className="ssub" style={{ color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 600 }}>{nextFeedLabel}</div>
+            <div className="ssub" style={{ color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 600, whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', lineHeight: 1.35 }}>
+              다음 예상 :<br />{nextFeedLabel}
+            </div>
           )}
         </div>
         <div className={`sc${diaperTier ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : tierCardStyle(diaperTier)}>
@@ -573,7 +575,7 @@ export default function HomePanel() {
             <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
           </div>
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(diaperTier) }}>{lastDiaper ? agoShort(lastDiaper.time) : '—'}</div>
-          <div className="ssub">{lastDiaper ? fmtFull(lastDiaper.time) : '기록 없음'}</div>
+          <div className="ssub">{lastDiaper ? clockKo(lastDiaper.time) : '기록 없음'}</div>
         </div>
         <div className="sc" onClick={() => openEditSleep(lastSleep)}>
           <div className="sr">
