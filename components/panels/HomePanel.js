@@ -555,7 +555,7 @@ export default function HomePanel() {
 
       {/* 직전 — 클릭 시 수정 팝업 */}
       <p className="seclbl" style={{ marginBottom:'8px' }}>직전</p>
-      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px' }}>
+      <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom:'16px', alignItems:'start' }}>
         <div className={`sc${feedTier ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : tierCardStyle(feedTier)}>
           <div className="sr">
             <div className="slbl">수유</div>
