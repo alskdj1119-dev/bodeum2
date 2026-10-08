@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
-  agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
+  agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
   groupFeedsForDisplay, groupFeedTypeLabel, feedColor, diaperColor,
@@ -30,6 +30,22 @@ function useBlinkDelay(period = BLINK_PERIOD_MS) {
 // 카드 안에서 항상 안 잘리도록: 끝의 " 전"을 생략(라벨이 이미 "직전"이라 의미는 충분히 전달됨) + 폰트 축소.
 function agoShort(iso) {
   return agoStr(iso).replace(/ 전$/, '');
+}
+
+function p2(n) { return String(n).padStart(2, '0'); }
+
+// 직전 수유 카드 — "00시간 00분 경과" / "00시 00분" (24시간, 날짜 없음)
+function elapsedKo(iso) {
+  const min = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  return p2(Math.floor(min / 60)) + '시간 ' + p2(min % 60) + '분 경과';
+}
+function clockKo(iso) {
+  const d = kstDate(new Date(iso).getTime());
+  return p2(d.getUTCHours()) + '시 ' + p2(d.getUTCMinutes()) + '분';
+}
+function clockKoTight(iso) {
+  const d = kstDate(new Date(iso).getTime());
+  return p2(d.getUTCHours()) + '시' + p2(d.getUTCMinutes()) + '분';
 }
 
 // 홈 화면 좌측 상단 — 앱을 열 때마다(재접속 시) 랜덤하게 하나씩 보여주는 부모 응원 문구.
@@ -310,8 +326,7 @@ export default function HomePanel() {
     const recent = gaps.slice(-5);
     const alertH = Number(notifSettings && notifSettings.feedAlertH);
     const interval = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : (alertH > 0 ? alertH : 3) * 3600000;
-    const next = kstDate(starts[starts.length - 1] + interval);
-    const hm = String(next.getUTCHours()).padStart(2, '0') + ':' + String(next.getUTCMinutes()).padStart(2, '0');
+    const hm = clockKoTight(new Date(starts[starts.length - 1] + interval).toISOString());
     return '다음 예상 : ' + hm;
   })();
 
@@ -546,8 +561,8 @@ export default function HomePanel() {
             <div className="slbl">수유</div>
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
-          <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(feedStartTime(lastFeed)) : '—'}</div>
-          <div className="ssub">{lastFeed ? fmt(feedStartTime(lastFeed)) : '기록 없음'}</div>
+          <div className="sval" style={{ fontSize:'11px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
+          <div className="ssub">{lastFeed ? clockKo(feedStartTime(lastFeed)) : '기록 없음'}</div>
           {lastFeed && (
             <div className="ssub" style={{ color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 600 }}>{nextFeedLabel}</div>
           )}
