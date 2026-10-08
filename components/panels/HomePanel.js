@@ -93,7 +93,7 @@ export default function HomePanel() {
     db, dispatch, saveDB, showToast, baby, babies, setOpenModal, setEditId, setEditType,
     feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep, pauseActiveFeed, resumeActiveFeed,
     pauseActiveSleep, resumeActiveSleep,
-    notifPermission, requestNotifPermission,
+    notifPermission, requestNotifPermission, notifSettings,
     filterByActiveBaby, activeBabyId, switchBaby,
   } = useApp();
   // 아이가 2명 이상 등록돼 있으면 지금 보고 있는 아이의 기록만 걸러서 보여준다.
@@ -289,6 +289,35 @@ export default function HomePanel() {
 
   const feedTier = elapsedTier(lastFeed ? feedStartTime(lastFeed) : null);
   const diaperTier = elapsedTier(lastDiaper ? lastDiaper.time : null);
+
+  // 직전 수유 카드 하단 — 최근 수유 시작 간격(최대 5회, 20분~8시간)의 평균으로 다음 예상 시각.
+  // 비교할 기록이 없으면 알림 설정의 수유 경과 시간(기본 3시간)을 쓴다.
+  const nextFeedLabel = (() => {
+    const starts = groupFeedsForDisplay(feeds)
+      .map(item => {
+        const members = item.isGroup ? item.members : [item.feed];
+        const times = members.map(feedStartTime).filter(Boolean).map(t => new Date(t).getTime());
+        return times.length ? Math.min(...times) : null;
+      })
+      .filter(t => t != null)
+      .sort((a, b) => a - b);
+    if (!starts.length) return '';
+    const gaps = [];
+    for (let i = 1; i < starts.length; i++) {
+      const g = starts[i] - starts[i - 1];
+      if (g >= 20 * 60000 && g <= 8 * 3600000) gaps.push(g);
+    }
+    const recent = gaps.slice(-5);
+    const alertH = Number(notifSettings && notifSettings.feedAlertH);
+    const interval = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : (alertH > 0 ? alertH : 3) * 3600000;
+    const next = kstDate(starts[starts.length - 1] + interval);
+    const hm = String(next.getUTCHours()).padStart(2, '0') + ':' + String(next.getUTCMinutes()).padStart(2, '0');
+    const day0 = Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate());
+    const day1 = Date.UTC(next.getUTCFullYear(), next.getUTCMonth(), next.getUTCDate());
+    const dayDiff = Math.round((day1 - day0) / 86400000);
+    const when = dayDiff === 0 ? hm : dayDiff === 1 ? '내일 ' + hm : (next.getUTCMonth() + 1) + '/' + next.getUTCDate() + ' ' + hm;
+    return '다음 ' + when;
+  })();
 
   // 수유 기록 한 건의 "준비량/섭취량 · 소요시간" 텍스트 — 단독 기록과 묶음 안의
   // 구성원 표시 양쪽에서 재사용한다.
@@ -523,6 +552,9 @@ export default function HomePanel() {
           </div>
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(feedStartTime(lastFeed)) : '—'}</div>
           <div className="ssub">{lastFeed ? fmtFull(feedStartTime(lastFeed)) : '기록 없음'}</div>
+          {lastFeed && (
+            <div className="ssub" style={{ color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 600 }}>{nextFeedLabel}</div>
+          )}
         </div>
         <div className={`sc${diaperTier ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : tierCardStyle(diaperTier)}>
           <div className="sr">
