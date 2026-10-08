@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
   agoStr, durStr, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
-  kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
+  kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedBreath,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
   groupFeedsForDisplay, groupFeedTypeLabel, feedColor, diaperColor,
   FEED_TYPE_LABEL as TF, DIAPER_TYPE_LABEL as TD,
@@ -131,8 +131,6 @@ export default function HomePanel() {
   // 블링크 동기화용 delay — 각 대상별로 자신이 마운트된 시점 기준으로 계산됨
   const feedTimerBlinkDelay = useBlinkDelay();
   const sleepTimerBlinkDelay = useBlinkDelay();
-  const feedTierBlinkDelay = useBlinkDelay(BREATH_PERIOD_MS);
-  const diaperTierBlinkDelay = useBlinkDelay(BREATH_PERIOD_MS);
 
   // "오늘 N건 기록했어요" 배너 — 평소엔 접혀 있다가 탭하면 직전 24시간 상세가 펼쳐짐
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -283,37 +281,19 @@ export default function HomePanel() {
     setOpenModal('sleep');
   }
 
-  // "직전" 수유/기저귀 카드 — 경과 시간이 오래될수록 눈에 띄게 색을 바꿔서
-  // 한눈에 "슬슬 확인해야 할 때"를 알 수 있도록 함. 1시간 미만은 평소 그대로.
-  const ELAPSED_TIER_STYLE = {
-    caution: { border: 'var(--cd-wet)', bg: 'var(--dw-wet)' },
-    warn:    { border: 'var(--warn)',   bg: 'var(--warn-wash)' },
-    alert:   { border: 'var(--alert)',  bg: 'var(--alert-wash)' },
-  };
-  function tierCardStyle(tier) {
-    if (!tier) return undefined;
-    const t = ELAPSED_TIER_STYLE[tier];
+  // 직전 수유/기저귀 — 색은 원래 카드색. 2시간부터 브리딩, 3시간부터 더 빠르게.
+  function breathCardStyle(breath, base) {
+    if (!breath) return { background: base };
     return {
-      background: t.bg, borderColor: t.border,
-      '--blink-base': t.bg,
-      '--blink-light': `color-mix(in srgb, ${t.border} 45%, white)`,
+      background: base,
+      '--blink-base': base,
+      '--blink-light': `color-mix(in srgb, ${base} 42%, white)`,
+      animationDuration: breath.periodMs + 'ms',
+      animationDelay: -(Date.now() % breath.periodMs) + 'ms',
     };
   }
-  function tierIcoStyle(tier) {
-    if (!tier) return undefined;
-    return { background: ELAPSED_TIER_STYLE[tier].bg };
-  }
-  function tierSvgStyle(tier) {
-    if (!tier) return undefined;
-    return { stroke: ELAPSED_TIER_STYLE[tier].border };
-  }
-  function tierValStyle(tier) {
-    if (!tier) return undefined;
-    return { color: ELAPSED_TIER_STYLE[tier].border, fontWeight: 700 };
-  }
-
-  const feedTier = elapsedTier(lastFeed ? feedStartTime(lastFeed) : null);
-  const diaperTier = elapsedTier(lastDiaper ? lastDiaper.time : null);
+  const feedBreath = elapsedBreath(lastFeed ? feedStartTime(lastFeed) : null);
+  const diaperBreath = elapsedBreath(lastDiaper ? lastDiaper.time : null);
 
   // 직전 수유 카드 하단 — 최근 수유 시작 간격(최대 5회, 20분~8시간)의 평균으로 다음 예상 시각.
   // 비교할 기록이 없으면 알림 설정의 수유 경과 시간(기본 3시간)을 쓴다.
@@ -557,19 +537,19 @@ export default function HomePanel() {
         </div>
         <div className="sumdiv" style={{ marginBottom: 8 }}></div>
         <div style={{ display:'flex', alignItems:'stretch', gap: 8 }}>
-          <div className={`sc${feedTier ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ flex: 1, padding: '8px 8px 6px', background: 'var(--fw)', ...(feedTier ? { ...tierCardStyle(feedTier), animationDelay: feedTierBlinkDelay } : {}) }}>
+          <div className={`sc${feedBreath ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ flex: 1, padding: '8px 8px 6px', ...breathCardStyle(feedBreath, 'var(--fw)') }}>
             <div className="sr" style={{ marginBottom: 2 }}>
               <div className="slbl">수유</div>
-              <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+              <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
             </div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip', ...(tierValStyle(feedTier) || {}) }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
+            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
             {lastFeed && nextFeedLabel && (
-              <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip', marginTop: 2, color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
+              <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip', marginTop: 2, color:'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
             )}
           </div>
-          <div className={`sc${diaperTier ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', background: 'var(--dw)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, ...(diaperTier ? { ...tierCardStyle(diaperTier), animationDelay: diaperTierBlinkDelay } : {}) }}>
-            <div className="sico d" style={tierIcoStyle(diaperTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(diaperTier)}><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
-            <div className="slbl" style={diaperTier ? { color: ELAPSED_TIER_STYLE[diaperTier].border } : undefined}>기저귀</div>
+          <div className={`sc${diaperBreath ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, ...breathCardStyle(diaperBreath, 'var(--dw)') }}>
+            <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
+            <div className="slbl">기저귀</div>
           </div>
           <div className="sc" onClick={() => openEditSleep(lastSleep)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', background: 'var(--sw)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
             <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>

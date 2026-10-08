@@ -81,8 +81,8 @@ export default function SettingsPanel() {
           </svg>
         </div>
         <div className="settmenu-inf">
-          <div className="settmenu-title">카드 색상 설정</div>
-          <div className="settmenu-sub">직전 카드 경과 시간별 색상 기준</div>
+          <div className="settmenu-title">브리딩 속도</div>
+          <div className="settmenu-sub">직전 카드 경과 시간별 숨 쉬는 속도</div>
         </div>
         <div className="settmenu-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </button>
