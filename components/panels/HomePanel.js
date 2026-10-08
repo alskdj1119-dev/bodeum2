@@ -37,7 +37,7 @@ function p2(n) { return String(n).padStart(2, '0'); }
 // 직전 수유 카드 — "00시간 00분 경과" / "00시 00분" (24시간, 날짜 없음)
 function elapsedKo(iso) {
   const min = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
-  return p2(Math.floor(min / 60)) + '시간 ' + p2(min % 60) + '분 경과';
+  return Math.floor(min / 60) + '시간 ' + p2(min % 60) + '분 경과';
 }
 function clockKo(iso) {
   const d = kstDate(new Date(iso).getTime());
