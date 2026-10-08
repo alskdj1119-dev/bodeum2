@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import {
-  agoStr, durStr, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
+  agoStr, durStr, fmt, fmtFull, elapsedStr, feedAmountMl, feedEffectiveMl, feedStartTime, timerStr, directFeedDurationMs,
   kstDate, kstMidnightMs, kstMidnightMsFromDateStr, useNowTick, elapsedTier,
   diaperWetCount, diaperSoiledCount, sleepDotClass, sleepColor, sleepDurationMs, capTrash,
   groupFeedsForDisplay, groupFeedTypeLabel, feedColor, diaperColor,
@@ -312,11 +312,7 @@ export default function HomePanel() {
     const interval = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : (alertH > 0 ? alertH : 3) * 3600000;
     const next = kstDate(starts[starts.length - 1] + interval);
     const hm = String(next.getUTCHours()).padStart(2, '0') + ':' + String(next.getUTCMinutes()).padStart(2, '0');
-    const day0 = Date.UTC(nowKst.getUTCFullYear(), nowKst.getUTCMonth(), nowKst.getUTCDate());
-    const day1 = Date.UTC(next.getUTCFullYear(), next.getUTCMonth(), next.getUTCDate());
-    const dayDiff = Math.round((day1 - day0) / 86400000);
-    const when = dayDiff === 0 ? hm : dayDiff === 1 ? '내일 ' + hm : (next.getUTCMonth() + 1) + '/' + next.getUTCDate() + ' ' + hm;
-    return '다음 ' + when;
+    return '다음 예상 : ' + hm;
   })();
 
   // 수유 기록 한 건의 "준비량/섭취량 · 소요시간" 텍스트 — 단독 기록과 묶음 안의
@@ -551,7 +547,7 @@ export default function HomePanel() {
             <div className="sico f" style={tierIcoStyle(feedTier)}><svg viewBox="0 0 24 24" style={tierSvgStyle(feedTier)}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
           </div>
           <div className="sval" style={{ fontSize:'13px', whiteSpace:'nowrap', ...tierValStyle(feedTier) }}>{lastFeed ? agoShort(feedStartTime(lastFeed)) : '—'}</div>
-          <div className="ssub">{lastFeed ? fmtFull(feedStartTime(lastFeed)) : '기록 없음'}</div>
+          <div className="ssub">{lastFeed ? fmt(feedStartTime(lastFeed)) : '기록 없음'}</div>
           {lastFeed && (
             <div className="ssub" style={{ color: feedTier ? ELAPSED_TIER_STYLE[feedTier].border : 'var(--cf)', fontWeight: 600 }}>{nextFeedLabel}</div>
           )}
