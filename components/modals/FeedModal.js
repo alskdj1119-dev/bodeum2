@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../lib/store';
 import DateTimePicker from '../DateTimePicker';
-import { toLocal, fromLocal, directFeedMlFromMs, authorFromRole } from '../../lib/helpers';
+import { toLocal, fromLocal, directFeedMlFromMs, authorFromRole, recentPreparedAmounts } from '../../lib/helpers';
 
 // Color scheme per feed type
 const FEED_COLOR = {
@@ -15,7 +15,7 @@ const FEED_COLOR = {
 
 export default function FeedModal() {
   const {
-    db, dispatch, saveDB, showToast,
+    db, dispatch, saveDB, showToast, filterByActiveBaby,
     setOpenModal,
     editId, setEditId, setEditType,
     uid, activeBabyId, myRole,
@@ -95,6 +95,11 @@ export default function FeedModal() {
   const isDirectBreast = type === 'breast' && subtype === 'direct';
   const colorKey = type === 'bottle' ? 'bottle' : `breast_${subtype}`;
   const fc = FEED_COLOR[colorKey] || FEED_COLOR.breast_direct;
+  const preparedSuggestions = isDirectBreast ? [] : recentPreparedAmounts(
+    filterByActiveBaby(db.feeds || []),
+    type === 'bottle' ? 'bottle' : 'pumped',
+    editId
+  );
 
   function close() { setOpenModal(null); setEditId(null); setEditType(null); }
 
@@ -252,6 +257,18 @@ export default function FeedModal() {
               <div className="flbl">준비량 (ml) <span>· 필수</span></div>
               <input className="finp" type="number" value={amount}
                 onChange={e => setAmount(e.target.value)} placeholder="예: 120" />
+              {preparedSuggestions.length > 0 && (
+                <div className="seg" style={{ marginTop: 8 }}>
+                  {preparedSuggestions.map(n => {
+                    const on = amount !== '' && Number(amount) === n;
+                    return (
+                      <button key={n} type="button" className={`sbtn${on ? ' on' : ''}`}
+                        style={on ? { background: fc.main, borderColor: fc.main } : {}}
+                        onClick={() => setAmount(String(n))}>{n}ml</button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
           {/* 섭취량 — 최초 기록 시엔 입력하지 않음(타이머 종료 시 팝업으로 입력), 이미 기록된 건을 수정할 때만 수정 가능 */}

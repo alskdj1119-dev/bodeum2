@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useApp } from '../../lib/store';
+import { recentPreparedAmounts } from '../../lib/helpers';
 
 const TYPE_COLOR = { bottle: 'var(--cd)', pumped: 'var(--cf)' };
 
@@ -10,11 +11,12 @@ const TYPE_COLOR = { bottle: 'var(--cd)', pumped: 'var(--cf)' };
 // 이렇게 시작된 기록은 방금 끝난 직수 기록과 같은 groupId로 연결되어, 목록에는
 // 하나의 "수유 세션"으로 합쳐서 보인다(lib/helpers.js의 groupFeedsForDisplay 참고).
 export default function SupplementPromptModal() {
-  const { startSupplementFeed, dismissSupplementPrompt } = useApp();
+  const { startSupplementFeed, dismissSupplementPrompt, db, filterByActiveBaby } = useApp();
   // 'ask' — 보충수유 할지 물어보는 1단계, 'amount' — 종류/준비량 입력하는 2단계
   const [step, setStep] = useState('ask');
   const [kind, setKind] = useState('bottle'); // 'bottle' | 'pumped'
   const [amount, setAmount] = useState('');
+  const preparedSuggestions = recentPreparedAmounts(filterByActiveBaby(db.feeds || []), kind);
 
   function start() {
     if (!amount || Number.isNaN(parseFloat(amount))) return;
@@ -66,6 +68,18 @@ export default function SupplementPromptModal() {
             <div className="flbl">준비량 (ml) <span>· 필수</span></div>
             <input className="finp" type="number" value={amount}
               onChange={e => setAmount(e.target.value)} placeholder="예: 40" autoFocus />
+            {preparedSuggestions.length > 0 && (
+              <div className="seg" style={{ marginTop: 8 }}>
+                {preparedSuggestions.map(n => {
+                  const on = amount !== '' && Number(amount) === n;
+                  return (
+                    <button key={n} type="button" className={`sbtn${on ? ' on' : ''}`}
+                      style={on ? { background: TYPE_COLOR[kind], borderColor: TYPE_COLOR[kind] } : {}}
+                      onClick={() => setAmount(String(n))}>{n}ml</button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
         <div className="mfoot">
