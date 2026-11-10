@@ -39,8 +39,8 @@ function elapsedKo(iso) {
   const min = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
   const h = Math.floor(min / 60);
   const m = min % 60;
-  if (h === 0) return m + '분';
-  return h + '시간 ' + p2(m) + '분 경과';
+  if (h === 0) return m + '분 경과';
+  return h + '시간 ' + m + '분 경과';
 }
 function clockKoTight(iso) {
   const d = kstDate(new Date(iso).getTime());
@@ -120,7 +120,7 @@ export default function HomePanel() {
     db, dispatch, saveDB, showToast, baby, babies, setOpenModal, setEditId, setEditType,
     feedTimerMs, sleepTimerMs, stopActiveFeed, stopActiveSleep, pauseActiveFeed, resumeActiveFeed,
     pauseActiveSleep, resumeActiveSleep,
-    notifPermission, requestNotifPermission, notifSettings,
+    notifPermission, requestNotifPermission,
     filterByActiveBaby, activeBabyId, switchBaby,
   } = useApp();
   // 아이가 2명 이상 등록돼 있으면 지금 보고 있는 아이의 기록만 걸러서 보여준다.
@@ -298,29 +298,7 @@ export default function HomePanel() {
   const feedBreath = elapsedBreath(lastFeed ? feedStartTime(lastFeed) : null);
   const diaperBreath = elapsedBreath(lastDiaper ? lastDiaper.time : null);
 
-  // 직전 수유 카드 하단 — 최근 수유 시작 간격(최대 5회, 20분~8시간)의 평균으로 다음 예상 시각.
-  // 비교할 기록이 없으면 알림 설정의 수유 경과 시간(기본 3시간)을 쓴다.
-  const nextFeedLabel = (() => {
-    const starts = groupFeedsForDisplay(feeds)
-      .map(item => {
-        const members = item.isGroup ? item.members : [item.feed];
-        const times = members.map(feedStartTime).filter(Boolean).map(t => new Date(t).getTime());
-        return times.length ? Math.min(...times) : null;
-      })
-      .filter(t => t != null)
-      .sort((a, b) => a - b);
-    if (!starts.length) return '';
-    const gaps = [];
-    for (let i = 1; i < starts.length; i++) {
-      const g = starts[i] - starts[i - 1];
-      if (g >= 20 * 60000 && g <= 8 * 3600000) gaps.push(g);
-    }
-    const recent = gaps.slice(-5);
-    const alertH = Number(notifSettings && notifSettings.feedAlertH);
-    const interval = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : (alertH > 0 ? alertH : 3) * 3600000;
-    const hm = clockKoTight(new Date(starts[starts.length - 1] + interval).toISOString());
-    return hm;
-  })();
+  // 다음 예상 시각은 화면에서 뺐다. 다시 붙일 때 최근 수유 간격 평균으로 계산한다.
 
   // 수유 기록 한 건의 "준비량/섭취량 · 소요시간" 텍스트 — 단독 기록과 묶음 안의
   // 구성원 표시 양쪽에서 재사용한다.
@@ -553,9 +531,6 @@ export default function HomePanel() {
               <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
             </div>
             <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, width:'fit-content' }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
-            {lastFeed && nextFeedLabel && (
-              <div className="ssub" style={{ marginTop: 2, color:'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
-            )}
           </div>
           <div className={`sc${diaperBreath ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ padding: '8px 8px 6px', ...breathCardStyle(diaperBreath, 'var(--dw)') }}>
             <div className="sr" style={{ marginBottom: 2 }}>
