@@ -365,8 +365,12 @@ export default function Home24hModal({ type, initialDate, initialMode, records: 
 
   const dateLabelStr = `${dm}월 ${dd}일(${['일','월','화','수','목','금','토'][kstDate(dayStartMs).getUTCDay()]})`;
 
-  const titles = { feed: '수유', diaper: '기저귀', sleep: '수면' };
-  const colors = { feed: 'var(--cf)', diaper: 'var(--cd)', sleep: 'var(--cs)' };
+  const titles = { feed: '수유', diaper: '기저귀', sleep: '수면', all: '기록' };
+  const colors = { feed: 'var(--cf)', diaper: 'var(--cd)', sleep: 'var(--cs)', all: 'var(--sage)' };
+  // type === 'all'(요일 상세): 수유·기저귀·수면을 한 화면에 차례로 보여준다. 섹션 제목줄의 스타일.
+  const sectionTitle = (label, color) => (
+    <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--serif)', color, margin: '4px 0 12px' }}>{label}</div>
+  );
 
   function handleClose() {
     setOpen(false);
@@ -455,6 +459,18 @@ export default function Home24hModal({ type, initialDate, initialMode, records: 
 
         {/* 내용 스크롤 영역 */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px', WebkitOverflowScrolling: 'touch' }}>
+          {type === 'all' && (
+            <>
+              {sectionTitle('수유', colors.feed)}
+              <FeedDetail records={feedRecords} onEdit={editFeed} dayList={null} />
+              <div style={{ height: 1, background: 'var(--bdr)', margin: '12px 0 16px' }} />
+              {sectionTitle('기저귀', colors.diaper)}
+              <DiaperDetail records={diaperRecords} onEdit={editDiaper} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} dayList={null} />
+              <div style={{ height: 1, background: 'var(--bdr)', margin: '12px 0 16px' }} />
+              {sectionTitle('수면', colors.sleep)}
+              <SleepDetail records={sleepRecords} onEdit={editSleep} periodLabel={mode === 'day' ? '당일' : '직전 24시간'} dayList={null} />
+            </>
+          )}
           {type === 'feed' && <FeedDetail records={feedRecords} onEdit={editFeed} dayList={isRangeMode ? dayList : null} />}
           {type === 'diaper' && <DiaperDetail records={diaperRecords} onEdit={editDiaper} periodLabel={isRangeMode ? rangeLabel : (mode === 'day' ? '당일' : '직전 24시간')} dayList={isRangeMode ? dayList : null} />}
           {type === 'sleep' && <SleepDetail records={sleepRecords} onEdit={editSleep} periodLabel={isRangeMode ? rangeLabel : (mode === 'day' ? '당일' : '직전 24시간')} dayList={isRangeMode ? dayList : null} />}

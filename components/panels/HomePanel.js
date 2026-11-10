@@ -155,14 +155,14 @@ export default function HomePanel() {
   const activeSleep = sleeps.find(s => s.start && !s.end);
 
   // 직전 24시간 상세 모달 — detail24Date가 있으면 그 날짜의 "당일" 모드로 열림
-  const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep'
+  const [detail24, setDetail24] = useState(null); // null | 'feed' | 'diaper' | 'sleep' | 'all'(요일 상세: 세 종류를 한 화면에)
   const [detail24Date, setDetail24Date] = useState(null); // "YYYY-MM-DD"(KST) | null
   const [detail24Mode, setDetail24Mode] = useState('recent24h'); // 배너 아코디언에서 연 경우, 그때 선택돼 있던 모드 그대로 전달
 
   // 요일 스트립에서 기록 있는 날짜를 탭하면 그 날짜의 "당일" 상세를 봄 (직전 24시간 토글은 불필요하므로 숨김)
   function openDayDetail(dateStr) {
     setDetail24Date(dateStr);
-    setDetail24('feed');
+    setDetail24('all');
   }
 
   // 홈 상단 응원 문구 — 앱을 처음 열 때 랜덤으로 고르고, 이후 탭을 오가는 동안에는 유지하되,
@@ -504,30 +504,37 @@ export default function HomePanel() {
         </div>
       )}
 
-      <div className="sumcard open" style={HOME_TRAY}>
-        <div className="sumhead" style={{ marginBottom: 6 }}>
+      <div className={`sumcard${summaryOpen ? ' open' : ''}`} style={HOME_TRAY}>
+        <div className="sumhead" role="button" tabIndex={0} aria-expanded={summaryOpen}
+          onClick={() => setSummaryOpen(v => !v)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSummaryOpen(v => !v); } }}
+          style={{ marginBottom: summaryOpen ? 6 : 0, cursor: 'pointer' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></svg>
           <div className="txt">{todayDateStr} &middot; 오늘 <b>{todayCount}건</b> 기록했어요</div>
-          <svg className="sumchev" style={{ transform: 'rotate(90deg)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+          <svg className="sumchev" style={{ transform: summaryOpen ? 'rotate(90deg)' : 'rotate(0deg)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
-        <div className="sumdiv" style={{ marginBottom: 8 }}></div>
-        <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom: 0 }}>
-          <div className="sc" style={{ padding: '8px 8px 6px', background: 'var(--fw)' }} onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode('day'); setDetail24('feed'); }}>
-            <div className="sr" style={{ marginBottom: 2 }}><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1 }}>{feedMlToday > 0 ? `총 ${feedMlToday}ml` : `${todayFeedCount}회`}</div>
-            <div className="ssub">{todayFeedCount > 0 ? `${todayFeedCount}회 수유` : '기록 없음'}</div>
+        {summaryOpen && (
+          <>
+          <div className="sumdiv" style={{ marginBottom: 8 }}></div>
+          <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom: 0 }}>
+            <div className="sc" style={{ padding: '8px 8px 6px', background: 'var(--fw)' }} onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode('day'); setDetail24('feed'); }}>
+              <div className="sr" style={{ marginBottom: 2 }}><div className="slbl">수유</div><div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div></div>
+              <div className="sval" style={{ fontSize:'14px', paddingBottom: 1 }}>{feedMlToday > 0 ? `총 ${feedMlToday}ml` : `${todayFeedCount}회`}</div>
+              <div className="ssub">{todayFeedCount > 0 ? `${todayFeedCount}회 수유` : '기록 없음'}</div>
+            </div>
+            <div className="sc" style={{ padding: '8px 8px 6px', background: 'var(--dw)' }} onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode('day'); setDetail24('diaper'); }}>
+              <div className="sr" style={{ marginBottom: 2 }}><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
+              <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'nowrap' }}>{diaperToday.length}회</div>
+              <div className="ssub">소변 {diaperWetToday} &middot; 대변 {diaperSoiledToday}</div>
+            </div>
+            <div className="sc" style={{ padding: '8px 8px 6px', background: 'var(--sw)' }} onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode('day'); setDetail24('sleep'); }}>
+              <div className="sr" style={{ marginBottom: 2 }}><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
+              <div className="sval" style={{ fontSize:'14px', paddingBottom: 1 }}>{sleepMsToday > 0 ? durStr(sleepMsToday) : '0분'}</div>
+              <div className="ssub">{sleepToday.length}회</div>
+            </div>
           </div>
-          <div className="sc" style={{ padding: '8px 8px 6px', background: 'var(--dw)' }} onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode('day'); setDetail24('diaper'); }}>
-            <div className="sr" style={{ marginBottom: 2 }}><div className="slbl">기저귀</div><div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div></div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'nowrap' }}>{diaperToday.length}회</div>
-            <div className="ssub">소변 {diaperWetToday} &middot; 대변 {diaperSoiledToday}</div>
-          </div>
-          <div className="sc" style={{ padding: '8px 8px 6px', background: 'var(--sw)' }} onClick={ev => { ev.stopPropagation(); setDetail24Date(null); setDetail24Mode('day'); setDetail24('sleep'); }}>
-            <div className="sr" style={{ marginBottom: 2 }}><div className="slbl">수면</div><div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div></div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1 }}>{sleepMsToday > 0 ? durStr(sleepMsToday) : '0분'}</div>
-            <div className="ssub">{sleepToday.length}회</div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       <div className="sumcard open" style={HOME_TRAY}>
@@ -536,8 +543,8 @@ export default function HomePanel() {
           <div className="txt">마지막으로 돌본 뒤</div>
         </div>
         <div className="sumdiv" style={{ marginBottom: 8 }}></div>
-        <div style={{ display:'flex', alignItems:'stretch', gap: 8 }}>
-          <div className={`sc${feedBreath ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ flex: 1, padding: '8px 8px 6px', ...breathCardStyle(feedBreath, 'var(--fw)') }}>
+        <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom: 0 }}>
+          <div className={`sc${feedBreath ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ padding: '8px 8px 6px', ...breathCardStyle(feedBreath, 'var(--fw)') }}>
             <div className="sr" style={{ marginBottom: 2 }}>
               <div className="slbl">수유</div>
               <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
@@ -547,13 +554,21 @@ export default function HomePanel() {
               <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip', marginTop: 2, color:'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
             )}
           </div>
-          <div className={`sc${diaperBreath ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, ...breathCardStyle(diaperBreath, 'var(--dw)') }}>
-            <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
-            <div className="slbl">기저귀</div>
+          <div className={`sc${diaperBreath ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ padding: '8px 8px 6px', ...breathCardStyle(diaperBreath, 'var(--dw)') }}>
+            <div className="sr" style={{ marginBottom: 2 }}>
+              <div className="slbl">기저귀</div>
+              <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
+            </div>
+            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastDiaper ? elapsedKo(lastDiaper.time) : '—'}</div>
+            <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastDiaper ? `${TD[lastDiaper.type] || ''} · ${clockKoTight(lastDiaper.time)}` : '기록 없음'}</div>
           </div>
-          <div className="sc" onClick={() => openEditSleep(lastSleep)} style={{ width: 68, flex: '0 0 68px', padding: '8px 4px', background: 'var(--sw)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
-            <div className="slbl">수면</div>
+          <div className="sc" onClick={() => openEditSleep(lastSleep)} style={{ padding: '8px 8px 6px', background: 'var(--sw)' }}>
+            <div className="sr" style={{ marginBottom: 2 }}>
+              <div className="slbl">수면</div>
+              <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+            </div>
+            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastSleep ? elapsedKo(lastSleep.end) : '—'}</div>
+            <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastSleep ? `수면 ${durStr(sleepDurationMs(lastSleep))}` : '기록 없음'}</div>
           </div>
         </div>
       </div>
