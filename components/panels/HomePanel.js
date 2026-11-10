@@ -48,6 +48,16 @@ function hmOnly(iso) {
   return p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes());
 }
 
+// 직전 카드 세 칸은 폭이 좁다. 줄바꿈으로 "경과"가 끊기지 않게 한 줄로 둔다.
+const LAST_VAL = {
+  fontSize: '10.5px', paddingBottom: 1, whiteSpace: 'nowrap', overflow: 'hidden',
+  textOverflow: 'clip', letterSpacing: '-0.04em', display: 'block', maxWidth: '100%',
+};
+const LAST_SUB = {
+  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'clip',
+  letterSpacing: '-0.04em', fontSize: '9px', marginTop: 2,
+};
+
 const HOME_TRAY = {
   cursor: 'default',
   padding: '10px 12px',
@@ -544,31 +554,31 @@ export default function HomePanel() {
         </div>
         <div className="sumdiv" style={{ marginBottom: 8 }}></div>
         <div className="sgrid" style={{ gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', marginBottom: 0 }}>
-          <div className={`sc${feedBreath ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ padding: '8px 8px 6px', ...breathCardStyle(feedBreath, 'var(--fw)') }}>
+          <div className={`sc${feedBreath ? ' breath-live' : ''}`} onClick={() => openEditFeed(lastFeed)} style={{ padding: '8px 6px 6px', ...breathCardStyle(feedBreath, 'var(--fw)') }}>
             <div className="sr" style={{ marginBottom: 2 }}>
               <div className="slbl">수유</div>
               <div className="sico f"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
             </div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
+            <div className="sval" style={LAST_VAL}>{lastFeed ? elapsedKo(feedStartTime(lastFeed)) : '—'}</div>
             {lastFeed && nextFeedLabel && (
-              <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip', marginTop: 2, color:'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
+              <div className="ssub" style={{ ...LAST_SUB, color:'var(--cf)', fontWeight: 700 }}>다음 예상 : {nextFeedLabel}</div>
             )}
           </div>
-          <div className={`sc${diaperBreath ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ padding: '8px 8px 6px', ...breathCardStyle(diaperBreath, 'var(--dw)') }}>
+          <div className={`sc${diaperBreath ? ' breath-live' : ''}`} onClick={() => openEditDiaper(lastDiaper)} style={{ padding: '8px 6px 6px', ...breathCardStyle(diaperBreath, 'var(--dw)') }}>
             <div className="sr" style={{ marginBottom: 2 }}>
               <div className="slbl">기저귀</div>
               <div className="sico d"><svg viewBox="0 0 24 24"><path d="M2 9.5L5 6h14l3 3.5v5L19 18H5l-3-3.5V9.5z"/><path d="M2 9.5h5l3 3 3-3h5"/></svg></div>
             </div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastDiaper ? elapsedKo(lastDiaper.time) : '—'}</div>
-            <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastDiaper ? `${TD[lastDiaper.type] || ''} · ${clockKoTight(lastDiaper.time)}` : '기록 없음'}</div>
+            <div className="sval" style={LAST_VAL}>{lastDiaper ? elapsedKo(lastDiaper.time) : '—'}</div>
+            <div className="ssub" style={LAST_SUB}>{lastDiaper ? `${TD[lastDiaper.type] || ''} · ${clockKoTight(lastDiaper.time)}` : '기록 없음'}</div>
           </div>
-          <div className="sc" onClick={() => openEditSleep(lastSleep)} style={{ padding: '8px 8px 6px', background: 'var(--sw)' }}>
+          <div className="sc" onClick={() => openEditSleep(lastSleep)} style={{ padding: '8px 6px 6px', background: 'var(--sw)' }}>
             <div className="sr" style={{ marginBottom: 2 }}>
               <div className="slbl">수면</div>
               <div className="sico s"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
             </div>
-            <div className="sval" style={{ fontSize:'14px', paddingBottom: 1, whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastSleep ? elapsedKo(lastSleep.end) : '—'}</div>
-            <div className="ssub" style={{ whiteSpace:'normal', overflow:'visible', textOverflow:'clip' }}>{lastSleep ? `수면 ${durStr(sleepDurationMs(lastSleep))}` : '기록 없음'}</div>
+            <div className="sval" style={LAST_VAL}>{lastSleep ? elapsedKo(lastSleep.end) : '—'}</div>
+            <div className="ssub" style={LAST_SUB}>{lastSleep ? `수면 ${durStr(sleepDurationMs(lastSleep))}` : '기록 없음'}</div>
           </div>
         </div>
       </div>
